@@ -1,9 +1,33 @@
-import Vue from 'vue';
-import App from './App.vue';
-import './registerServiceWorker';
+import Vue from 'vue'
+import Buefy from 'buefy'
+import './custom.scss'
+import '@fortawesome/fontawesome-free/css/all.css'
+import App from './App.vue'
+import './filter'
+import router from './Router'
 
-Vue.config.productionTip = false;
+Vue.use(Buefy, {
+  defaultIconPack: 'fas'
+})
+
+Vue.config.productionTip = false
+
+declare global {
+  interface Window {
+    readonly connex: Connex
+    readonly isSyncEnv: boolean
+  }
+  const connex: Connex
+  const isSyncEnv: boolean
+}
+
+Object.defineProperty(window, 'isSyncEnv', {
+  value: true,
+  enumerable: true,
+  writable: false
+})
 
 new Vue({
-  render: (h) => h(App),
-}).$mount('#app');
+  router,
+  render: h => h(App)
+}).$mount('#app')

@@ -1,29 +1,37 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
-  </div>
+<body class="has-navbar-fixed-top">
+  <EnvInspect :isShow="!isSync"/>
+  <Navbar v-if="isSync" class="is-fixed-top"/>
+  <router-view v-if="isSync" class="router-view section"></router-view>
+</body>
 </template>
-
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-import HelloWorld from './components/HelloWorld.vue';
-
+import { Vue, Component } from 'vue-property-decorator'
+import Navbar from './components/Navbar.vue'
+import EnvInspect from './components/EnvInspect.vue'
 @Component({
   components: {
-    HelloWorld,
-  },
+    Navbar,
+    EnvInspect
+  }
 })
-export default class App extends Vue {}
-</script>
-
-<style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+export default class App extends Vue {
+  isSync = isSyncEnv
 }
+</script>
+<style>
+html {
+  height: 100vh;
+}
+body {
+  height: 100%;
+}
+.router-view {
+  height: 100%;
+  overflow: auto;
+}
+
 </style>
+
+
+
