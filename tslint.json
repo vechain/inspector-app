@@ -16,6 +16,7 @@
     "ordered-imports": false,
     "trailing-comma" : false,
     "object-literal-sort-keys": false,
-    "no-consecutive-blank-lines": false
+    "no-consecutive-blank-lines": false,
+    "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"]
   }
 }

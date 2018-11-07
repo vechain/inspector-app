@@ -3,7 +3,7 @@
     <article class="media">
       <div class="media-left">
         <figure class="image is-64x64">
-          <img alt="Image">
+          <img class="is-rounded" v-ident="item.address" alt="Image">
         </figure>
       </div>
       <div class="media-content">
@@ -12,6 +12,11 @@
             <strong>{{item.name || ''}}</strong>
           </p>
           <p>{{item.address | addr}}</p>
+        </div>
+      </div>
+      <div class="media-right">
+        <div class="content">
+          <slot/>
         </div>
       </div>
     </article>
@@ -23,7 +28,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator'
 @Component
 export default class Contract extends Vue {
   @Prop()
-  item!: Contract.Item
+  private item!: Contract.Item
 }
 </script>
 <style lang="sass" scoped>

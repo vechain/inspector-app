@@ -25,8 +25,7 @@
 import { Vue, Component } from 'vue-property-decorator'
 @Component
 export default class Navbar extends Vue {
-  name = 'navbar'
-  routes = [
+  private routes = [
     { name: 'home', text: 'Home' },
     { name: 'contracts', text: 'Contracts' }
   ]

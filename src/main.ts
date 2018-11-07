@@ -3,7 +3,8 @@ import Buefy from 'buefy'
 import './custom.scss'
 import '@fortawesome/fontawesome-free/css/all.css'
 import App from './App.vue'
-import './filter'
+import './filters'
+import './directives'
 import router from './Router'
 
 Vue.use(Buefy, {

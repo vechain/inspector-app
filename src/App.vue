@@ -16,7 +16,7 @@ import EnvInspect from './components/EnvInspect.vue'
   }
 })
 export default class App extends Vue {
-  isSync = isSyncEnv
+  private isSync = isSyncEnv
 }
 </script>
 <style>
