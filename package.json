@@ -12,6 +12,7 @@
     "buefy": "0.7.0",
     "color": "3.1.0",
     "dexie": "2.0.4",
+    "dexie-observable": "1.0.0-beta.5",
     "mersenne-twister": "1.1.0",
     "vue": "^2.5.17",
     "vue-class-component": "^6.0.0",

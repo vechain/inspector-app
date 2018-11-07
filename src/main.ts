@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Buefy from 'buefy'
 import './custom.scss'
+import './overwrite.css'
 import '@fortawesome/fontawesome-free/css/all.css'
 import App from './App.vue'
 import './filters'

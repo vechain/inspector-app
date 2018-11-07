@@ -1,0 +1,11 @@
+.modal-card-head {
+  border-bottom: none;
+}
+
+.modal-card-foot {
+  border-top: none;
+}
+
+.modal-card-head, .modal-card-foot {
+  background-color: #fff;
+}
