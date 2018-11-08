@@ -5,20 +5,24 @@
         <h1 class="title level-item">Contracts</h1>
       </div>
       <div class="level-right">
-        <router-link :to="{name: 'deploy'}" class="button is-primary is-outlined">
+        <button @click="addItem" class="button is-primary is-outlined">
           <b-icon icon="plus"></b-icon>
-        </router-link>
+        </button>
       </div>
     </div>
-    <div class="columns section is-variable is-1 is-multiline">
-      <div class="column is-3-fullhd is-4-desktop is-6-tablet" v-for="(t, i) in 7" :key="i">
-        <Contract :item="item" style="max-width: 400px">
+    <div v-if="contracts.length" class="columns section is-variable is-1 is-multiline">
+      <div
+        class="column is-3-fullhd is-4-desktop is-6-tablet"
+        v-for="(item, index) in contracts"
+        :key="index"
+      >
+        <Contract @select="onSelect(item.id)" :item="item" style="max-width: 400px">
           <slot>
             <p class="buttons">
-              <button @click="remove(item)" class="button is-danger is-inverted">
+              <button @click.stop="remove(item)" class="button is-danger is-inverted">
                 <b-icon icon="trash-alt" size="is-small"></b-icon>
               </button>
-              <button @click="edit" class="button is-primary is-inverted">
+              <button @click.stop="edit(item)" class="button is-primary is-inverted">
                 <b-icon icon="edit" size="is-small"></b-icon>
               </button>
             </p>
@@ -26,8 +30,20 @@
         </Contract>
       </div>
     </div>
+    <div v-if="!isloading && !contracts.length" class="section">
+      <div class="container">
+        <div class="card">
+          <div
+            class="card-content has-text-centered is-size-2 has-text-grey-light"
+          >No contracts here!</div>
+          <div class="card-footer">
+            <a @click="addItem" class="card-footer-item">Add</a>
+          </div>
+        </div>
+      </div>
+    </div>
     <b-modal :canCancel="['outside']" :active.sync="isModalActive">
-      <EditContract/>
+      <EditContract @cancel="onCancel" @finished="reload" :item="currentItem"/>
     </b-modal>
   </section>
 </template>
@@ -35,6 +51,7 @@
 import { Vue, Component } from 'vue-property-decorator'
 import EditContract from '../components/EditContract.vue'
 import Contract from '../components/Contract.vue'
+import DB, { Entities } from '../database'
 @Component({
   components: {
     Contract,
@@ -42,8 +59,12 @@ import Contract from '../components/Contract.vue'
   }
 })
 export default class Contracts extends Vue {
-  private item = { name: 'adf', address: 'adf' }
+  private isloading = true
+
   private isModalActive = false
+  private currentItem: Entities.Contract | null = null
+  private contracts: Entities.Contract[] = []
+
   private remove(item: any) {
     this.$dialog.confirm({
       title: 'Remove',
@@ -57,8 +78,48 @@ export default class Contracts extends Vue {
       }
     })
   }
-  private edit() {
+
+  onSelect(id: number) {
+    this.$router.push({
+      name: 'contract_detail',
+      params: {id: id.toString()}
+    })
+  }
+
+  async created() {
+    const loading = this.$loading.open({
+      container: null
+    })
+    await this.list()
+    loading.close()
+  }
+
+  reload() {
+    this.currentItem = null
+    this.list()
+    this.isModalActive = false
+  }
+  private open() {
     this.isModalActive = true
+  }
+  private close() {
+    this.isModalActive = false
+  }
+  private async list() {
+    this.contracts = await DB.contracts.toArray()
+    this.isloading = false
+  }
+  private addItem() {
+    this.currentItem = null
+    this.open()
+  }
+  private onCancel() {
+    this.currentItem = null
+    this.close()
+  }
+  private edit(item: Entities.Contract) {
+    this.currentItem = item
+    this.open()
   }
 }
 </script>

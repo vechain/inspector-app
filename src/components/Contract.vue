@@ -3,7 +3,7 @@
     <article class="media">
       <div class="media-left">
         <figure class="image is-64x64">
-          <img class="is-rounded" v-ident="item.address" alt="Image">
+          <img @click.stop="$emit('select')" class="is-rounded" v-ident="item.address" alt="Image">
         </figure>
       </div>
       <div class="media-content">
@@ -11,7 +11,10 @@
           <p>
             <strong>{{item.name || ''}}</strong>
           </p>
-          <p>{{item.address | addr}}</p>
+          <!-- <b-tooltip position="is-bottom" type="is-dark" size="is-large" :label="item.address + '  click to clip'"> -->
+            <p v-if="isShort">{{item.address | addr}}</p>
+            <p v-else>{{item.address}}</p>
+          <!-- </b-tooltip> -->
         </div>
       </div>
       <div class="media-right">
@@ -29,6 +32,9 @@ import { Vue, Component, Prop } from 'vue-property-decorator'
 export default class Contract extends Vue {
   @Prop()
   private item!: Contract.Item
+
+  @Prop({ default: true })
+  private isShort!: boolean
 }
 </script>
 <style lang="sass" scoped>

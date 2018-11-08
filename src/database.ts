@@ -10,7 +10,7 @@ export namespace Entities {
   }
 }
 
-export default class Database extends Dexie {
+class Database extends Dexie {
   public readonly contracts!: Dexie.Table<Entities.Contract, string>
   constructor() {
     super('inspect')
@@ -20,3 +20,7 @@ export default class Database extends Dexie {
     this.open().catch(err => console.error(err))
   }
 }
+
+const DB = new Database()
+
+export default DB

@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import Home from './views/Home.vue'
 import Contracts from './views/Contracts.vue'
 import Deploy from './views/DeployContract.vue'
+import ContractDetail from './views/ContractDetail.vue'
 
 Vue.use(Router)
 
@@ -23,6 +24,11 @@ const router = new Router({
       name: 'deploy',
       component: Deploy,
       path: '/deploy'
+    },
+    {
+      name: 'contract_detail',
+      component: ContractDetail,
+      path: '/contract/:id/detail'
     }
   ]
 })
