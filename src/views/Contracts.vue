@@ -74,7 +74,10 @@ export default class Contracts extends Vue {
       type: 'is-warning',
       scroll: 'clip',
       onConfirm: () => {
-        console.log('confirmed')
+        console.log(item)
+        DB.contracts.delete(item.id).then(() => {
+          this.reload()
+        })
       }
     })
   }

@@ -12,8 +12,8 @@
             <strong>{{item.name || ''}}</strong>
           </p>
           <!-- <b-tooltip position="is-bottom" type="is-dark" size="is-large" :label="item.address + '  click to clip'"> -->
-            <p class="is-family-monospace" v-if="isShort">{{item.address | addr}}</p>
-            <p class="is-family-monospace" v-else>{{item.address}}</p>
+            <p class="is-fixed-font is-size-7" v-if="isShort">{{item.address | addr}}</p>
+            <p class="is-fixed-font is-size-6" v-else>{{item.address}}</p>
           <!-- </b-tooltip> -->
         </div>
       </div>

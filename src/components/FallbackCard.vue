@@ -1,7 +1,7 @@
 <template>
   <b-collapse class="panel">
     <div class="panel-heading">
-      <strong>Fallbacks</strong>
+      <strong>Fallback</strong>
     </div>
     <div v-for="(item, index) in list" :key="index" class="panel-block is-block">
       <pre>{{item}}</pre>

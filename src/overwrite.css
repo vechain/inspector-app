@@ -9,3 +9,7 @@
 .modal-card-head, .modal-card-foot {
   background-color: #fff;
 }
+
+.is-fixed-font {
+  font-family: Menlo,Consolas,DejaVu Sans Mono;
+}
