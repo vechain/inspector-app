@@ -11,6 +11,11 @@ const router = new Router({
   mode: 'hash',
   routes: [
     {
+      name: 'root',
+      redirect: { name: 'contracts' },
+      path: '/'
+    },
+    {
       name: 'home',
       component: Home,
       path: '/home'
