@@ -1,8 +1,8 @@
 <template>
-  <div class="box">
+  <div class="box" :class="{'img-hover': $listeners.select}">
     <article class="media">
       <div class="media-left">
-        <figure class="image is-64x64">
+        <figure :class="{'could-hover': $listeners.select}" class="image is-64x64">
           <img @click.stop="$emit('select')" class="is-rounded" v-ident="item.address" alt="Image">
         </figure>
       </div>
@@ -12,8 +12,8 @@
             <strong>{{item.name || ''}}</strong>
           </p>
           <!-- <b-tooltip position="is-bottom" type="is-dark" size="is-large" :label="item.address + '  click to clip'"> -->
-            <p class="is-fixed-font is-size-7" v-if="isShort">{{item.address | addr}}</p>
-            <p class="is-fixed-font is-size-6" v-else>{{item.address}}</p>
+          <p class="is-fixed-font is-size-7" v-if="isShort">{{item.address | addr}}</p>
+          <p class="is-fixed-font is-size-6" v-else>{{item.address}}</p>
           <!-- </b-tooltip> -->
         </div>
       </div>
@@ -37,8 +37,18 @@ export default class Contract extends Vue {
   private isShort!: boolean
 }
 </script>
-<style lang="sass" scoped>
-  .box
-    margin: auto
+<style lang="css" scoped>
+.box {
+  margin: auto;
+}
+
+.img-hover .could-hover {
+  cursor: pointer;
+  transition: transform .2s, filter .2s ease-in-out;
+}
+.img-hover:hover .could-hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+}
 </style>
 

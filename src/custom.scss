@@ -7,7 +7,8 @@ $twitter: #4099FF;
 $twitter-invert: findColorInvert($twitter);
 
 $danger: #f44336;
-
+$navbar-breakpoint: 800px;
+$box-padding: 1.1rem;
 $colors: (
     "white": ($white, $black),
     "black": ($black, $white),

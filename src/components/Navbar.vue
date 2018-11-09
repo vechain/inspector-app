@@ -1,8 +1,8 @@
 <template>
   <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
     <div class="container">
-      <div class="navbar-brand">
-        <h2 class="subtitle has-text-white is-2" style="font-family: Bradley Hand, Ink Free">Inspect</h2>
+      <div class="navbar-brand is-marginless">
+        <h2 class="subtitle has-text-white is-2" style="font-family: Noteworthy,Bradley Hand, Ink Free">Inspector</h2>
       </div>
       <div class="navbar-menu">
         <div style="width: 60px"></div>

@@ -16,9 +16,9 @@
         v-for="(item, index) in contracts"
         :key="index"
       >
-        <Contract @select="onSelect(item.id)" :item="item" style="max-width: 400px">
+        <Contract @select="onSelect(item.id)" :item="item" class="contract-box">
           <slot>
-            <p class="buttons">
+            <p class="buttons buttons-slot">
               <button @click.stop="remove(item)" class="button is-danger is-inverted">
                 <b-icon icon="trash-alt" size="is-small"></b-icon>
               </button>
@@ -85,7 +85,7 @@ export default class Contracts extends Vue {
   onSelect(id: number) {
     this.$router.push({
       name: 'contract_detail',
-      params: {id: id.toString()}
+      params: { id: id.toString() }
     })
   }
 
@@ -126,10 +126,21 @@ export default class Contracts extends Vue {
   }
 }
 </script>
-<style lang="sass" scoped>
-  .column:last-child 
-    margin-bottom: 1.5rem;
-  
+<style lang="css" scoped>
+.column:last-child {
+  margin-bottom: 1.5rem;
+}
+.buttons-slot {
+  opacity: 0.3;
+  transition: opacity .2s ease-in-out;
+}
+.contract-box {
+  max-width: 400px;
+  min-width: 370px;
+}
+.contract-box:hover .buttons-slot {
+  opacity: 1;
+}
 </style>
 
 

@@ -25,7 +25,7 @@ declare global {
 }
 
 Object.defineProperty(window, 'isSyncEnv', {
-  value: true,
+  value: !!window.connex,
   enumerable: true,
   writable: false
 })

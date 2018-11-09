@@ -3,10 +3,11 @@
     <div v-if="contract" class="container">
       <Contract :isShort="false" :item="contract"/>
       <section class="section">
-        <b-tabs type="is-toggle" expanded v-model="tabIndex" class="block">
+        <b-tabs type="is-centered" v-model="tabIndex" class="block">
           <b-tab-item v-for="(item, index) in tabs" :key="index">
             <span slot="header">
               {{item.text}}
+              <span class="is-size-7" v-if="item.count">({{item.count}})</span>
             </span>
           </b-tab-item>
         </b-tabs>
@@ -74,7 +75,7 @@ export default class ContractDetail extends Vue {
       { text: 'Read', count: this.readList.length },
       { text: 'Write', count: this.writeList.length },
       { text: 'Code & ABI', count: '' },
-      { text: 'Events', count: this.writeList.length },
+      { text: 'Events', count: this.eventList.length },
       { text: 'Fallback', count: '' }
     ]
   }

@@ -1,7 +1,25 @@
 <template>
   <b-collapse :open="false" class="panel">
     <div slot="trigger" slot-scope="props" class="panel-heading">
-      <strong>{{item.name}}</strong>
+      <!-- <div>
+        
+        <span class="tag is-dark is-rounded">{{item.payable}}</span>
+      </div>-->
+      <div class="level">
+        <div class="level-left">
+          <div class="level-item">
+            <strong>{{item.name}}</strong>
+          </div>
+          <div v-if="item.payable" class="level-item">
+            <span class="tag is-primary is-rounded is-normal">payable</span>
+          </div>
+        </div>
+        <div class="level-right">
+          <div class="level-item">
+            <b-icon type="is-primary" size="is-small" :icon="props.open ? 'caret-up' : 'caret-down'"></b-icon>
+          </div>
+        </div>
+      </div>
     </div>
     <p class="panel-tabs" style="justify-content: left">
       <a
@@ -71,11 +89,13 @@ export default class FunctionCard extends Vue {
   }
   private async writeMethod() {
     try {
-      this.resp = await connex.vendor.sign('tx', [
-        { ...this.method.asClause(this.params, '0x0'), desc: this.item.name }
-      ], {
-        summary: `inspect-${this.address}`
-      })
+      this.resp = await connex.vendor.sign(
+        'tx',
+        [{ ...this.method.asClause(this.params, '0x0'), desc: this.item.name }],
+        {
+          summary: `inspect-${this.address}`
+        }
+      )
     } catch (error) {
       console.error(error)
     }
