@@ -1,61 +1,41 @@
 <template>
-  <b-collapse :open="false" class="panel">
-    <div slot="trigger" slot-scope="props" class="panel-heading">
-      <!-- <div>
-        
-        <span class="tag is-dark is-rounded">{{item.payable}}</span>
-      </div>-->
-      <div class="level">
-        <div class="level-left">
-          <div class="level-item">
-            <strong>{{item.name}}</strong>
-          </div>
-          <div v-if="item.payable" class="level-item">
-            <span class="tag is-primary is-rounded is-normal">payable</span>
-          </div>
+  <Panel v-model="activeTab" :tabs="tabs">
+    <strong slot="title">{{item.name}}</strong>
+    <template slot="tags">
+      <span v-if="item.payable" class="tag is-primary is-rounded is-normal">payable</span>
+    </template>
+    <template slot="panel-content">
+        <div v-show="activeTab === tabs[0]">
+          <b-field
+            class="item-content"
+            horizontal
+            :label="v.name"
+            v-for="(v, index) in item.inputs"
+            :key="index"
+          >
+            <b-input v-model="params[index]" :placeholder="v.type"></b-input>
+          </b-field>
+          <b-field class="item-content has-text-right">
+            <button @click="executeFC" class="button is-rounded is-primary is-outlined">execute</button>
+          </b-field>
+          <b-field v-if="resp">
+            <pre>{{resp}}</pre>
+          </b-field>
         </div>
-        <div class="level-right">
-          <div class="level-item">
-            <b-icon type="is-primary" size="is-small" :icon="props.open ? 'caret-up' : 'caret-down'"></b-icon>
-          </div>
+        <div v-show="activeTab === tabs[1]">
+          <pre>{{item}}</pre>
         </div>
-      </div>
-    </div>
-    <p class="panel-tabs" style="justify-content: left">
-      <a
-        v-for="(item, index) in tabs"
-        :key="index"
-        @click.stop="switchTab(item)"
-        :class="{'is-active': activeTab === item}"
-      >{{item}}</a>
-    </p>
-    <div class="panel-block is-block">
-      <div v-show="activeTab === tabs[0]">
-        <b-field
-          class="item-content"
-          horizontal
-          :label="v.name"
-          v-for="(v, index) in item.inputs"
-          :key="index"
-        >
-          <b-input v-model="params[index]" :placeholder="v.type"></b-input>
-        </b-field>
-        <b-field class="item-content has-text-right">
-          <button @click="executeFC" class="button is-rounded is-primary is-outlined">execute</button>
-        </b-field>
-        <b-field v-if="resp">
-          <pre>{{resp}}</pre>
-        </b-field>
-      </div>
-      <div v-show="activeTab === tabs[1]">
-        <pre>{{item}}</pre>
-      </div>
-    </div>
-  </b-collapse>
+    </template>
+  </Panel>
 </template>
 <script lang="ts">
+import Panel from './Panel.vue'
 import { Vue, Component, Prop } from 'vue-property-decorator'
-@Component
+@Component({
+  components: {
+    Panel
+  }
+})
 export default class FunctionCard extends Vue {
   @Prop({ default: null })
   private item: ABI.Item | any
@@ -77,9 +57,9 @@ export default class FunctionCard extends Vue {
     this.method = account.method(this.item)
   }
 
-  private switchTab(tab: string) {
-    this.activeTab = tab
-  }
+  // private switchTab(tab: string) {
+  //   this.activeTab = tab
+  // }
   private executeFC() {
     if (this.item.constant) {
       this.readMethod()

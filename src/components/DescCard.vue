@@ -1,17 +1,20 @@
 <template>
-  <b-collapse :open="false" class="panel">
-    <div slot="trigger" class="panel-heading">
-      <strong>{{$attrs.title}}</strong>
-    </div>
-    <div class="panel-block is-block">
+  <Panel>
+    <strong slot="title">{{$attrs.title}}</strong>
+    <template slot="panel-content">
       <pre>{{item}}</pre>
-    </div>
-  </b-collapse>
+    </template>
+  </Panel>
 </template>
 <script lang="ts">
+import Panel from './Panel.vue'
 import { Vue, Component, Prop } from 'vue-property-decorator'
 
-@Component
+@Component({
+  components: {
+    Panel
+  }
+})
 export default class DescCard extends Vue {
   @Prop({ default: null })
   item!: ABI.Item | null

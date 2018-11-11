@@ -42,7 +42,7 @@
           />
         </div>
         <div v-show="tabIndex === 4">
-          <FallbackCard :list="fbList"/>
+          <FallbackCard :fb="fb"/>
         </div>
       </section>
     </div>
@@ -96,8 +96,8 @@ export default class ContractDetail extends Vue {
       return item.type === 'event'
     })
   }
-  get fbList() {
-    return this.abi.filter((item: ABI.Item) => {
+  get fb() {
+    return this.abi.find((item: ABI.Item) => {
       return item.type === 'fallback'
     })
   }

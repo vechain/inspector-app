@@ -1,19 +1,22 @@
 <template>
-  <b-collapse class="panel">
-    <div class="panel-heading">
-      <strong>Fallback</strong>
-    </div>
-    <div v-for="(item, index) in list" :key="index" class="panel-block is-block">
-      <pre>{{item}}</pre>
-    </div>
-  </b-collapse>
+  <Panel>
+    <strong slot="title">Fallback</strong>
+    <template slot="panel-content">
+      <pre>{{fb}}</pre>
+    </template>
+  </Panel>
 </template>
 <script lang="ts">
+import Panel from './Panel.vue'
 import { Vue, Component, Prop } from 'vue-property-decorator'
 
-@Component
+@Component({
+  components: {
+    Panel
+  }
+})
 export default class FallbackCard extends Vue {
-  @Prop({ default: [] })
-  list!: ABI.Item[]
+  @Prop({ default: null })
+  fb!: ABI.Item
 }
 </script>
