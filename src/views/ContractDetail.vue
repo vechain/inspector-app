@@ -33,7 +33,8 @@
           <DescCard style="margin-bottom: 20px" :item="abi" title="ABI"/>
         </div>
         <div v-show="tabIndex === 3">
-          <DescCard
+          <EventCard
+            :address="contract.address"
             v-for="(item, index) in eventList"
             :key="index"
             style="margin-bottom: 20px"
@@ -53,6 +54,7 @@ import { Vue, Component } from 'vue-property-decorator'
 import Contract from '../components/Contract.vue'
 import FunctionCard from '../components/FunctionCard.vue'
 import FallbackCard from '../components/FallbackCard.vue'
+import EventCard from '../components/EventCard.vue'
 import DescCard from '../components/DescCard.vue'
 import DB, { Entities } from '../database'
 @Component({
@@ -60,7 +62,8 @@ import DB, { Entities } from '../database'
     Contract,
     FunctionCard,
     FallbackCard,
-    DescCard
+    DescCard,
+    EventCard
   }
 })
 export default class ContractDetail extends Vue {
@@ -81,23 +84,23 @@ export default class ContractDetail extends Vue {
   }
 
   get readList() {
-    return this.abi.filter((item: ABI.Item) => {
+    return this.abi.filter((item: ABI.FunctionItem) => {
       return item.type === 'function' && item.constant
     })
   }
   get writeList() {
-    return this.abi.filter((item: ABI.Item) => {
+    return this.abi.filter((item: ABI.FunctionItem) => {
       return item.type === 'function' && !item.constant
     })
   }
 
   get eventList() {
-    return this.abi.filter((item: ABI.Item) => {
+    return this.abi.filter((item: ABI.EventItem) => {
       return item.type === 'event'
     })
   }
   get fb() {
-    return this.abi.find((item: ABI.Item) => {
+    return this.abi.find((item: ABI.EventItem) => {
       return item.type === 'fallback'
     })
   }

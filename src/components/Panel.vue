@@ -4,12 +4,9 @@
       <div class="level">
         <div class="level-left">
           <div class="level-item">
-            <slot name="title"></slot>
-            <!-- <strong>{{item.name}}</strong> -->
+            <strong>{{title}}</strong>
           </div>
-          <div class="level-item">
-             <slot name="tags" />
-          </div>
+          <div class="level-item"></div>
         </div>
         <div class="level-right">
           <div class="level-item">
@@ -36,14 +33,22 @@
   </b-collapse>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator'
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 @Component
 export default class Panel extends Vue {
   @Prop({ default: 0 })
   value!: string
 
-  @Prop({ default: [] })
+  @Prop({ default: Array })
   tabs!: string[]
+
+  @Prop({ default: '' })
+  title!: string
+
+  @Watch('value')
+  onchange(val: string) {
+    this.activeTab = val
+  }
 
   private activeTab: string = this.value
 

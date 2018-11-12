@@ -1,6 +1,5 @@
 <template>
-  <Panel>
-    <strong slot="title">Fallback</strong>
+  <Panel title="Fallback">
     <template slot="panel-content">
       <pre>{{fb}}</pre>
     </template>
@@ -17,6 +16,6 @@ import { Vue, Component, Prop } from 'vue-property-decorator'
 })
 export default class FallbackCard extends Vue {
   @Prop({ default: null })
-  fb!: ABI.Item
+  fb!: ABI.FunctionItem
 }
 </script>

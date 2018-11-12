@@ -1,6 +1,5 @@
 <template>
-  <Panel>
-    <strong slot="title">{{$attrs.title}}</strong>
+  <Panel :title="$attrs.title">
     <template slot="panel-content">
       <pre>{{item}}</pre>
     </template>
@@ -17,6 +16,6 @@ import { Vue, Component, Prop } from 'vue-property-decorator'
 })
 export default class DescCard extends Vue {
   @Prop({ default: null })
-  item!: ABI.Item | null
+  item!: ABI.EventItem | ABI.FunctionItem
 }
 </script>

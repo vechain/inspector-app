@@ -6,16 +6,22 @@ declare namespace ABI {
   type EventInputItem = {
     name: string
     type: string
-    indexed: boolean
+    indexed?: boolean
   }
-  type Item = {
-    type: 'function' | 'constructor' | 'fallback' | 'event'
+  type FunctionItem = {
+    type: 'function' | 'constructor'
     name: string
-    inputs: InputItem[] | EventInputItem[]
-    outputs?: InputItem[]
+    inputs: InputItem[]
+    outputs: InputItem[]
     payable: boolean
-    stateMutability?: 'pure' | 'view' | 'nonpayable' | 'payable'
-    constant?: boolean
+    stateMutability: 'pure' | 'view' | 'nonpayable' | 'payable'
+    constant: boolean
+  }
+
+  type EventItem = {
+    type: 'fallback' | 'event'
+    name: string
+    inputs: EventInputItem[]
     anonymous?: boolean
   }
 }

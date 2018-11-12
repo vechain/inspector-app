@@ -1,30 +1,29 @@
 <template>
-  <Panel v-model="activeTab" :tabs="tabs">
-    <strong slot="title">{{item.name}}</strong>
-    <template slot="tags">
-      <span v-if="item.payable" class="tag is-primary is-rounded is-normal">payable</span>
-    </template>
+  <Panel v-model="activeTab" :tabs="tabs" :title="item.name">
+    <!-- <template v-if="item.payable">
+      <span class="tag is-primary is-rounded is-normal">payable</span>
+    </template> -->
     <template slot="panel-content">
-        <div v-show="activeTab === tabs[0]">
-          <b-field
-            class="item-content"
-            horizontal
-            :label="v.name"
-            v-for="(v, index) in item.inputs"
-            :key="index"
-          >
-            <b-input v-model="params[index]" :placeholder="v.type"></b-input>
-          </b-field>
-          <b-field class="item-content has-text-right">
-            <button @click="executeFC" class="button is-rounded is-primary is-outlined">execute</button>
-          </b-field>
-          <b-field v-if="resp">
-            <pre>{{resp}}</pre>
-          </b-field>
-        </div>
-        <div v-show="activeTab === tabs[1]">
-          <pre>{{item}}</pre>
-        </div>
+      <div v-show="activeTab === tabs[0]">
+        <b-field
+          class="item-content"
+          horizontal
+          :label="v.name"
+          v-for="(v, index) in item.inputs"
+          :key="index"
+        >
+          <b-input v-model="params[index]" :placeholder="v.type"></b-input>
+        </b-field>
+        <b-field class="item-content has-text-right">
+          <button @click="executeFC" class="button is-rounded is-primary is-outlined">execute</button>
+        </b-field>
+        <b-field v-if="resp">
+          <pre>{{resp}}</pre>
+        </b-field>
+      </div>
+      <div v-show="activeTab === tabs[1]">
+        <pre>{{item}}</pre>
+      </div>
     </template>
   </Panel>
 </template>
@@ -38,7 +37,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator'
 })
 export default class FunctionCard extends Vue {
   @Prop({ default: null })
-  private item: ABI.Item | any
+  private item: ABI.FunctionItem | any
 
   @Prop()
   private address!: string
