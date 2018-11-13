@@ -31,6 +31,7 @@
         </div>
         <div v-show="tabIndex === 2">
           <DescCard style="margin-bottom: 20px" :item="abi" title="ABI"/>
+          <DescCard class="code-pre" v-if="code" style="margin-bottom: 20px" :item="code" title="Code"/>
         </div>
         <div v-show="tabIndex === 3">
           <EventCard
@@ -71,6 +72,7 @@ export default class ContractDetail extends Vue {
   private tabIndex: number = 0
   private tabs: { text: string; count: number | '' }[] = []
   private abi = []
+  private code?: string = ''
 
   private async created() {
     await this.getDetail(parseInt(this.$route.params.id))
@@ -112,7 +114,20 @@ export default class ContractDetail extends Vue {
         .first()) || null
 
     this.abi = JSON.parse(this.contract!.abi!)
+    await this.getCode(this.contract!.address || '')
+  }
+
+  async getCode(address: string) {
+    if (address) {
+      const temp = await connex.thor.account(address).getCode()
+      this.code = temp.code
+    }
   }
 }
 </script>
 
+<style scope>
+  .code-pre pre{
+    white-space: pre-wrap;
+  }
+</style>

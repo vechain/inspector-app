@@ -11,11 +11,14 @@
         >
           <b-input v-model="params[v.name]" :placeholder="v.type"></b-input>
         </b-field>
-        <b-field class="item-content has-text-right">
-          <button @click="getResult" class="button is-rounded is-primary is-outlined">execute</button>
-        </b-field>
-        <b-field v-if="resp">
-          <pre>{{resp}}</pre>
+        <b-field class="item-content" horizontal>
+          <div class="buttons has-addons is-pulled-right">
+            <button
+              @click="addFilter(item.name)"
+              class="button is-rounded is-primary is-outlined"
+            >Add Filter</button>
+            <button @click="getResult" class="button is-rounded is-primary is-outlined">Execute</button>
+          </div>
         </b-field>
       </div>
       <div v-show="activeTab === tabs[1]">
@@ -31,6 +34,7 @@
 import Panel from './Panel.vue'
 import LogList from './LogList.vue'
 import { Vue, Component, Prop } from 'vue-property-decorator'
+import DB from '../database'
 @Component({
   components: {
     Panel,
@@ -43,8 +47,6 @@ export default class EventCard extends Vue {
 
   @Prop()
   private address!: string
-
-  private resp: any = null
 
   private list: any[] = []
 
@@ -75,6 +77,41 @@ export default class EventCard extends Vue {
     })
   }
 
+  private addFilter(name: string) {
+    this.$dialog.prompt({
+      title: 'Add quick view',
+      message: 'Input a filter name',
+      inputAttrs: {
+        placeholder: 'Filter name',
+        value: name,
+        maxlength: 30,
+        required: true
+      },
+      onConfirm: (value: string) => {
+        this.saveFilter(value)
+      }
+    })
+  }
+  private async saveFilter(name: string) {
+    const contract =
+      (await DB.contracts
+        .where('address')
+        .equals(this.address)
+        .first()) || null
+
+    await DB.filters.add({
+      name: name,
+      address: contract!.address,
+      contractName: contract!.name,
+      createdTime: Date.now(),
+      abi: JSON.stringify(this.item)
+    })
+
+    this.$toast.open({
+      message: 'Added success!',
+      type: 'is-success'
+    })
+  }
   private async getResult() {
     let params: any[] = []
 
@@ -88,14 +125,10 @@ export default class EventCard extends Vue {
         }
       }
     }
-    const result = await this.event
+    this.list = await this.event
       .filter(params)
       .order('desc')
       .next(0, 5)
-
-    this.list = result.map(item => {
-      return item.decoded
-    })
     this.activeTab = this.tabs[2]
   }
 }

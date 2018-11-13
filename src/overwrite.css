@@ -11,5 +11,85 @@
 }
 
 .is-fixed-font {
-  font-family: Menlo,Consolas,DejaVu Sans Mono;
+  font-family: Menlo, Consolas, DejaVu Sans Mono;
+}
+
+
+@-webkit-keyframes textChange {
+  from {
+    background: rgba(0, 209, 178, 0.8);
+    color: #fff;
+  }
+  30% {
+    background: rgba(0, 209, 178, 0.8);
+    color: rgba(0, 0, 0, 0.6);
+  }
+  70% {
+    background: rgba(0, 209, 178, 0.3);
+    color: rgba(0, 0, 0, 0.3);
+  }
+  to {
+    color: #000;
+    background: transparent;
+  }
+}
+
+
+@keyframes textChange {
+  from {
+    background: rgba(0, 209, 178, 0.8);
+    color: #fff;
+  }
+  30% {
+    background: rgba(0, 209, 178, 0.8);
+    color: rgba(0, 0, 0, 0.6);
+  }
+  70% {
+    background: rgba(0, 209, 178, 0.3);
+    color: rgba(0, 0, 0, 0.3);
+  }
+  to {
+    color: #000;
+    background: transparent;
+  }
+}
+
+.textChange {
+  -webkit-animation-name: textChange;
+  animation-name: textChange;
+}
+
+@-webkit-keyframes textOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes textOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.textOut {
+  -webkit-animation-name: textOut;
+  animation-name: textOut;
+}
+
+.animated {
+  -webkit-animation-duration: .7s;
+  animation-duration: .7s;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+
+.animated.faster {
+  -webkit-animation-duration: 500ms;
+  animation-duration: 500ms;
 }

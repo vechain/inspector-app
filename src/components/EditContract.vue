@@ -16,8 +16,8 @@
         </b-field>
       </section>
       <footer class="modal-card-foot">
-        <button class="button" type="button" @click="close">Cancel</button>
-        <button class="button is-primary" @click="submit">{{context.btn}}</button>
+        <button class="button" type="button" @click.stop="close">Cancel</button>
+        <button class="button is-primary" type="button" @click.stop="submit">{{context.btn}}</button>
       </footer>
     </div>
   </form>
@@ -80,10 +80,11 @@ export default class EditContract extends Vue {
   }
 
   async submit() {
-    const obj = {
+    const obj: Entities.Contract = {
       name: this.form.name,
       address: this.form.address,
-      abi: this.form.abi
+      abi: this.form.abi,
+      createdTime: Date.now()
     }
     try {
       if (!this.isEdit) {
