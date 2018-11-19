@@ -106,7 +106,7 @@ export default class EventCard extends Vue {
       createdTime: Date.now(),
       abi: JSON.stringify(this.item)
     })
-
+    BUS.$emit('added-filter')
     this.$toast.open({
       message: 'Added success!',
       type: 'is-success'

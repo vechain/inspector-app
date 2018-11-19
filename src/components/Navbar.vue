@@ -24,6 +24,13 @@
               <router-link
                 class="navbar-item"
                 :to="{
+                name: 'filter_mgt'
+              }"
+              >Management</router-link>
+              <hr class="navbar-divider">
+              <router-link
+                class="navbar-item"
+                :to="{
                 name: 'filter_view',
                 params: {
                   id: view.id
@@ -52,8 +59,15 @@ export default class Navbar extends Vue {
 
   private views: Entities.Filter[] = []
 
+  private async getList() {
+    this.views = await DB.filters.limit(5).toArray()
+  }
   private async created() {
-    this.views = await DB.filters.toArray()
+    await this.getList()
+    const _this = this
+    BUS.$on('added-filter', function() {
+      _this.getList()
+    })
   }
 }
 </script>

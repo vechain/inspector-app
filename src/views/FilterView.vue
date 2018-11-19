@@ -18,7 +18,7 @@
           <button @click="search" class="button is-primary is-outlined">Search</button>
         </b-field>
       </div>
-      <div class="box">
+      <div v-inview="'section.section'" class="box">
         <b-field horizontal label="Count">
           <transition
             mode="out-in"
@@ -60,8 +60,7 @@
       </div>
     </div>
     <div class="box log-container">
-      <LogList 
-      :metadata="metadata" :keys="columns" :list="list"/>
+      <LogList :metadata="metadata" :keys="columns" :list="list"/>
     </div>
   </section>
 </template>
@@ -176,8 +175,10 @@ export default class FilterView extends Vue {
 .log-filter {
   width: 250px;
   right: 20px;
+  float: right;
   /* height: 100%; */
-  position: fixed;
+  /* overflow: auto; */
+  /* position: fixed; */
 }
 .log-container {
   width: calc(100% - 270px);

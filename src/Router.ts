@@ -5,6 +5,7 @@ import Contracts from './views/Contracts.vue'
 import Deploy from './views/DeployContract.vue'
 import ContractDetail from './views/ContractDetail.vue'
 import FilterView from './views/FilterView.vue'
+import FilterMgt from './views/FilterMgt.vue'
 
 Vue.use(Router)
 
@@ -40,6 +41,10 @@ const router = new Router({
       name: 'filter_view',
       component: FilterView,
       path: '/view/:id/list'
+    },{
+      name: 'filter_mgt',
+      component: FilterMgt,
+      path: '/view/mgt'
     }
   ]
 })
