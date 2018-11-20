@@ -31,7 +31,13 @@
         </div>
         <div v-show="tabIndex === 2">
           <DescCard style="margin-bottom: 20px" :item="abi" title="ABI"/>
-          <DescCard class="code-pre" v-if="code" style="margin-bottom: 20px" :item="code" title="Code"/>
+          <DescCard
+            class="code-pre"
+            v-if="code"
+            style="margin-bottom: 20px"
+            :item="code"
+            title="Code"
+          />
         </div>
         <div v-show="tabIndex === 3">
           <EventCard
@@ -127,7 +133,8 @@ export default class ContractDetail extends Vue {
 </script>
 
 <style scope>
-  .code-pre pre{
-    white-space: pre-wrap;
-  }
+.code-pre pre {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
 </style>

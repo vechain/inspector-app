@@ -1,8 +1,5 @@
 <template>
   <Panel v-model="activeTab" :tabs="tabs" :title="item.name">
-    <!-- <template v-if="item.payable">
-      <span class="tag is-primary is-rounded is-normal">payable</span>
-    </template> -->
     <template slot="panel-content">
       <div v-show="activeTab === tabs[0]">
         <b-field
@@ -13,6 +10,9 @@
           :key="index"
         >
           <b-input v-model="params[index]" :placeholder="v.type"></b-input>
+        </b-field>
+        <b-field v-if="item.payable" class="item-content" horizontal label="value">
+          <b-input type="number" placeholder="number" v-model="value"></b-input>
         </b-field>
         <b-field class="item-content has-text-right">
           <button @click="executeFC" class="button is-rounded is-primary is-outlined">execute</button>
@@ -43,6 +43,7 @@ export default class FunctionCard extends Vue {
   private address!: string
 
   private resp: any = null
+  private value: string | null = null
 
   private params: any[] = new Array(this.item.inputs.length)
   private tabs = ['Inputs', 'Description']
@@ -56,9 +57,6 @@ export default class FunctionCard extends Vue {
     this.method = account.method(this.item)
   }
 
-  // private switchTab(tab: string) {
-  //   this.activeTab = tab
-  // }
   private executeFC() {
     if (this.item.constant) {
       this.readMethod()
@@ -81,7 +79,7 @@ export default class FunctionCard extends Vue {
   }
   private async readMethod() {
     try {
-      this.resp = await this.method.call(this.params)
+      this.resp = await this.method.call(this.params, this.value || 0)
     } catch (error) {
       console.error(error)
     }
