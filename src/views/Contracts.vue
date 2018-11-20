@@ -71,7 +71,7 @@ export default class Contracts extends Vue {
       message: `Are you sure want to remove ${item.name} contract`,
       cancelText: 'Cancel',
       confirmText: 'YES',
-      type: 'is-warning',
+      type: 'is-danger',
       scroll: 'clip',
       onConfirm: () => {
         console.log(item)
