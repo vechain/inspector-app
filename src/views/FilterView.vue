@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <section class="section">
     <div class="log-filter">
       <div class="box">
         <b-field :label="v.name" v-for="(v, index) in params" :key="index">

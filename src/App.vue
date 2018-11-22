@@ -2,7 +2,7 @@
 <body class="has-navbar-fixed-top">
   <EnvInspect :isShow="!isSync"/>
   <Navbar v-if="isSync" class="is-fixed-top"/>
-  <router-view v-if="isSync" class="router-view section"></router-view>
+  <router-view v-if="isSync" class="router-view"></router-view>
 </body>
 </template>
 <script lang="ts">

@@ -26,7 +26,7 @@
                 :to="{
                 name: 'filter_mgt'
               }"
-              >Management</router-link>
+              >All</router-link>
               <hr class="navbar-divider">
               <router-link
                 class="navbar-item"

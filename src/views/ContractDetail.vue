@@ -1,8 +1,27 @@
 <template>
-  <section class="section">
+  <section class="section contract-detail">
     <div v-if="contract" class="container">
       <Contract :isShort="false" :item="contract"/>
       <section class="section">
+        <nav class="level">
+          <div class="level-left"></div>
+          <div class="level-right">
+            <b-field>
+              <b-autocomplete
+                rounded
+                v-model="name"
+                :data="filterList"
+                placeholder="Func/Event Name"
+                @select="onSearchSelect"
+              >
+                <template slot-scope="props">
+                  <span>{{props.option.name}}</span>
+                </template>
+                <template slot="empty">No results found</template>
+              </b-autocomplete>
+            </b-field>
+          </div>
+        </nav>
         <b-tabs type="is-centered" v-model="tabIndex" class="block">
           <b-tab-item v-for="(item, index) in tabs" :key="index">
             <span slot="header">
@@ -13,6 +32,7 @@
         </b-tabs>
         <div v-show="tabIndex === 0">
           <FunctionCard
+            :id="item.name"
             v-for="(item, index) in readList"
             :key="index"
             :address="contract.address"
@@ -79,6 +99,7 @@ export default class ContractDetail extends Vue {
   private tabs: { text: string; count: number | '' }[] = []
   private abi = []
   private code?: string = ''
+  private name: string = ''
 
   private async created() {
     await this.getDetail(parseInt(this.$route.params.id))
@@ -91,6 +112,26 @@ export default class ContractDetail extends Vue {
     ]
   }
 
+  private onSearchSelect(item: any) {
+    console.log(item)
+  }
+  get filterList() {
+    const temp: any[] = [
+      { name: 'Code' },
+      { name: 'ABI' },
+      { name: 'Fallback' }
+    ].concat(this.abi)
+
+    return temp.filter((item: ABI.FunctionItem | ABI.EventItem) => {
+      return (
+        item.name && this.name &&
+        item.name
+          .toString()
+          .toLowerCase()
+          .indexOf(this.name.toLowerCase()) >= 0
+      )
+    })
+  }
   get readList() {
     return this.abi.filter((item: ABI.FunctionItem) => {
       return item.type === 'function' && item.constant

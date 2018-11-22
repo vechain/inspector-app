@@ -14,8 +14,19 @@
         <template slot-scope="props">
           <b-table-column centered label="ID">{{props.row.id}}</b-table-column>
           <b-table-column centered label="From Contract">{{props.row.contractName}}</b-table-column>
-          <b-table-column centered label="Name">{{props.row.name}}</b-table-column>
-          <b-table-column centered label="Address">{{props.row.address}}</b-table-column>
+          <b-table-column centered label="Name">
+            <router-link
+              :to="{
+                name: 'filter_view',
+                params: {
+                  id: props.row.id
+                }
+              }"
+            >{{props.row.name}}</router-link>
+          </b-table-column>
+          <b-table-column centered label="Address">
+            <span class="is-fixed-font">{{props.row.address}}</span>
+          </b-table-column>
           <b-table-column centered label="Operations">
             <div class="buttons has-addons is-centered">
               <button @click="edit(props.row)" class="button is-rounded control is-small">
