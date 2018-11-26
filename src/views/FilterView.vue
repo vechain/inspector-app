@@ -83,6 +83,7 @@ export default class FilterView extends Vue {
     size: 10,
     order: true
   }
+
   private list: any[] = []
   private metadata: boolean = false
   private columns: string[] = []
@@ -98,6 +99,12 @@ export default class FilterView extends Vue {
     this.columns = this.abi.inputs.map((item: ABI.EventInputItem) => {
       return item.name
     })
+  }
+
+  @Watch('$route')
+  async onRouterChange() {
+    await this.init()
+    this.nextPage()
   }
 
   @Watch('conditions')

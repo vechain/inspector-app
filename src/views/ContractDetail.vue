@@ -15,7 +15,10 @@
                 @select="onSearchSelect"
               >
                 <template slot-scope="props">
-                  <span>{{props.option.name}}</span>
+                  <div>
+                    <span class="is-size-6">{{props.option.name}}</span>
+                  </div>
+                  <span class="has-text-grey">{{props.option.type}}</span>
                 </template>
                 <template slot="empty">No results found</template>
               </b-autocomplete>
@@ -33,6 +36,7 @@
         <div v-show="tabIndex === 0">
           <FunctionCard
             :id="item.name"
+            :ref="item.name"
             v-for="(item, index) in readList"
             :key="index"
             :address="contract.address"
@@ -43,6 +47,7 @@
         <div v-show="tabIndex === 1">
           <FunctionCard
             v-for="(item, index) in writeList"
+            :ref="item.name"
             :key="index"
             :address="contract.address"
             style="margin-bottom: 20px"
@@ -113,18 +118,35 @@ export default class ContractDetail extends Vue {
   }
 
   private onSearchSelect(item: any) {
-    console.log(item)
+    const types = {
+      cb: 2,
+      fb: 4,
+      read: 0,
+      write: 1,
+      event: 3
+    }
+
+    let type: 'cb' | 'fb' | 'read' | 'write' | 'event' | 'function' = item.type
+    if (type === 'function') {
+      type = item.constant ? 'read' : 'write'
+    }
+    this.tabIndex = types[type]
+    let temp = this.$refs[item.name] as any[]
+    temp[0].$children[0].toggle(true)
+    temp[0].$el.scrollIntoView()
   }
+
   get filterList() {
     const temp: any[] = [
-      { name: 'Code' },
-      { name: 'ABI' },
-      { name: 'Fallback' }
+      { name: 'Code', type: 'cb' },
+      { name: 'ABI', type: 'cb' },
+      { name: 'Fallback', type: 'fb' }
     ].concat(this.abi)
 
     return temp.filter((item: ABI.FunctionItem | ABI.EventItem) => {
       return (
-        item.name && this.name &&
+        item.name &&
+        this.name &&
         item.name
           .toString()
           .toLowerCase()

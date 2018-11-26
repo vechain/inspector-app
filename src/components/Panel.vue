@@ -1,5 +1,5 @@
 <template>
-  <b-collapse :open="false" class="panel">
+  <b-collapse @update:open="onupdate" :open="isOpen" class="panel">
     <div slot="trigger" slot-scope="props" class="panel-heading">
       <div class="level">
         <div class="level-left">
@@ -36,6 +36,7 @@
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 @Component
 export default class Panel extends Vue {
+  isOpen = false
   @Prop({ default: 0 })
   value!: string
 
@@ -48,6 +49,14 @@ export default class Panel extends Vue {
   @Watch('value')
   onchange(val: string) {
     this.activeTab = val
+  }
+
+  toggle(open: boolean) {
+    this.isOpen = (open === true || open === false) ? open : !this.isOpen
+  }
+
+  onupdate(value: boolean) {
+    this.isOpen = value
   }
 
   private activeTab: string = this.value
