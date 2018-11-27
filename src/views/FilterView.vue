@@ -183,16 +183,11 @@ export default class FilterView extends Vue {
   width: 250px;
   right: 20px;
   float: right;
-  /* height: 100%; */
-  /* overflow: auto; */
-  /* position: fixed; */
 }
 .log-container {
   width: calc(100% - 270px);
   overflow-x: auto;
   margin-right: 20px;
   float: left;
-  /* height: 100%; */
-  /* overflow: hidden; */
 }
 </style>

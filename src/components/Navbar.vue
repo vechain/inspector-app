@@ -53,8 +53,9 @@ import DB, { Entities } from '../database'
 @Component
 export default class Navbar extends Vue {
   private routes = [
-    { name: 'home', text: 'Home' },
-    { name: 'contracts', text: 'Contracts' }
+    // { name: 'home', text: 'Home' },
+    { name: 'contracts', text: 'Contracts' },
+    { name: 'deploy', text: 'Deploy' }
   ]
 
   private views: Entities.Filter[] = []

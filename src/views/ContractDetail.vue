@@ -187,9 +187,13 @@ export default class ContractDetail extends Vue {
   }
 
   async getCode(address: string) {
-    if (address) {
-      const temp = await connex.thor.account(address).getCode()
-      this.code = temp.code
+    try {
+      if (address) {
+        const temp = await connex.thor.account(address).getCode()
+        this.code = temp.code
+      }
+    } catch (error) {
+      console.error(error)
     }
   }
 }
