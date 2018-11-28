@@ -85,7 +85,7 @@ export default class Contracts extends Vue {
   onSelect(id: number) {
     this.$router.push({
       name: 'contract_detail',
-      params: { id: id.toString() }
+      query: { id: id.toString() }
     })
   }
 

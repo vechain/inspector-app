@@ -107,7 +107,9 @@ export default class ContractDetail extends Vue {
   private name: string = ''
 
   private async created() {
-    await this.getDetail(parseInt(this.$route.params.id))
+    let idOrAddress: string =  this.$route.query.id || this.$route.query.address
+
+    await this.getDetail(idOrAddress)
     this.tabs = [
       { text: 'Read', count: this.readList.length },
       { text: 'Write', count: this.writeList.length },
@@ -175,11 +177,12 @@ export default class ContractDetail extends Vue {
       return item.type === 'fallback'
     })
   }
-  async getDetail(id: number) {
+  async getDetail(idOrAddress: string) {
     this.contract =
       (await DB.contracts
         .where('id')
-        .equals(id)
+        .equals(parseInt(idOrAddress))
+        .or('address').equals(idOrAddress)
         .first()) || null
 
     this.abi = JSON.parse(this.contract!.abi!)

@@ -35,7 +35,7 @@ const router = new Router({
     {
       name: 'contract_detail',
       component: ContractDetail,
-      path: '/contract/:id/detail'
+      path: '/contract/detail'
     },
     {
       name: 'filter_view',

@@ -41,6 +41,12 @@
               >{{view.name}}</router-link>
             </div>
           </div>
+          <router-link
+            v-if="shortCuts"
+            class="navbar-item"
+            active-class="has-background-grey-dark"
+            :to="{name: 'shortcuts_mgt'}"
+          >Shortcuts</router-link>
         </div>
       </div>
     </div>
@@ -48,25 +54,31 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
-import DB, { Entities } from '../database'
+import { Vue, Component } from "vue-property-decorator"
+import DB, { Entities } from "../database"
 @Component
 export default class Navbar extends Vue {
   private routes = [
     // { name: 'home', text: 'Home' },
-    { name: 'contracts', text: 'Contracts' },
-    { name: 'deploy', text: 'Deploy' }
-  ]
+    { name: "contracts", text: "Contracts" },
+    { name: "deploy", text: "Deploy" }
+  ];
 
   private views: Entities.Filter[] = []
+  private shortCuts: number = 0
 
   private async getList() {
     this.views = await DB.filters.limit(5).toArray()
   }
+
+  private async countShortCuts() {
+    this.shortCuts = await DB.shortCuts.count()
+  }
   private async created() {
     await this.getList()
+    await this.countShortCuts()
     const _this = this
-    BUS.$on('added-filter', function() {
+    BUS.$on("added-filter", function() {
       _this.getList()
     })
   }

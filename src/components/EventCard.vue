@@ -16,7 +16,7 @@
             <button
               @click="addFilter(item.name)"
               class="button is-rounded is-primary is-outlined"
-            >Add Filter</button>
+            >As a view</button>
             <button @click="getResult" class="button is-rounded is-primary is-outlined">Execute</button>
           </div>
         </b-field>
@@ -92,6 +92,7 @@ export default class EventCard extends Vue {
       }
     })
   }
+
   private async saveFilter(name: string) {
     const contract =
       (await DB.contracts
@@ -112,6 +113,7 @@ export default class EventCard extends Vue {
       type: 'is-success'
     })
   }
+
   private async getResult() {
     let params: any[] = []
 
@@ -125,6 +127,7 @@ export default class EventCard extends Vue {
         }
       }
     }
+
     this.list = await this.event
       .filter(params)
       .order('desc')

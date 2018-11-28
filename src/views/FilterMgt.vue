@@ -13,7 +13,18 @@
       >
         <template slot-scope="props">
           <b-table-column centered label="ID">{{props.row.id}}</b-table-column>
-          <b-table-column centered label="From Contract">{{props.row.contractName}}</b-table-column>
+          <b-table-column centered label="From Contract">
+            <router-link
+              :to="{
+                name: 'contract_detail',
+                query: {
+                  address: props.row.address
+                }
+              }"
+            >
+            {{props.row.contractName}}
+            </router-link>
+          </b-table-column>
           <b-table-column centered label="Name">
             <router-link
               :to="{
