@@ -102,7 +102,7 @@ export default class ContractDetail extends Vue {
   private contract: Entities.Contract | null = null
   private tabIndex: number = 0
   private tabs: { text: string; count: number | '' }[] = []
-  private abi: any[] = []
+  private abi: any = []
   private code?: string = ''
   private name: string = ''
 

@@ -36,9 +36,7 @@
           </b-table-column>
         </template>
         <template slot="detail" slot-scope="props">
-          <pre>
-            {{props.row.abi}}
-          </pre>
+          <pre>{{props.row.abi}}</pre>
         </template>
       </b-table>
     </div>
