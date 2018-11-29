@@ -91,7 +91,7 @@ export default class FilterMgt extends Vue {
     this.onPageChange(1)
     this.count = await DB.filters.count()
   }
-  edit(row: any) {
+  private edit(row: any) {
     this.$dialog.prompt({
       title: 'Edit quick view',
       message: 'Edit filter name',
@@ -109,10 +109,10 @@ export default class FilterMgt extends Vue {
       }
     })
   }
-  remove(row: any) {
+  private remove(row: any) {
     this.$dialog.confirm({
       title: 'Remove',
-      message: `Are you sure want to remove ${row.name} contract`,
+      message: `Are you sure want to remove '${row.name}' contract`,
       cancelText: 'Cancel',
       confirmText: 'YES',
       type: 'is-danger',

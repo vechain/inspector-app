@@ -65,7 +65,7 @@ export default class FunctionCard extends Vue {
 
   private params: any[] = new Array(this.item.inputs.length)
   private tabs = ["Inputs", "Description"]
-  private activeTab = ""
+  private activeTab = "Inputs"
 
   private method: any
 
