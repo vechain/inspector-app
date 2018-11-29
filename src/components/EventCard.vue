@@ -105,7 +105,7 @@ export default class EventCard extends Vue {
       address: contract!.address,
       contractName: contract!.name,
       createdTime: Date.now(),
-      abi: JSON.stringify(this.item)
+      abi: this.item
     })
     BUS.$emit('added-filter')
     this.$toast.open({

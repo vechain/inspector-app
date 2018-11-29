@@ -133,7 +133,7 @@ export default class FilterView extends Vue {
         .equals(parseInt(this.$route.params.id))
         .first()) || null
     const account = connex.thor.account(this.filter!.address)
-    this.abi = this.filter!.abi ? JSON.parse(this.filter!.abi) : ''
+    this.abi = this.filter!.abi ? this.filter!.abi : ''
     this.event = account.event(this.abi)
     this.setParams()
     this.setColumns()

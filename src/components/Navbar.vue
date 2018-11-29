@@ -45,7 +45,7 @@
             v-if="shortCuts"
             class="navbar-item"
             active-class="has-background-grey-dark"
-            :to="{name: 'shortcuts_mgt'}"
+            :to="{name: 'short_cuts'}"
           >Shortcuts</router-link>
         </div>
       </div>

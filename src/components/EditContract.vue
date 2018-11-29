@@ -34,7 +34,7 @@ export default class EditContract extends Vue {
     id: 0,
     name: '',
     address: '',
-    abi: ''
+    abi: null || ''
   }
 
   created() {
@@ -67,7 +67,7 @@ export default class EditContract extends Vue {
     if (val && val.address) {
       this.form.name = val.name || ''
       this.form.address = val.address || ''
-      this.form.abi = val.abi || ''
+      this.form.abi = JSON.stringify(val.abi || '')
       this.form.id = val.id || 0
     } else {
       this.form = {
@@ -83,7 +83,7 @@ export default class EditContract extends Vue {
     const obj: Entities.Contract = {
       name: this.form.name,
       address: this.form.address,
-      abi: this.form.abi,
+      abi: JSON.parse(this.form.abi),
       createdTime: Date.now()
     }
     try {

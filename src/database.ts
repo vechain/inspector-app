@@ -8,7 +8,7 @@ export namespace Entities {
     name?: string
     address: string
     createdTime?: number
-    abi: string
+    abi: object | []
   }
 
   export interface Filter extends Contract {
@@ -16,7 +16,8 @@ export namespace Entities {
   }
 
   export interface ShortCuts extends Contract {
-    contractName?: string
+    contractName?: string,
+    type: 'read' | 'write'
   }
 }
 

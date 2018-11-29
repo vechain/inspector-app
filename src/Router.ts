@@ -6,6 +6,7 @@ import Deploy from './views/DeployContract.vue'
 import ContractDetail from './views/ContractDetail.vue'
 import FilterView from './views/FilterView.vue'
 import FilterMgt from './views/FilterMgt.vue'
+import ShortCuts from './views/ShortCuts.vue'
 
 Vue.use(Router)
 
@@ -45,6 +46,10 @@ const router = new Router({
       name: 'filter_mgt',
       component: FilterMgt,
       path: '/view/mgt'
+    },{
+      name: 'short_cuts',
+      component: ShortCuts,
+      path: '/view/scs'
     }
   ]
 })

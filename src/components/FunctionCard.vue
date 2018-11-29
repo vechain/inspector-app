@@ -130,8 +130,10 @@ export default class FunctionCard extends Vue {
       address: contract!.address,
       contractName: contract!.name,
       createdTime: Date.now(),
-      abi: JSON.stringify(this.item)
+      abi: this.item,
+      type: this.item.constant ? 'read' : 'write'
     })
+
     BUS.$emit("added-shortcut")
     this.$toast.open({
       message: "Added success!",
