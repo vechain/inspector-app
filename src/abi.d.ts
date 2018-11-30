@@ -1,14 +1,14 @@
 declare namespace ABI {
-  type InputItem = {
+  interface InputItem {
     name: string
     type: string
   }
-  type EventInputItem = {
+  interface EventInputItem {
     name: string
     type: string
     indexed?: boolean
   }
-  type FunctionItem = {
+  interface FunctionItem {
     type: 'function' | 'constructor'
     name: string
     inputs: InputItem[]
@@ -18,7 +18,7 @@ declare namespace ABI {
     constant: boolean
   }
 
-  type EventItem = {
+  interface EventItem {
     type: 'fallback' | 'event'
     name: string
     inputs: EventInputItem[]

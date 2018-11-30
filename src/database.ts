@@ -34,7 +34,7 @@ class Database extends Dexie {
       filters: '++id, address, name, contractName',
       shortCuts: '++id, address, name, contractName'
     })
-    this.open().catch(err => console.error(err))
+    this.open().catch((err) => console.error(err))
   }
 
   // public subscribe(

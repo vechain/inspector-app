@@ -65,23 +65,6 @@ export default class Contracts extends Vue {
   private currentItem: Entities.Contract | null = null
   private contracts: Entities.Contract[] = []
 
-  private remove(item: any) {
-    this.$dialog.confirm({
-      title: 'Remove',
-      message: `Are you sure want to remove ${item.name} contract`,
-      cancelText: 'Cancel',
-      confirmText: 'YES',
-      type: 'is-danger',
-      scroll: 'clip',
-      onConfirm: () => {
-        console.log(item)
-        DB.contracts.delete(item.id).then(() => {
-          this.reload()
-        })
-      }
-    })
-  }
-
   onSelect(id: number) {
     this.$router.push({
       name: 'contract_detail',
@@ -101,6 +84,23 @@ export default class Contracts extends Vue {
     this.currentItem = null
     this.list()
     this.isModalActive = false
+  }
+
+  private remove(item: any) {
+    this.$dialog.confirm({
+      title: 'Remove',
+      message: `Are you sure want to remove ${item.name} contract`,
+      cancelText: 'Cancel',
+      confirmText: 'YES',
+      type: 'is-danger',
+      scroll: 'clip',
+      onConfirm: () => {
+        console.log(item)
+        DB.contracts.delete(item.id).then(() => {
+          this.reload()
+        })
+      }
+    })
   }
   private open() {
     this.isModalActive = true

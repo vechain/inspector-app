@@ -20,7 +20,7 @@ declare namespace Connex {
                 read(): Promise<string | ArrayBuffer>
             }
 
-            type Config = {
+            interface Config {
                 name: string
                 url: string
                 genesis: Connex.Thor.Block

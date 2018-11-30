@@ -48,9 +48,9 @@
   </div>
 </template>
 <script lang="ts">
-import Panel from "./Panel.vue";
-import { Vue, Component, Prop } from "vue-property-decorator";
-import DB from "../database";
+import Panel from './Panel.vue'
+import { Vue, Component, Prop } from 'vue-property-decorator'
+import DB from '../database'
 @Component({
   components: {
     Panel
@@ -58,62 +58,62 @@ import DB from "../database";
 })
 export default class SampleFuncCard extends Vue {
   @Prop({ default: null })
-  private item: ABI.FunctionItem | any;
+  private item: ABI.FunctionItem | any
 
   @Prop()
-  private address!: string;
+  private address!: string
 
-  private resp: any = null;
-  private value: string | null = null;
+  private resp: any = null
+  private value: string | null = null
 
-  private params: any[] = new Array(this.item.inputs.length);
-  private tabs = ["Inputs", "Description"];
-  private activeTab = "";
+  private params: any[] = new Array(this.item.inputs.length)
+  private tabs = ['Inputs', 'Description']
+  private activeTab = ''
 
-  private method: any;
+  private method: any
 
-  created () {
-    this.activeTab = this.tabs[0];
-    const account = connex.thor.account(this.address);
-    this.method = account.method(this.item);
+  created() {
+    this.activeTab = this.tabs[0]
+    const account = connex.thor.account(this.address)
+    this.method = account.method(this.item)
   }
 
-  private switchTab (tab: string) {
-    this.activeTab = tab;
+  private switchTab(tab: string) {
+    this.activeTab = tab
     // this.$emit('input', tab)
   }
 
-  private executeFC () {
+  private executeFC() {
     if (this.item.constant) {
-      this.readMethod();
+      this.readMethod()
     } else {
-      this.writeMethod();
+      this.writeMethod()
     }
   }
-  private async writeMethod () {
+  private async writeMethod() {
     try {
-      let params: any[] = [];
-      this.params.forEach(item => {
+      const params: any[] = []
+      this.params.forEach((item) => {
         if (item) {
-          return params.push(item);
+          return params.push(item)
         }
-      });
+      })
       this.resp = await connex.vendor.sign(
-        "tx",
-        [{ ...this.method.asClause(this.params, "0x0"), desc: this.item.name }],
+        'tx',
+        [{ ...this.method.asClause(this.params, '0x0'), desc: this.item.name }],
         {
           summary: `inspect-${this.address}`
         }
-      );
+      )
     } catch (error) {
-      console.error(error);
+      console.error(error)
     }
   }
-  private async readMethod () {
+  private async readMethod() {
     try {
-      this.resp = await this.method.call(this.params, this.value || 0);
+      this.resp = await this.method.call(this.params, this.value || 0)
     } catch (error) {
-      console.error(error);
+      console.error(error)
     }
   }
 }

@@ -10,13 +10,13 @@ declare namespace Connex {
         transaction(id: string, options?: { head?: string }): Thor.TransactionVisitor
         filter<T extends 'event' | 'transfer'>(kind: T, criteriaSet: Array<Thor.Criteria<T>>): Thor.Filter<T>
         subscribe<T extends 'event' | 'transfer' | 'block'>
-            (subject: T, criteria: Thor.Criteria<T>, options?: { position?: string }): Thor.Subscription<T>
+           (subject: T, criteria: Thor.Criteria<T>, options?: { position?: string }): Thor.Subscription<T>
 
         explain(clauses: Thor.Clause[], options?: Thor.CallOptions & { revision?: string | number }): Promise<Thor.VMOutput[]>
     }
 
     namespace Thor {
-        type Status = {
+        interface Status {
             progress: number
             head: {
                 id: string
@@ -34,7 +34,7 @@ declare namespace Connex {
             get(): Promise<(Block & TrunkFlag) | null>
         }
 
-        type Block = {
+        interface Block {
             id: string
             number: number
             size: number
@@ -61,17 +61,17 @@ declare namespace Connex {
             event(abi: object): EventVisitor
         }
 
-        type Account = {
+        interface Account {
             balance: string
             energy: string
             hasCode: boolean
         }
 
         namespace Account {
-            type Storage = {
+            interface Storage {
                 value: string
             }
-            type Code = {
+            interface Code {
                 code: string
             }
         }
@@ -94,7 +94,7 @@ declare namespace Connex {
             getReceipt(): Promise<(Receipt & Transaction.Meta) | null>
         }
 
-        type Transaction = {
+        interface Transaction {
             id: string
             chainTag: number
             blockRef: string
@@ -109,7 +109,7 @@ declare namespace Connex {
         }
 
         namespace Transaction {
-            type Meta = {
+            interface Meta {
                 meta: {
                     blockID: string
                     blockNumber: number
@@ -118,20 +118,20 @@ declare namespace Connex {
             }
         }
 
-        type Receipt = {
+        interface Receipt {
             gasUsed: number
             gasPayer: string
             paid: string
             reward: string
             reverted: boolean
-            outputs: {
+            outputs: Array<{
                 contractAddress: string | null
                 events: Event[]
                 transfers: Transfer[]
-            }[]
+            }>
         }
 
-        type Clause = {
+        interface Clause {
             to: string | null
             value: string | number
             data: string
@@ -149,7 +149,7 @@ declare namespace Connex {
             T extends 'transfer' ? Transfer : (Event & Decoded)) & Log.Meta
 
         namespace Log {
-            type Meta = {
+            interface Meta {
                 meta: {
                     blockID: string
                     blockNumber: number
@@ -160,14 +160,14 @@ declare namespace Connex {
             }
         }
 
-        type Event = {
+        interface Event {
             address: string
             topics: string[]
             data: string
         }
 
         namespace Event {
-            type Criteria = {
+            interface Criteria {
                 address?: string
                 topic0?: string
                 topic1?: string
@@ -177,14 +177,14 @@ declare namespace Connex {
             }
         }
 
-        type Transfer = {
+        interface Transfer {
             sender: string
             recipient: string
             amount: string
         }
 
         namespace Transfer {
-            type Criteria = {
+            interface Criteria {
                 txOrigin?: string
                 sender?: string
                 recipient?: string
@@ -195,7 +195,7 @@ declare namespace Connex {
             T extends 'event' ? Event.Criteria :
             T extends 'transfer' ? Transfer.Criteria : {}
 
-        type Range = {
+        interface Range {
             unit: 'block' | 'time'
             from: number
             to: number
@@ -215,22 +215,22 @@ declare namespace Connex {
                 (Event & Decoded & Log.Meta)) & ObsoleteFlag
         }
 
-        type ObsoleteFlag = {
+        interface ObsoleteFlag {
             obsolete: boolean
         }
 
-        type TrunkFlag = {
+        interface TrunkFlag {
             isTrunk: boolean
         }
 
-        type CallOptions = {
+        interface CallOptions {
             gas?: number
             gasPrice?: string
             caller?: string
         }
 
 
-        type VMOutput = {
+        interface VMOutput {
             data: string
             vmError: string
             gasUsed: number
@@ -239,7 +239,7 @@ declare namespace Connex {
             transfers: Transfer[]
         }
 
-        type Decoded = {
+        interface Decoded {
             decoded: object
         }
     }

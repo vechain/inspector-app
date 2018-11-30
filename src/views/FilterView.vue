@@ -154,7 +154,7 @@ export default class FilterView extends Vue {
   }
 
   private async getList() {
-    let params: any[] = []
+    const params: any[] = []
 
     for (const key in this.conditions) {
       if (this.conditions.hasOwnProperty(key)) {

@@ -54,34 +54,34 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator"
-import DB, { Entities } from "../database"
-@Component
-export default class Navbar extends Vue {
-  private routes = [
-    // { name: 'home', text: 'Home' },
-    { name: "contracts", text: "Contracts" },
-    { name: "deploy", text: "Deploy" }
-  ];
+  import { Vue, Component } from 'vue-property-decorator'
+  import DB, { Entities } from '../database'
+  @Component
+  export default class Navbar extends Vue {
+    private routes = [
+      // { name: 'home', text: 'Home' },
+      { name: 'contracts', text: 'Contracts' },
+      { name: 'deploy', text: 'Deploy' }
+    ]
 
-  private views: Entities.Filter[] = []
-  private shortCuts: number = 0
+    private views: Entities.Filter[] = []
+    private shortCuts: number = 0
 
-  private async getList() {
-    this.views = await DB.filters.limit(5).toArray()
-  }
+    private async getList() {
+      this.views = await DB.filters.limit(5).toArray()
+    }
 
-  private async countShortCuts() {
-    this.shortCuts = await DB.shortCuts.count()
+    private async countShortCuts() {
+      this.shortCuts = await DB.shortCuts.count()
+    }
+    private async created() {
+      await this.getList()
+      await this.countShortCuts()
+      const _this = this
+      BUS.$on('added-filter', function() {
+        _this.getList()
+      })
+    }
   }
-  private async created() {
-    await this.getList()
-    await this.countShortCuts()
-    const _this = this
-    BUS.$on("added-filter", function() {
-      _this.getList()
-    })
-  }
-}
 </script>
 

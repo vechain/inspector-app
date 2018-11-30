@@ -99,44 +99,6 @@ import DB, { Entities } from '../database'
   }
 })
 export default class ContractDetail extends Vue {
-  private contract: Entities.Contract | null = null
-  private tabIndex: number = 0
-  private tabs: { text: string; count: number | '' }[] = []
-  private abi: any = []
-  private code?: string = ''
-  private name: string = ''
-
-  private async created() {
-    let idOrAddress: string =  this.$route.query.id || this.$route.query.address
-
-    await this.getDetail(idOrAddress)
-    this.tabs = [
-      { text: 'Read', count: this.readList.length },
-      { text: 'Write', count: this.writeList.length },
-      { text: 'Code & ABI', count: '' },
-      { text: 'Events', count: this.eventList.length },
-      { text: 'Fallback', count: '' }
-    ]
-  }
-
-  private onSearchSelect(item: any) {
-    const types = {
-      cb: 2,
-      fb: 4,
-      read: 0,
-      write: 1,
-      event: 3
-    }
-
-    let type: 'cb' | 'fb' | 'read' | 'write' | 'event' | 'function' = item.type
-    if (type === 'function') {
-      type = item.constant ? 'read' : 'write'
-    }
-    this.tabIndex = types[type]
-    let temp = this.$refs[item.name] as any[]
-    temp[0].$children[0].toggle(true)
-    temp[0].$el.scrollIntoView()
-  }
 
   get filterList() {
     const temp: any[] = [
@@ -177,6 +139,12 @@ export default class ContractDetail extends Vue {
       return item.type === 'fallback'
     })
   }
+  private contract: Entities.Contract | null = null
+  private tabIndex: number = 0
+  private tabs: Array<{ text: string; count: number | '' }> = []
+  private abi: any = []
+  private code?: string = ''
+  private name: string = ''
   async getDetail(idOrAddress: string) {
     this.contract =
       (await DB.contracts
@@ -198,6 +166,38 @@ export default class ContractDetail extends Vue {
     } catch (error) {
       console.error(error)
     }
+  }
+
+  private async created() {
+    const idOrAddress: string =  this.$route.query.id || this.$route.query.address
+
+    await this.getDetail(idOrAddress)
+    this.tabs = [
+      { text: 'Read', count: this.readList.length },
+      { text: 'Write', count: this.writeList.length },
+      { text: 'Code & ABI', count: '' },
+      { text: 'Events', count: this.eventList.length },
+      { text: 'Fallback', count: '' }
+    ]
+  }
+
+  private onSearchSelect(item: any) {
+    const types = {
+      cb: 2,
+      fb: 4,
+      read: 0,
+      write: 1,
+      event: 3
+    }
+
+    let type: 'cb' | 'fb' | 'read' | 'write' | 'event' | 'function' = item.type
+    if (type === 'function') {
+      type = item.constant ? 'read' : 'write'
+    }
+    this.tabIndex = types[type]
+    const temp = this.$refs[item.name] as any[]
+    temp[0].$children[0].toggle(true)
+    temp[0].$el.scrollIntoView()
   }
 }
 </script>

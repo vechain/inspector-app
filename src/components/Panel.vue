@@ -46,6 +46,8 @@ export default class Panel extends Vue {
   @Prop({ default: '' })
   title!: string
 
+  private activeTab: string = this.value
+
   @Watch('value')
   onchange(val: string) {
     this.activeTab = val
@@ -58,8 +60,6 @@ export default class Panel extends Vue {
   onupdate(value: boolean) {
     this.isOpen = value
   }
-
-  private activeTab: string = this.value
 
   private switchTab(tab: string) {
     this.activeTab = tab

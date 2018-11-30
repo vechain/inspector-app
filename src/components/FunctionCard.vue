@@ -45,9 +45,9 @@
   </Panel>
 </template>
 <script lang="ts">
-import Panel from "./Panel.vue"
-import { Vue, Component, Prop } from "vue-property-decorator"
-import DB from "../database"
+import Panel from './Panel.vue'
+import { Vue, Component, Prop } from 'vue-property-decorator'
+import DB from '../database'
 @Component({
   components: {
     Panel
@@ -64,35 +64,35 @@ export default class FunctionCard extends Vue {
   private value: string | null = null
 
   private params: any[] = new Array(this.item.inputs.length)
-  private tabs = ["Inputs", "Description"]
-  private activeTab = "Inputs"
+  private tabs = ['Inputs', 'Description']
+  private activeTab = 'Inputs'
 
   private method: any
 
-  created () {
+  created() {
     this.activeTab = this.tabs[0]
     const account = connex.thor.account(this.address)
     this.method = account.method(this.item)
   }
 
-  private executeFC () {
+  private executeFC() {
     if (this.item.constant) {
       this.readMethod()
     } else {
       this.writeMethod()
     }
   }
-  private async writeMethod () {
+  private async writeMethod() {
     try {
-      let params: any[] = []
-      this.params.forEach(item => {
+      const params: any[] = []
+      this.params.forEach((item) => {
         if (item) {
           return params.push(item)
         }
       })
       this.resp = await connex.vendor.sign(
-        "tx",
-        [{ ...this.method.asClause(this.params, "0x0"), desc: this.item.name }],
+        'tx',
+        [{ ...this.method.asClause(this.params, '0x0'), desc: this.item.name }],
         {
           summary: `inspect-${this.address}`
         }
@@ -102,12 +102,12 @@ export default class FunctionCard extends Vue {
     }
   }
 
-  private addShortCut (name: string) {
+  private addShortCut(name: string) {
     this.$dialog.prompt({
-      title: "Add Short Cut",
-      message: "Input a short cut",
+      title: 'Add Short Cut',
+      message: 'Input a short cut',
       inputAttrs: {
-        placeholder: "Filter name",
+        placeholder: 'Filter name',
         value: name,
         maxlength: 30,
         required: true
@@ -118,15 +118,15 @@ export default class FunctionCard extends Vue {
     })
   }
 
-  private async saveShortCut (name: string) {
+  private async saveShortCut(name: string) {
     const contract =
       (await DB.contracts
-        .where("address")
+        .where('address')
         .equals(this.address)
         .first()) || null
 
     await DB.shortCuts.add({
-      name: name,
+      name,
       address: contract!.address,
       contractName: contract!.name,
       createdTime: Date.now(),
@@ -134,13 +134,13 @@ export default class FunctionCard extends Vue {
       type: this.item.constant ? 'read' : 'write'
     })
 
-    BUS.$emit("added-shortcut")
+    BUS.$emit('added-shortcut')
     this.$toast.open({
-      message: "Added success!",
-      type: "is-success"
+      message: 'Added success!',
+      type: 'is-success'
     })
   }
-  private async readMethod () {
+  private async readMethod() {
     try {
       this.resp = await this.method.call(this.params, this.value || 0)
     } catch (error) {
@@ -150,7 +150,7 @@ export default class FunctionCard extends Vue {
 }
 </script>
 <style lang="scss" scoped>
-.item-content {
-  padding: 0.5rem 5rem 0 0;
-}
+  .item-content {
+    padding: 0.5rem 5rem 0 0;
+  }
 </style>

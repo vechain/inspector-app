@@ -32,7 +32,7 @@ export function generate(content: string) {
   const rand = new MersenneTwister(seed)
   const wobble = 20
   const amount = rand.random() * wobble - wobble / 2
-  const remainingColors = colors.map(hex => {
+  const remainingColors = colors.map((hex) => {
     const color = Color(hex)
       .rotate(amount)
       .desaturate(0.3)

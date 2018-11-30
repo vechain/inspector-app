@@ -27,7 +27,7 @@ Vue.directive('inview', {
     SE.onscroll = function(event: any) {
       window.clearTimeout(scrollEnd)
       scrollEnd = window.setTimeout(function() {
-        let top = event.target.scrollTop
+        const top = event.target.scrollTop
         if (top > offsetTop) {
           const temp = top - (offsetTop - elHeight)
           el.style.marginTop = (temp > 0 ? temp : 0) + 'px'

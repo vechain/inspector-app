@@ -42,11 +42,11 @@ const router = new Router({
       name: 'filter_view',
       component: FilterView,
       path: '/view/:id/list'
-    },{
+    }, {
       name: 'filter_mgt',
       component: FilterMgt,
       path: '/view/mgt'
-    },{
+    }, {
       name: 'short_cuts',
       component: ShortCuts,
       path: '/view/scs'

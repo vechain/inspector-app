@@ -1,5 +1,5 @@
 declare namespace Contract {
-  type Item = {
+  interface Item {
     name: string
     address: string
   }

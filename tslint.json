@@ -18,6 +18,7 @@
     "object-literal-sort-keys": false,
     "no-consecutive-blank-lines": false,
     "no-namespace": false,
-    "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"]
+    "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"],
+    "member-access": false
   }
 }

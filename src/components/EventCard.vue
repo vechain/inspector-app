@@ -101,7 +101,7 @@ export default class EventCard extends Vue {
         .first()) || null
 
     await DB.filters.add({
-      name: name,
+      name,
       address: contract!.address,
       contractName: contract!.name,
       createdTime: Date.now(),
@@ -115,7 +115,7 @@ export default class EventCard extends Vue {
   }
 
   private async getResult() {
-    let params: any[] = []
+    const params: any[] = []
 
     for (const key in this.params) {
       if (this.params.hasOwnProperty(key)) {

@@ -12,7 +12,7 @@ declare namespace Connex {
 
     namespace Vendor {
         type Message<T extends 'tx'> = T extends 'tx' ?
-            (Thor.Clause & { desc?: string })[] : never
+            Array<Thor.Clause & { desc?: string }> : never
 
         type SignOptions<T extends 'tx'> = T extends 'tx' ? {
             signer?: string
