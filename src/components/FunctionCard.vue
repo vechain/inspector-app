@@ -3,8 +3,8 @@
     <template slot="panel-content">
       <form
         ref="form"
-        @reset.stop="$refs['form'].reset()"
-        @submit.self.stop="executeFC"
+        @reset.prevent="$refs['form'].reset()"
+        @submit.prevent="executeFC"
         v-show="activeTab === tabs[0]"
       >
         <b-field
