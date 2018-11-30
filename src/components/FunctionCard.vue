@@ -26,7 +26,16 @@
               @click="addShortCut(item.name)"
               class="button is-rounded is-primary is-outlined"
             >Short Cut</button>
-            <button type="submit" class="button is-rounded is-primary is-outlined">Execute</button>
+            <button
+              v-if="!item.constant"
+              type="submit"
+              class="button is-rounded is-primary is-outlined"
+            >Execute</button>
+            <button
+              type="button"
+              @click="callFC"
+              class="button is-rounded is-primary is-outlined"
+            >Call</button>
             <button
               v-if="params.length"
               type="reset"
@@ -45,109 +54,114 @@
   </Panel>
 </template>
 <script lang="ts">
-import Panel from './Panel.vue'
-import { Vue, Component, Prop } from 'vue-property-decorator'
-import DB from '../database'
-@Component({
-  components: {
-    Panel
-  }
-})
-export default class FunctionCard extends Vue {
-  @Prop({ default: null })
-  private item: ABI.FunctionItem | any
+  import Panel from './Panel.vue'
+  import { Vue, Component, Prop } from 'vue-property-decorator'
+  import DB from '../database'
+  @Component({
+    components: {
+      Panel
+    }
+  })
+  export default class FunctionCard extends Vue {
+    @Prop({ default: null })
+    private item: ABI.FunctionItem | any
 
-  @Prop()
-  private address!: string
+    @Prop()
+    private address!: string
 
-  private resp: any = null
-  private value: string | null = null
+    @Prop()
+    private caller!: string
 
-  private params: any[] = new Array(this.item.inputs.length)
-  private tabs = ['Inputs', 'Description']
-  private activeTab = 'Inputs'
+    private resp: any = null
+    private value: string | null = null
 
-  private method: any
+    private params: any[] = new Array(this.item.inputs.length)
+    private tabs = ['Inputs', 'Description']
+    private activeTab = 'Inputs'
 
-  created() {
-    this.activeTab = this.tabs[0]
-    const account = connex.thor.account(this.address)
-    this.method = account.method(this.item)
-  }
+    private method: any
 
-  private executeFC() {
-    if (this.item.constant) {
+    created() {
+      this.activeTab = this.tabs[0]
+      const account = connex.thor.account(this.address)
+      this.method = account.method(this.item)
+    }
+
+    private callFC() {
       this.readMethod()
-    } else {
+    }
+
+    private executeFC() {
       this.writeMethod()
     }
-  }
-  private async writeMethod() {
-    try {
-      const params: any[] = []
-      this.params.forEach((item) => {
-        if (item) {
-          return params.push(item)
+    private async writeMethod() {
+      try {
+        const params: any[] = []
+        this.params.forEach(item => {
+          if (item) {
+            return params.push(item)
+          }
+        })
+        this.resp = await connex.vendor.sign(
+          'tx',
+          [{ ...this.method.asClause(this.params, '0x0'), desc: this.item.name }],
+          {
+            summary: `inspect-${this.address}`
+          }
+        )
+      } catch (error) {
+        console.error(error)
+      }
+    }
+
+    private addShortCut(name: string) {
+      this.$dialog.prompt({
+        title: 'Add Short Cut',
+        message: 'Input a short cut',
+        inputAttrs: {
+          placeholder: 'Filter name',
+          value: name,
+          maxlength: 30,
+          required: true
+        },
+        onConfirm: (value: string) => {
+          this.saveShortCut(value)
         }
       })
-      this.resp = await connex.vendor.sign(
-        'tx',
-        [{ ...this.method.asClause(this.params, '0x0'), desc: this.item.name }],
-        {
-          summary: `inspect-${this.address}`
-        }
-      )
-    } catch (error) {
-      console.error(error)
     }
-  }
 
-  private addShortCut(name: string) {
-    this.$dialog.prompt({
-      title: 'Add Short Cut',
-      message: 'Input a short cut',
-      inputAttrs: {
-        placeholder: 'Filter name',
-        value: name,
-        maxlength: 30,
-        required: true
-      },
-      onConfirm: (value: string) => {
-        this.saveShortCut(value)
+    private async saveShortCut(name: string) {
+      const contract =
+        (await DB.contracts
+          .where('address')
+          .equals(this.address)
+          .first()) || null
+
+      await DB.shortCuts.add({
+        name,
+        address: contract!.address,
+        contractName: contract!.name,
+        createdTime: Date.now(),
+        abi: this.item,
+        type: this.item.constant ? 'read' : 'write'
+      })
+
+      BUS.$emit('added-shortcut')
+      this.$toast.open({
+        message: 'Added success!',
+        type: 'is-success'
+      })
+    }
+    private async readMethod() {
+      try {
+        this.resp = await this.method.call(this.params, this.value || 0, {
+          caller: this.caller
+        })
+      } catch (error) {
+        console.error(error)
       }
-    })
-  }
-
-  private async saveShortCut(name: string) {
-    const contract =
-      (await DB.contracts
-        .where('address')
-        .equals(this.address)
-        .first()) || null
-
-    await DB.shortCuts.add({
-      name,
-      address: contract!.address,
-      contractName: contract!.name,
-      createdTime: Date.now(),
-      abi: this.item,
-      type: this.item.constant ? 'read' : 'write'
-    })
-
-    BUS.$emit('added-shortcut')
-    this.$toast.open({
-      message: 'Added success!',
-      type: 'is-success'
-    })
-  }
-  private async readMethod() {
-    try {
-      this.resp = await this.method.call(this.params, this.value || 0)
-    } catch (error) {
-      console.error(error)
     }
   }
-}
 </script>
 <style lang="scss" scoped>
   .item-content {

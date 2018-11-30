@@ -1,11 +1,11 @@
 import { Vue } from 'vue-property-decorator'
-import { generate } from './ident-svg'
+import { picasso } from '@vechain/picasso'
 import { VNode } from 'vue'
 
 Vue.directive('ident', {
   inserted(el: HTMLElement, binding: any) {
     if (binding.value !== binding.oldValue) {
-      const svg = generate(binding.value)
+      const svg = picasso(binding.value)
       if (el.nodeName === 'IMG') {
         const temp = el as HTMLImageElement
         temp.src = `data:image/svg+xml;utf8,${svg}`
@@ -24,9 +24,9 @@ Vue.directive('inview', {
     const offsetTop = el.offsetTop
     const elHeight = el.clientHeight
     el.style.transition = 'margin-top 0.15s'
-    SE.onscroll = function(event: any) {
+    SE.onscroll = (event: any) => {
       window.clearTimeout(scrollEnd)
-      scrollEnd = window.setTimeout(function() {
+      scrollEnd = window.setTimeout(() => {
         const top = event.target.scrollTop
         if (top > offsetTop) {
           const temp = top - (offsetTop - elHeight)
