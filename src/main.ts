@@ -33,6 +33,7 @@ Object.defineProperty(window, 'isSyncEnv', {
 })
 
 Object.defineProperty(window, 'BUS', {
+  // tslint:disable-next-line:new-parens
   value: new Vue,
   enumerable: true,
   writable: false

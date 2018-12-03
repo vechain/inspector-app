@@ -77,9 +77,8 @@
     private async created() {
       await this.getList()
       await this.countShortCuts()
-      const _this = this
-      BUS.$on('added-filter', function() {
-        _this.getList()
+      BUS.$on('added-filter', () => {
+        this.getList()
       })
     }
   }

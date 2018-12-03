@@ -130,7 +130,7 @@ export default class FilterView extends Vue {
     this.filter =
       (await DB.filters
         .where('id')
-        .equals(parseInt(this.$route.params.id))
+        .equals(parseInt(this.$route.params.id, 10))
         .first()) || null
     const account = connex.thor.account(this.filter!.address)
     this.abi = this.filter!.abi ? this.filter!.abi : ''

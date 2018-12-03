@@ -93,6 +93,7 @@ export default class EditContract extends Vue {
         await DB.contracts.where('id').equals(this.form.id).modify(obj)
       }
     } catch (error) {
+      // tslint:disable-next-line:no-console
       console.error(error)
     } finally {
       this.$emit('finished')

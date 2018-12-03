@@ -27,6 +27,7 @@ export default class DeployContract extends Vue {
         summary: 'Inspector deploy CT'
       })
       .then((r) => {
+        // tslint:disable-next-line:no-console
         console.log(r)
       })
   }
