@@ -100,9 +100,9 @@
   export default class ContractDetail extends Vue {
     get filterList() {
       const temp: any[] = [
-        { name: 'Code', type: 'cb' },
-        { name: 'ABI', type: 'cb' },
-        { name: 'Fallback', type: 'fb' }
+        { name: 'Code', type: 'Code' },
+        { name: 'ABI', type: 'ABI' },
+        { name: 'Fallback', type: 'fallback' }
       ].concat(this.abi)
 
       return temp.filter((item: ABI.FunctionItem | ABI.EventItem) => {
