@@ -1,12 +1,16 @@
 <template>
   <Panel v-model="activeTab" :tabs="tabs" :title="item.name">
     <template slot="panel-content">
-      <form
-        ref="form"
-        @reset.prevent="$refs['form'].reset()"
-        @submit.prevent="executeFC"
-        v-show="activeTab === tabs[0]"
-      >
+      <form @reset.self.prevent="reset" v-show="activeTab === tabs[0]">
+        <b-field
+          class="item-content"
+          horizontal
+          v-model="caller"
+          message="Special address to call the method, it's not the param of the method"
+          label="Caller"
+        >
+          <b-input placeholder="Optional: Address"></b-input>
+        </b-field>
         <b-field
           class="item-content"
           horizontal
@@ -14,7 +18,13 @@
           v-for="(v, index) in item.inputs"
           :key="index"
         >
-          <b-input required v-model="params[index]" :placeholder="v.type"></b-input>
+          <b-input
+            ref="input"
+            required
+            :name="v.name"
+            v-model="params[index]"
+            :placeholder="v.type"
+          ></b-input>
         </b-field>
         <b-field v-if="item.payable" class="item-content" horizontal label="value">
           <b-input type="number" placeholder="number" v-model="value"></b-input>
@@ -28,12 +38,13 @@
             >Short Cut</button>
             <button
               v-if="!item.constant"
-              type="submit"
+              @click.stop="executeFC"
+              type="button"
               class="button is-rounded is-primary is-outlined"
             >Execute</button>
             <button
               type="button"
-              @click="callFC"
+              @click.stop="callFC"
               class="button is-rounded is-primary is-outlined"
             >Call</button>
             <button
@@ -55,63 +66,21 @@
 </template>
 <script lang="ts">
   import Panel from './Panel.vue'
-  import { Vue, Component, Prop } from 'vue-property-decorator'
+  import AccountCall from '../mixin/AccountCall'
+  import { Vue, Component, Prop, Mixins } from 'vue-property-decorator'
   import DB from '../database'
   @Component({
     components: {
       Panel
     }
   })
-  export default class FunctionCard extends Vue {
-    @Prop({ default: null })
-    private item: ABI.FunctionItem | any
-
-    @Prop()
-    private address!: string
-
-    @Prop()
-    private caller!: string
-
-    private resp: any = null
-    private value: string | null = null
-
-    private params: any[] = new Array(this.item.inputs.length)
+  export default class FunctionCard extends Mixins(AccountCall) {
     private tabs = ['Inputs', 'Description']
     private activeTab = 'Inputs'
-
-    private method: any
-
     created() {
       this.activeTab = this.tabs[0]
       const account = connex.thor.account(this.address)
       this.method = account.method(this.item)
-    }
-
-    private callFC() {
-      this.readMethod()
-    }
-
-    private executeFC() {
-      this.writeMethod()
-    }
-    private async writeMethod() {
-      try {
-        const params: any[] = []
-        this.params.forEach(item => {
-          if (item) {
-            return params.push(item)
-          }
-        })
-        this.resp = await connex.vendor.sign(
-          'tx',
-          [{ ...this.method.asClause(this.params, '0x0'), desc: this.item.name }],
-          {
-            summary: `inspect-${this.address}`
-          }
-        )
-      } catch (error) {
-        console.error(error)
-      }
     }
 
     private addShortCut(name: string) {
@@ -151,15 +120,6 @@
         message: 'Added success!',
         type: 'is-success'
       })
-    }
-    private async readMethod() {
-      try {
-        this.resp = await this.method.call(this.params, this.value || 0, {
-          caller: this.caller
-        })
-      } catch (error) {
-        console.error(error)
-      }
     }
   }
 </script>
