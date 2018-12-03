@@ -1,6 +1,19 @@
 <template>
   <section class="section">
     <div class="container">
+      <b-field grouped>
+        <!-- <b-field expanded>
+          <b-input type="text" v-model="caller" placeholder="Caller: Address"/>
+        </b-field> -->
+        <b-field expanded>
+          <b-field class="is-pulled-right">
+            <b-input icon="search" type="text" placeholder="Name"></b-input>
+            <p class="control">
+              <button class="button is-primary">Search</button>
+            </p>
+          </b-field>
+        </b-field>
+      </b-field>
       <b-table
         detailed
         :per-page="perPage"
@@ -40,7 +53,7 @@
           </b-table-column>
         </template>
         <template slot="detail" slot-scope="props">
-          <SampleFuncCard :item="props.row.abi" :address="props.row.address"/>
+          <SampleFuncCard caller="caller" :item="props.row.abi" :address="props.row.address"/>
         </template>
       </b-table>
     </div>
@@ -61,6 +74,7 @@
     private count = 0
     private perPage = 10
     private currentPage = 1
+    private caller = ''
     async created() {
       await this.onPageChange(1)
       await this.countList()

@@ -4,25 +4,24 @@
       <Contract :isShort="false" :item="contract"/>
       <section class="section">
         <b-field grouped>
-          <b-field expanded label="Caller">
-            <b-input rounded v-model="caller" name="name" placeholder="Address"></b-input>
-          </b-field>
-          <b-field expanded label="Search">
-            <b-autocomplete
-              rounded
-              v-model="name"
-              :data="filterList"
-              placeholder="Func/Event Name"
-              @select="onSearchSelect"
-            >
-              <template slot-scope="props">
-                <div>
-                  <span class="is-size-6">{{props.option.name}}</span>
-                </div>
-                <span class="has-text-grey">{{props.option.type}}</span>
-              </template>
-              <template slot="empty">No results found</template>
-            </b-autocomplete>
+          <b-field expanded>
+            <b-field class="is-pulled-right">
+              <b-autocomplete
+                rounded
+                v-model="name"
+                :data="filterList"
+                placeholder="Func/Event Name"
+                @select="onSearchSelect"
+              >
+                <template slot-scope="props">
+                  <div>
+                    <span class="is-size-6">{{props.option.name}}</span>
+                  </div>
+                  <span class="has-text-grey">{{props.option.type}}</span>
+                </template>
+                <template slot="empty">No results found</template>
+              </b-autocomplete>
+            </b-field>
           </b-field>
         </b-field>
         <b-tabs type="is-centered" v-model="tabIndex" class="block">
@@ -39,7 +38,6 @@
             :ref="item.name"
             v-for="(item, index) in readList"
             :key="index"
-            :caller="callerAdd"
             :address="contract.address"
             style="margin-bottom: 20px"
             :item="item"
@@ -50,7 +48,6 @@
             v-for="(item, index) in writeList"
             :ref="item.name"
             :key="index"
-            :caller="callerAdd"
             :address="contract.address"
             style="margin-bottom: 20px"
             :item="item"
@@ -140,10 +137,6 @@
         return item.type === 'fallback'
       })
     }
-
-    get callerAdd() {
-      return this.caller ? this.caller : '0x0000000000000000000000000000000000000000'
-    }
     private contract: Entities.Contract | null = null
     private tabIndex: number = 0
     private tabs: Array<{ text: string; count: number | '' }> = []
@@ -155,7 +148,7 @@
       this.contract =
         (await DB.contracts
           .where('id')
-          .equals(parseInt(idOrAddress))
+          .equals(parseInt(idOrAddress, 10))
           .or('address')
           .equals(idOrAddress)
           .first()) || null
@@ -171,6 +164,7 @@
           this.code = temp.code
         }
       } catch (error) {
+        // tslint:disable-next-line:no-console
         console.error(error)
       }
     }
