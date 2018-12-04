@@ -65,129 +65,135 @@
   </section>
 </template>
 <script lang="ts">
-import LogList from '../components/LogList.vue'
-import { Vue, Component, Watch } from 'vue-property-decorator'
-import DB, { Entities } from '../database'
-@Component({
-  components: {
-    LogList
-  }
-})
-export default class FilterView extends Vue {
-  private filter!: Entities.Filter | null
-  private event!: Connex.Thor.EventVisitor
-  private abi!: any
-  private conditions: any = {}
-  private page = {
-    num: -1,
-    size: 10,
-    order: true
-  }
-
-  private list: any[] = []
-  private metadata: boolean = false
-  private columns: string[] = []
-  private params: ABI.EventInputItem[] = []
-
-  setParams() {
-    this.params = this.abi.inputs.filter((item: ABI.EventInputItem) => {
-      return item.indexed
-    })
-  }
-
-  setColumns() {
-    this.columns = this.abi.inputs.map((item: ABI.EventInputItem) => {
-      return item.name
-    })
-  }
-
-  @Watch('$route')
-  async onRouterChange() {
-    await this.init()
-    this.nextPage()
-  }
-
-  @Watch('conditions')
-  onConditionChange() {
-    this.search()
-  }
-  @Watch('page.size')
-  onSizeChanged(value: number) {
-    if (!value) {
-      this.page.size = 5
+  import LogList from '../components/LogList.vue'
+  import { Vue, Component, Watch } from 'vue-property-decorator'
+  import DB, { Entities } from '../database'
+  @Component({
+    components: {
+      LogList
     }
-    this.search()
-  }
-  @Watch('page.order')
-  onOrderChanged() {
-    this.search()
-  }
-  get currentPage() {
-    return this.page.num + 1
-  }
+  })
+  export default class FilterView extends Vue {
+    private filter!: Entities.Filter | null
+    private event!: Connex.Thor.EventVisitor
+    private abi!: any
+    private conditions: any = {}
+    private page = {
+      num: -1,
+      size: 10,
+      order: true
+    }
 
-  private async init() {
-    this.filter =
-      (await DB.filters
-        .where('id')
-        .equals(parseInt(this.$route.params.id, 10))
-        .first()) || null
-    const account = connex.thor.account(this.filter!.address)
-    this.abi = this.filter!.abi ? this.filter!.abi : ''
-    this.event = account.event(this.abi)
-    this.setParams()
-    this.setColumns()
-  }
+    private list: any[] = []
+    private metadata: boolean = false
+    private columns: string[] = []
+    private params: ABI.EventInputItem[] = []
 
-  private search() {
-    this.page.num = -1
-    this.nextPage()
-  }
+    setParams() {
+      this.params = this.abi.inputs.filter((item: ABI.EventInputItem) => {
+        return item.indexed
+      })
+    }
 
-  private prePage() {
-    --this.page.num
-    this.getList()
-  }
-  private nextPage() {
-    ++this.page.num
-    this.getList()
-  }
+    setColumns() {
+      this.columns = this.abi.inputs.map((item: ABI.EventInputItem) => {
+        return item.name
+      })
+    }
 
-  private async getList() {
-    const params: any[] = []
+    @Watch('$route')
+    async onRouterChange() {
+      await this.init()
+      this.nextPage()
+    }
 
-    for (const key in this.conditions) {
-      if (this.conditions.hasOwnProperty(key)) {
-        const element = this.conditions[key]
-        if (element) {
-          params.push({
-            [key]: element
-          })
+    @Watch('conditions')
+    onConditionChange() {
+      this.search()
+    }
+    @Watch('page.size')
+    onSizeChanged(value: number) {
+      if (!value) {
+        this.page.size = 5
+      }
+      this.search()
+    }
+    @Watch('page.order')
+    onOrderChanged() {
+      this.search()
+    }
+    get currentPage() {
+      return this.page.num + 1
+    }
+
+    private async init() {
+      this.filter =
+        (await DB.filters
+          .where('id')
+          .equals(parseInt(this.$route.params.id, 10))
+          .first()) || null
+      const account = connex.thor.account(this.filter!.address)
+      this.abi = this.filter!.abi ? this.filter!.abi : ''
+      this.event = account.event(this.abi)
+      this.setParams()
+      this.setColumns()
+    }
+
+    private search() {
+      this.page.num = -1
+      this.nextPage()
+    }
+
+    private prePage() {
+      --this.page.num
+      this.getList()
+    }
+    private nextPage() {
+      ++this.page.num
+      this.getList()
+    }
+
+    private async getList() {
+      const params: any[] = []
+
+      for (const key in this.conditions) {
+        if (this.conditions.hasOwnProperty(key)) {
+          const element = this.conditions[key]
+          if (element) {
+            params.push({
+              [key]: element
+            })
+          }
         }
       }
+      if (!this.page.order) {
+        this.list = await this.event
+        .filter(params)
+        .desc()
+        .apply(this.page.num * this.page.size, this.page.size)
+      } else {
+        this.list = await this.event
+        .filter(params)
+        .apply(this.page.num * this.page.size, this.page.size)
+      }
     }
-    this.list = await this.event
-      .filter(params)
-      .order(this.page.order ? 'asc' : 'desc')
-      .next(this.page.num * this.page.size, this.page.size)
-  }
 
-  private async created() {
-    await this.init()
-    this.nextPage()
+    private async created() {
+      await this.init()
+      this.nextPage()
+    }
   }
-}
 </script>
 <style scoped>
-.log-filter {
-  width: 250px;
-  right: 20px;
-  float: right;
-}
-.log-container {
-  width: calc(100% - 270px);
-  overflow-x: auto;
-  margin-right: 20px;
-  float: left;
-}
+  .log-filter {
+    width: 250px;
+    right: 20px;
+    float: right;
+  }
+  .log-container {
+    width: calc(100% - 270px);
+    overflow-x: auto;
+    margin-right: 20px;
+    float: left;
+  }
 </style>

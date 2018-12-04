@@ -17,11 +17,9 @@ Vue.config.productionTip = false
 
 declare global {
   interface Window {
-    readonly connex: Connex
     readonly isSyncEnv: boolean
     readonly BUS: Vue
   }
-  const connex: Connex
   const isSyncEnv: boolean
   const BUS: Vue
 }

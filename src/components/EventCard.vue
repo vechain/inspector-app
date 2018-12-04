@@ -24,7 +24,7 @@
               class="button is-rounded is-primary is-outlined"
             >Execute</button>
             <button
-            v-if="filters.length"
+              v-if="filters.length"
               type="button"
               @click="reset"
               class="button is-rounded is-primary is-outlined"
@@ -145,8 +145,8 @@
 
       this.list = await this.event
         .filter(params)
-        .order('desc')
-        .next(0, 5)
+        .desc()
+        .apply(0, 5)
       this.activeTab = this.tabs[2]
     }
   }
