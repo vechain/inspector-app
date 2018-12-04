@@ -16,21 +16,21 @@
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
-@Component
-export default class DeployContract extends Vue {
-  code: string = ''
-  value: number | null = null
-  sendCode() {
-    connex.vendor
-      .sign('tx', [{ value: this.value || 0, data: this.code, to: null }], {
-        summary: 'Inspector deploy CT'
-      })
-      .then((r) => {
-        // tslint:disable-next-line:no-console
-        console.log(r)
-      })
+  import { Vue, Component } from 'vue-property-decorator'
+  @Component
+  export default class DeployContract extends Vue {
+    code: string = ''
+    value: number | null = null
+    sendCode() {
+      connex.vendor
+        .sign('tx')
+        .comment('Inspector deploy CT')
+        .request([{ value: this.value || 0, data: this.code, to: null }])
+        .then(r => {
+          // tslint:disable-next-line:no-console
+          console.log(r)
+        })
+    }
   }
-}
 </script>
 

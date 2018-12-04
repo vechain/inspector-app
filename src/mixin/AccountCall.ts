@@ -7,7 +7,7 @@ export default class AccountCall extends Vue {
 
   public value: string | null = null
   public resp: any = null
-  public method: any = null
+  public method: Connex.Thor.Method | null = null
   public params: any[] = new Array(this.item.inputs.length)
 
   public caller?: string = ''
@@ -46,9 +46,9 @@ export default class AccountCall extends Vue {
   }
   private async readMethod() {
     try {
-      this.resp = await this.method.call(this.params, this.value || 0, {
-        caller: this.caller || '0x0000000000000000000000000000000000000000'
-      })
+      this.resp = await this.method!.value(this.value || 0)
+        .caller(this.caller || '0x0000000000000000000000000000000000000000')
+        .call(...this.params)
     } catch (error) {
       // tslint:disable-next-line:no-console
       console.error(error)
@@ -62,13 +62,12 @@ export default class AccountCall extends Vue {
           return params.push(item)
         }
       })
-      this.resp = await connex.vendor.sign(
-        'tx',
-        [{ ...this.method.asClause(this.params, '0x0'), desc: this.item.name }],
-        {
-          summary: `inspect-${this.address}`
-        }
-      )
+      connex.vendor
+        .sign('tx')
+        .comment(`inspect-${this.address}`)
+        .request([
+          { ...this.method!.value('0x0').asClause(...this.params), comment: this.item.name }
+        ])
     } catch (error) {
       // tslint:disable-next-line:no-console
       console.error(error)
