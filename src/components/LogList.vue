@@ -45,7 +45,7 @@ export default class LogList extends Vue {
   keys!: any[]
 
   @Prop(Array)
-  list!: Array<Connex.Thor.Event>
+  list!: Connex.Thor.Event[]
 
   @Prop({ default: false })
   metadata!: boolean
