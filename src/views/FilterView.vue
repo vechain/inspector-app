@@ -60,7 +60,8 @@
       </div>
     </div>
     <div class="box log-container">
-      <LogList :metadata="metadata" :keys="columns" :list="list"/>
+      <b-loading :is-full-page="false" :active.sync="isLoading" :can-cancel="true"></b-loading>
+      <LogList v-if="!isLoading" :metadata="metadata" :keys="columns" :list="list"/>
     </div>
   </section>
 </template>
@@ -74,6 +75,7 @@
     }
   })
   export default class FilterView extends Vue {
+    private isLoading = true
     private filter!: Entities.Filter | null
     private event!: Connex.Thor.EventVisitor
     private abi!: any
@@ -154,6 +156,7 @@
     }
 
     private async getList() {
+      this.isLoading = true
       const params: any[] = []
 
       for (const key in this.conditions) {
@@ -166,16 +169,12 @@
           }
         }
       }
-      if (!this.page.order) {
-        this.list = await this.event
+
+      this.list = await this.event
         .filter(params)
-        .desc()
+        .order(this.page.order ? 'asc' : 'desc')
         .apply(this.page.num * this.page.size, this.page.size)
-      } else {
-        this.list = await this.event
-        .filter(params)
-        .apply(this.page.num * this.page.size, this.page.size)
-      }
+      this.isLoading = false
     }
 
     private async created() {
@@ -195,5 +194,6 @@
     overflow-x: auto;
     margin-right: 20px;
     float: left;
+    min-height: 100%;
   }
 </style>
