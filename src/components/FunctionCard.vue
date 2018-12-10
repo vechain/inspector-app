@@ -79,8 +79,7 @@
     private activeTab = 'Inputs'
     created() {
       this.activeTab = this.tabs[0]
-      const account = connex.thor.account(this.address)
-      this.method = account.method(this.item)
+      this.initMethod(this.address, this.item)
     }
 
     private addShortCut(name: string) {

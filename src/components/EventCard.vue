@@ -145,7 +145,7 @@
 
       this.list = await this.event
         .filter(params)
-        .desc()
+        .order('desc')
         .apply(0, 5)
       this.activeTab = this.tabs[2]
     }
