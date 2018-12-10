@@ -99,12 +99,7 @@
   })
   export default class ContractDetail extends Vue {
     get filterList() {
-      const temp: any[] = [
-        { name: 'Code', type: 'Code' },
-        { name: 'ABI', type: 'ABI' },
-        { name: 'Fallback', type: 'fallback' }
-      ].concat(this.abi)
-
+      const temp = this.abi
       return temp.filter((item: ABI.FunctionItem | ABI.EventItem) => {
         return (
           item.name &&
