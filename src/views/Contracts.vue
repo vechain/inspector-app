@@ -48,98 +48,115 @@
   </section>
 </template>
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
-import EditContract from '../components/EditContract.vue'
-import Contract from '../components/Contract.vue'
-import DB, { Entities } from '../database'
-@Component({
-  components: {
-    Contract,
-    EditContract
-  }
-})
-export default class Contracts extends Vue {
-  private isloading = true
+  import { Vue, Component } from 'vue-property-decorator'
+  import EditContract from '../components/EditContract.vue'
+  import Contract from '../components/Contract.vue'
+  import DB, { Entities } from '../database'
+  @Component({
+    components: {
+      Contract,
+      EditContract
+    }
+  })
+  export default class Contracts extends Vue {
+    private isloading = true
 
-  private isModalActive = false
-  private currentItem: Entities.Contract | null = null
-  private contracts: Entities.Contract[] = []
+    private isModalActive = false
+    private currentItem: Entities.Contract | null = null
+    private contracts: Entities.Contract[] = []
 
-  onSelect(id: number) {
-    this.$router.push({
-      name: 'contract_detail',
-      query: { id: id.toString() }
-    })
-  }
+    onSelect(id: number) {
+      this.$router.push({
+        name: 'contract_detail',
+        query: { id: id.toString() }
+      })
+    }
 
-  async created() {
-    const loading = this.$loading.open({
-      container: null
-    })
-    await this.list()
-    loading.close()
-  }
+    async created() {
+      const loading = this.$loading.open({
+        container: null
+      })
 
-  reload() {
-    this.currentItem = null
-    this.list()
-    this.isModalActive = false
-  }
+      await this.list()
+      this.prepare()
+      loading.close()
+    }
 
-  private remove(item: any) {
-    this.$dialog.confirm({
-      title: 'Remove',
-      message: `Are you sure want to remove ${item.name} contract`,
-      cancelText: 'Cancel',
-      confirmText: 'YES',
-      type: 'is-danger',
-      scroll: 'clip',
-      onConfirm: () => {
-        DB.contracts.delete(item.id).then(() => {
-          this.reload()
-        })
+    prepare() {
+      // query action=add&address=....
+      const { action, address } = this.$route.query
+      switch (action) {
+        case 'add':
+          this.currentItem = {
+            address: address
+          }
+          this.open()
+          break;
+        default:
+          break;
       }
-    })
+    }
+
+    reload() {
+      this.currentItem = null
+      this.list()
+      this.isModalActive = false
+    }
+
+    private remove(item: any) {
+      this.$dialog.confirm({
+        title: 'Remove',
+        message: `Are you sure want to remove ${item.name} contract`,
+        cancelText: 'Cancel',
+        confirmText: 'YES',
+        type: 'is-danger',
+        scroll: 'clip',
+        onConfirm: () => {
+          DB.contracts.delete(item.id).then(() => {
+            this.reload()
+          })
+        }
+      })
+    }
+    private open() {
+      this.isModalActive = true
+    }
+    private close() {
+      this.isModalActive = false
+    }
+    private async list() {
+      this.contracts = await DB.contracts.toArray()
+      this.isloading = false
+    }
+    private addItem() {
+      this.currentItem = null
+      this.open()
+    }
+    private onCancel() {
+      this.currentItem = null
+      this.close()
+    }
+    private edit(item: Entities.Contract) {
+      this.currentItem = item
+      this.open()
+    }
   }
-  private open() {
-    this.isModalActive = true
-  }
-  private close() {
-    this.isModalActive = false
-  }
-  private async list() {
-    this.contracts = await DB.contracts.toArray()
-    this.isloading = false
-  }
-  private addItem() {
-    this.currentItem = null
-    this.open()
-  }
-  private onCancel() {
-    this.currentItem = null
-    this.close()
-  }
-  private edit(item: Entities.Contract) {
-    this.currentItem = item
-    this.open()
-  }
-}
 </script>
 <style lang="css" scoped>
-.column:last-child {
-  margin-bottom: 1.5rem;
-}
-.buttons-slot {
-  opacity: 0.3;
-  transition: opacity .2s ease-in-out;
-}
-.contract-box {
-  max-width: 400px;
-  min-width: 370px;
-}
-.contract-box:hover .buttons-slot {
-  opacity: 1;
-}
+  .column:last-child {
+    margin-bottom: 1.5rem;
+  }
+  .buttons-slot {
+    opacity: 0.3;
+    transition: opacity 0.2s ease-in-out;
+  }
+  .contract-box {
+    max-width: 400px;
+    min-width: 370px;
+  }
+  .contract-box:hover .buttons-slot {
+    opacity: 1;
+  }
 </style>
 
 

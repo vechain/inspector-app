@@ -8,7 +8,7 @@ export namespace Entities {
     name?: string
     address: string
     createdTime?: number
-    abi: object | []
+    abi?: object | []
   }
 
   export interface Filter extends Contract {
