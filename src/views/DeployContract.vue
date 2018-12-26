@@ -26,10 +26,6 @@
         .sign('tx')
         .comment('Inspector deploy CT')
         .request([{ value: this.value || 0, data: this.code, to: null }])
-        .then((r) => {
-          // tslint:disable-next-line:no-console
-          console.log(r)
-        })
     }
   }
 </script>

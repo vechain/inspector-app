@@ -56,7 +56,7 @@ export default class EditContract extends Vue {
   }
 
   get isEdit() {
-    return this.item && this.item.address
+    return this.item && this.item.id
   }
   close() {
     this.$emit('cancel')
@@ -67,7 +67,7 @@ export default class EditContract extends Vue {
     if (val && val.address) {
       this.form.name = val.name || ''
       this.form.address = val.address || ''
-      this.form.abi = JSON.stringify(val.abi || '')
+      this.form.abi = val.abi ? JSON.stringify(val.abi) : ''
       this.form.id = val.id || 0
     } else {
       this.form = {
