@@ -69,12 +69,13 @@ export default class AccountCall extends Vue {
           return params.push(item)
         }
       })
+
       connex.vendor
         .sign('tx')
         .comment(`inspect-${this.address}`)
         .request([
           {
-            ...this.method!.value('0x0').asClause(...this.params),
+            ...this.method!.value(this.item.payable ? this.value || '0x0' : '0x0').asClause(...this.params),
             comment: this.item.name
           }
         ])
