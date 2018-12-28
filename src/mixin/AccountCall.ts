@@ -18,7 +18,7 @@ export default class AccountCall extends Vue {
     }
   }
   public reset() {
-    const inputs = this.$refs.input as any[]
+    const inputs = this.$refs.input as any[] || []
     inputs.forEach((element) => {
       element.$parent.newType = ''
       element.$parent.newMessage = ''
@@ -41,7 +41,7 @@ export default class AccountCall extends Vue {
   }
 
   private validate() {
-    const inputs = this.$refs.input as any[]
+    const inputs = this.$refs.input as any[] || []
     inputs.forEach((element) => {
       element.checkHtml5Validity()
     })
