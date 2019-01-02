@@ -14,39 +14,47 @@
           <p class="is-fixed-font is-size-7" v-if="isShort">{{item.address | addr}}</p>
           <p class="is-fixed-font is-size-6" v-else>{{item.address}}</p>
         </div>
+        <nav class="level">
+          <div class="level-left">
+            <div class="level-item">
+              <slot/>
+              <!-- <a class="button is-info">Submit</a> -->
+            </div>
+          </div>
+        </nav>
       </div>
       <div class="media-right">
         <div class="content">
-          <slot/>
+          <slot name="right"/>
         </div>
       </div>
     </article>
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator'
+  import { Vue, Component, Prop } from 'vue-property-decorator'
 
-@Component
-export default class Contract extends Vue {
-  @Prop()
-  private item!: Contract.Item
+  @Component
+  export default class Contract extends Vue {
+    @Prop()
+    private item!: Contract.Item
 
-  @Prop({ default: true })
-  private isShort!: boolean
-}
+    @Prop({ default: true })
+    private isShort!: boolean
+  }
 </script>
 <style lang="css" scoped>
-.box {
-  margin: auto;
-}
+  .box {
+    margin: auto;
+  }
 
-.img-hover .could-hover {
-  cursor: pointer;
-  transition: transform .2s, filter .2s ease-in-out;
-}
-.img-hover:hover .could-hover {
-  transform: scale(1.1);
-  filter: brightness(1.2);
-}
+  .img-hover .could-hover {
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s ease-in-out;
+  }
+  .img-hover:hover .could-hover {
+    transform: scale(1.1);
+    filter: brightness(1.2);
+  }
 </style>
 

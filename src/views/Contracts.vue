@@ -19,13 +19,15 @@
         <Contract @select="onSelect(item.id)" :item="item" class="contract-box">
           <slot>
             <p class="buttons buttons-slot">
-              <button @click.stop="remove(item)" class="button is-danger is-inverted">
-                <b-icon icon="trash-alt" size="is-small"></b-icon>
-              </button>
               <button @click.stop="edit(item)" class="button is-primary is-inverted">
                 <b-icon icon="edit" size="is-small"></b-icon>
               </button>
             </p>
+          </slot>
+          <slot slot="right">
+            <button @click.stop="remove(item)" class="buttons-slot button is-danger is-inverted">
+              <b-icon icon="trash-alt" size="is-small"></b-icon>
+            </button>
           </slot>
         </Contract>
       </div>
@@ -91,9 +93,9 @@
             address: address
           }
           this.open()
-          break;
+          break
         default:
-          break;
+          break
       }
     }
 
@@ -151,12 +153,10 @@
     transition: opacity 0.2s ease-in-out;
   }
   .contract-box {
-    max-width: 400px;
-    min-width: 370px;
+    max-width: 360px;
+    min-width: 330px;
   }
   .contract-box:hover .buttons-slot {
     opacity: 1;
   }
 </style>
-
-
