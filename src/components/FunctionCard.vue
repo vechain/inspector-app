@@ -35,7 +35,7 @@
               type="button"
               @click="addShortCut(item.name)"
               class="button is-rounded is-primary is-outlined"
-            >Short Cut</button>
+            >Shortcut</button>
             <button
               v-if="!item.constant"
               @click.stop="executeFC"
@@ -84,8 +84,8 @@
 
     private addShortCut(name: string) {
       this.$dialog.prompt({
-        title: 'Add Short Cut',
-        message: 'Input a short cut',
+        title: 'Add Shortcut',
+        message: 'Input a shortcut',
         inputAttrs: {
           placeholder: 'Filter name',
           value: name,
