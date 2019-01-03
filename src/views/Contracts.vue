@@ -90,7 +90,7 @@
       switch (action) {
         case 'add':
           this.currentItem = {
-            address: address
+            address
           }
           this.open()
           break
