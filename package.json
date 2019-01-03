@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.5.0",
+    "@types/node": "10.12.18",
     "@vechain/connex": "0.5.0",
     "@vechain/picasso": "^1.0.3",
     "buefy": "0.7.0",
@@ -17,6 +18,7 @@
     "dexie": "2.0.4",
     "dexie-observable": "1.0.0-beta.5",
     "mersenne-twister": "1.1.0",
+    "thor-devkit": "0.7.0",
     "vue": "^2.5.17",
     "vue-class-component": "^6.0.0",
     "vue-property-decorator": "^7.0.0",
