@@ -4,7 +4,7 @@
       <strong>We're sorry but Inspect doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
     <div class="notification is-warning">
-        No connex environment detacted, please download sync!
+        No connex environment detacted, please <a href="https://github.com/vechain/thor-sync.electron/releases"> download VeChain Sync </a>!
     </div>
   </div>
 </template>
