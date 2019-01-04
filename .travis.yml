@@ -2,10 +2,12 @@ script:
 - |
   npm i
   npm run build
+- cp dist/index.html dist/404.html
 deploy:
   provider: pages
   skip-cleanup: true
   github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+  repo: "vechain/inspector"
   keep-history: true
   local-dir: dist
   on:
