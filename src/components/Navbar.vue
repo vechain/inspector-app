@@ -2,13 +2,10 @@
   <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
     <div class="container">
       <div class="navbar-brand is-marginless">
-          <!-- style="font-family: Noteworthy,Bradley Hand, Ink Free" -->
-        <h2
-          class="subtitle has-text-white is-2"
-        >Inspector</h2>
+        <h2 class="subtitle has-text-white is-2" style="padding-left: 20px">Inspector</h2>
       </div>
       <div class="navbar-menu">
-        <div style="width: 60px"></div>
+        <div style="width: 40px"></div>
         <div class="navbar-start">
           <router-link
             v-for="(item, index) in routes"
@@ -59,7 +56,6 @@
   @Component
   export default class Navbar extends Vue {
     private routes = [
-      // { name: 'home', text: 'Home' },
       { name: 'contracts', text: 'Contracts' },
       { name: 'deploy', text: 'Deploy' }
     ]
@@ -77,8 +73,13 @@
     private async created() {
       await this.getList()
       await this.countShortCuts()
-      BUS.$on('added-filter', () => {
+
+      DB.subscribe('filters', () => {
         this.getList()
+      })
+
+      DB.subscribe('shortCuts', () => {
+        this.countShortCuts()
       })
     }
   }
