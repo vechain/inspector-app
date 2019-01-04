@@ -82,6 +82,10 @@
       await this.list()
       this.prepare()
       loading.close()
+
+      DB.subscribe('contracts', () => {
+        this.list()
+      })
     }
 
     prepare() {
