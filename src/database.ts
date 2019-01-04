@@ -1,6 +1,6 @@
 import Dexie from 'dexie'
-// import 'dexie-observable'
-// import { IDatabaseChange } from 'dexie-observable/api'
+import 'dexie-observable'
+import { IDatabaseChange } from 'dexie-observable/api'
 
 export namespace Entities {
   export interface Contract {
@@ -16,7 +16,7 @@ export namespace Entities {
   }
 
   export interface ShortCuts extends Contract {
-    contractName?: string,
+    contractName?: string
     type: 'read' | 'write'
   }
 }
@@ -29,39 +29,35 @@ class Database extends Dexie {
   constructor() {
     super('inspect')
 
-    this.version(1).stores({
+    this.version(2).stores({
       contracts: '++id, &address, name',
       filters: '++id, address, name, contractName',
       shortCuts: '++id, address, name, contractName'
     })
     this.open().catch((err) => {
       // tslint:disable-next-line:no-console
-      console.error(err)})
+      console.error(err)
+    })
   }
 
-  // public subscribe(
-  //   tableName: string,
-  //   onChange: (changes: IDatabaseChange[]) => void
-  // ) {
-  //   const ev = this.on('changes')
-  //   const fn = (changes: IDatabaseChange[]) => {
-  //     changes = changes.filter(c => c.table === tableName)
-  //     if (changes.length > 0) {
-  //       onChange(changes)
-  //     }
-  //   }
-  //   ev.subscribe(fn)
-  //   return {
-  //     unsubscribe: () => ev.unsubscribe(fn)
-  //   }
-  // }
+  public subscribe(
+    tableName: string,
+    onChange: (changes: IDatabaseChange[]) => void
+  ) {
+    const ev = this.on('changes')
+    const fn = (changes: IDatabaseChange[]) => {
+      changes = changes.filter((c) => c.table === tableName)
+      if (changes.length > 0) {
+        onChange(changes)
+      }
+    }
+    ev.subscribe(fn)
+    return {
+      unsubscribe: () => ev.unsubscribe(fn)
+    }
+  }
 }
 
 const DB = new Database()
-
-// DB.filters.hook('creating', function() {
-//   BUS.$emit('added-filter')
-
-// })
 
 export default DB
