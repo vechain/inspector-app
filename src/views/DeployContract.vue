@@ -3,10 +3,10 @@
     <div class="container">
       <form>
         <b-field label="Byte Code">
-          <b-input rows="10" v-model="code" type="textarea"/>
+          <b-input rows="10" v-model.trim="code" type="textarea"/>
         </b-field>
         <b-field label="Value">
-          <b-input v-model="value" placeholder="number" type="number"/>
+          <b-input v-model.trim="value" placeholder="number" type="number"/>
         </b-field>
         <b-field class="is-clearfix">
           <button type="button" @click="sendCode" class="is-pulled-right button is-primary">Send</button>
