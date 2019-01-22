@@ -1,7 +1,7 @@
 <template>
     <div class="section">
         <div class="container">
-            <form>
+            <form @submit.prevent="sendCode">
                 <b-field
                     :type="{'is-danger': errors.has('code')}"
                     :message="errors.first('code')"
@@ -16,24 +16,20 @@
                     />
                 </b-field>
                 <b-field
-                    :type="{'is-danger': errors.has('value')}"
-                    :message="errors.firstByRule('value', 'decimal')"
-                    label="Value"
+                    :type="{'is-danger': errors.has('vet')}"
+                    :message="errors.first('vet')"
+                    label="Vet"
                 >
-                    <b-input
-                        v-model.trim="value"
-                        name="value"
-                        v-validate="'decimal'"
-                        placeholder="number"
-                        type="text"
-                    />
+                    <b-input v-model.trim="vet" v-validate="'vet'" placeholder="number (optional)" name="vet" type="text"/>
+                </b-field>
+                <b-field label="Valid Hex value (wei)">
+                    <span class="is-fixed-font">{{haxValue}}</span>
+                </b-field>
+                <b-field label="Valid Integer value (wei)">
+                    <span class="is-fixed-font">{{numberValue}}</span>
                 </b-field>
                 <b-field class="is-clearfix">
-                    <button
-                        type="button"
-                        @click="sendCode"
-                        class="is-pulled-right button is-primary"
-                    >Send</button>
+                    <button type="submit" class="is-pulled-right button is-primary">Send</button>
                 </b-field>
             </form>
         </div>
@@ -41,20 +37,46 @@
 </template>
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
+
 @Component
 export default class DeployContract extends Vue {
     code: string = ''
-    value: number | null = null
+    vet: number | null = null
+    get haxValue() {
+        const vet = BN(this.vet)
+        if (!vet.isNaN() && !vet.isNegative()) {
+            return '0x' + BN(vet.multipliedBy(1e18).toFixed(0)).toString(16)
+        } else {
+            return '0x0'
+        }
+    }
+    get numberValue() {
+        const vet = BN(this.vet)
+        if (!vet.isNaN() && !vet.isNegative()) {
+            return vet.multipliedBy(1e18).toFixed(0)
+        } else {
+            return '0'
+        }
+    }
     async checkForm() {
         const result = await this.$validator.validateAll()
         return result
     }
     async sendCode() {
         if (await this.checkForm()) {
-            connex.vendor
-                .sign('tx')
-                .comment('Inspector deploy CT')
-                .request([{ value: this.value || 0, data: this.code, to: null }])
+            try {
+                connex.vendor
+                    .sign('tx')
+                    .comment('Inspector deploy CT')
+                    .request([{ value: this.haxValue || 0, data: this.code, to: null }])
+            } catch (error) {
+                this.$toast.open({
+                    type: 'is-danger',
+                    message: `${error.name}: ${error.message}`,
+                    position: 'is-top',
+                    duration: 3000
+                })
+            }
         }
     }
 }
