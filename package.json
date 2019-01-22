@@ -12,6 +12,7 @@
     "@types/node": "10.12.18",
     "@vechain/connex": "0.5.0",
     "@vechain/picasso": "^1.0.3",
+    "bignumber.js": "8.0.2",
     "buefy": "0.7.0",
     "bulma": "0.7.2",
     "color": "3.1.0",
