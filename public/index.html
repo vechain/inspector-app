@@ -6,14 +6,19 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <link rel="icon" href="<%= BASE_URL %>favicon.ico" />
     <title>Inspector</title>
+    <script>
+      if (!window.connex) {
+        location.href =
+          'https://env.vechain.org/#' + encodeURIComponent(location.href)
+      }
+    </script>
   </head>
   <body id="app">
-    <noscript >
+    <noscript>
       <div class="notification is-danger">
         <strong
           >We're sorry but Inspect doesn't work properly without JavaScript
-          enabled. Please enable it to continue.</strong
-        >
+          enabled. Please enable it to continue.</strong>
       </div>
     </noscript>
     <!-- built files will be auto injected -->
