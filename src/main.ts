@@ -11,6 +11,7 @@ import './filters'
 import './directives'
 import router from './Router'
 import './overwrite.css'
+import VueAnalytics from 'vue-analytics'
 
 Vue.use(Buefy, {
   defaultIconPack: 'fas'
@@ -19,6 +20,13 @@ Vue.use(Buefy, {
 Vue.use(VeeValidate, {
   events: 'blur',
   validity: true
+})
+
+Vue.use(VueAnalytics, {
+  id: 'UA-132391998-2',
+  debug: {
+    sendHitTask: process.env.NODE_ENV === 'production',
+  },
 })
 
 Vue.config.productionTip = false

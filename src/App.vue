@@ -14,6 +14,9 @@ import Navbar from './components/Navbar.vue'
     }
 })
 export default class App extends Vue {
+    public created() {
+        this.$ga.page('/inspector')
+    }
 }
 </script>
 <style>
