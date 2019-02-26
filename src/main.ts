@@ -12,7 +12,6 @@ import './directives'
 import router from './Router'
 import './overwrite.css'
 
-
 Vue.use(Buefy, {
   defaultIconPack: 'fas'
 })
