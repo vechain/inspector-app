@@ -1,6 +1,5 @@
 <template>
 <body class="has-navbar-fixed-top">
-    <!-- <EnvInspect :isShow="!isSync"/> -->
     <Navbar class="is-fixed-top"/>
     <router-view class="router-view"></router-view>
 </body>
@@ -8,12 +7,10 @@
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
 import Navbar from './components/Navbar.vue'
-import EnvInspect from './components/EnvInspect.vue'
 
 @Component({
     components: {
-        Navbar,
-        EnvInspect
+        Navbar
     }
 })
 export default class App extends Vue {
