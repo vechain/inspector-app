@@ -49,12 +49,18 @@ export default class AccountCall extends Vue {
       return item.isValid === false
     })
   }
+
+  public get hexValue() {
+    return BN(this.item.payable ? this.value || 0 : 0).multipliedBy(1e18).toFixed(0).toString(16)
+  }
+
   private async readMethod() {
     try {
       if (this.caller) {
-        this.resp = await this.method!.caller(this.caller).call(...this.params)
+        // tslint:disable-next-line:max-line-length
+        this.resp = await this.method!.value(this.hexValue).caller(this.caller).call(...this.params)
       } else {
-        this.resp = await this.method!.value(this.item.payable ? this.value || '0x0' : '0x0').call(...this.params)
+        this.resp = await this.method!.value(this.hexValue).call(...this.params)
       }
     } catch (error) {
       // tslint:disable-next-line:no-console
@@ -75,7 +81,7 @@ export default class AccountCall extends Vue {
         .comment(`inspect-${this.address}`)
         .request([
           {
-            ...this.method!.value(this.item.payable ? this.value || '0x0' : '0x0').asClause(...this.params),
+            ...this.method!.value(this.hexValue).asClause(...this.params),
             comment: this.item.name
           }
         ])

@@ -5,11 +5,10 @@
                 <b-field
                     class="item-content"
                     horizontal
-                    v-model="caller"
                     message="Special address to call the method, it's not the param of the method"
                     label="Caller"
                 >
-                    <b-input placeholder="Optional: Address"></b-input>
+                    <b-input v-model="caller" placeholder="Optional: Address"></b-input>
                 </b-field>
                 <b-field
                     class="item-content"
@@ -27,7 +26,7 @@
                     ></b-input>
                 </b-field>
                 <b-field v-if="item.payable" class="item-content" horizontal label="value">
-                    <b-input type="number" placeholder="number" v-model="value"></b-input>
+                    <b-input type="text" placeholder="number(vet)" v-model.trim="value"></b-input>
                 </b-field>
                 <b-field class="item-content" horizontal>
                     <div class="buttons has-addons">
