@@ -54,7 +54,7 @@ export default class AccountCall extends Vue {
       if (this.caller) {
         this.resp = await this.method!.caller(this.caller).call(...this.params)
       } else {
-        this.resp = await this.method!.call(...this.params)
+        this.resp = await this.method!.value(this.item.payable ? this.value || '0x0' : '0x0').call(...this.params)
       }
     } catch (error) {
       // tslint:disable-next-line:no-console
