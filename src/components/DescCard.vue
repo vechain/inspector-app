@@ -1,7 +1,7 @@
 <template>
   <Panel :title="$attrs.title">
     <template slot="panel-content">
-      <pre>{{item}}</pre>
+      <pre style="max-height: 500px; overflow: auto">{{item}}</pre>
     </template>
   </Panel>
 </template>

@@ -1,129 +1,132 @@
 <template>
-  <Panel v-model="activeTab" :tabs="tabs" :title="item.name">
-    <template slot="panel-content">
-      <form @reset.self.prevent="reset" v-show="activeTab === tabs[0]">
-        <b-field
-          class="item-content"
-          horizontal
-          v-model="caller"
-          message="Special address to call the method, it's not the param of the method"
-          label="Caller"
-        >
-          <b-input placeholder="Optional: Address"></b-input>
-        </b-field>
-        <b-field
-          class="item-content"
-          horizontal
-          :label="v.name"
-          v-for="(v, index) in item.inputs"
-          :key="index"
-        >
-          <b-input
-            ref="input"
-            required
-            :name="v.name"
-            v-model="params[index]"
-            :placeholder="v.type"
-          ></b-input>
-        </b-field>
-        <b-field v-if="item.payable" class="item-content" horizontal label="value">
-          <b-input type="number" placeholder="number" v-model="value"></b-input>
-        </b-field>
-        <b-field class="item-content" horizontal>
-          <div class="buttons has-addons is-pulled-right">
-            <button
-              type="button"
-              @click="addShortCut(item.name)"
-              class="button is-rounded is-primary is-outlined"
-            >Shortcut</button>
-            <button
-              v-if="!item.constant"
-              @click.stop="executeFC"
-              type="button"
-              class="button is-rounded is-primary is-outlined"
-            >Execute</button>
-            <button
-              type="button"
-              @click.stop="callFC"
-              class="button is-rounded is-primary is-outlined"
-            >Call</button>
-            <button
-              v-if="params.length"
-              type="reset"
-              class="button is-rounded is-primary is-outlined"
-            >Reset</button>
-          </div>
-        </b-field>
-        <b-field v-if="resp">
-          <pre>{{resp}}</pre>
-        </b-field>
-      </form>
-      <div v-show="activeTab === tabs[1]">
-        <pre>{{item}}</pre>
-      </div>
-    </template>
-  </Panel>
+    <Panel v-model="activeTab" :tabs="tabs" :title="item.name">
+        <template slot="panel-content">
+            <form @reset.self.prevent="reset" v-show="activeTab === tabs[0]">
+                <b-field
+                    class="item-content"
+                    horizontal
+                    v-model="caller"
+                    message="Special address to call the method, it's not the param of the method"
+                    label="Caller"
+                >
+                    <b-input placeholder="Optional: Address"></b-input>
+                </b-field>
+                <b-field
+                    class="item-content"
+                    horizontal
+                    :label="v.name"
+                    v-for="(v, index) in item.inputs"
+                    :key="index"
+                >
+                    <b-input
+                        ref="input"
+                        required
+                        :name="v.name"
+                        v-model="params[index]"
+                        :placeholder="v.type"
+                    ></b-input>
+                </b-field>
+                <b-field v-if="item.payable" class="item-content" horizontal label="value">
+                    <b-input type="number" placeholder="number" v-model="value"></b-input>
+                </b-field>
+                <b-field class="item-content" horizontal>
+                    <div class="buttons has-addons">
+                        <button
+                            type="button"
+                            @click="addShortCut(item.name)"
+                            class="button is-rounded is-primary is-outlined"
+                        >Shortcut</button>
+                        <button
+                            v-if="!item.constant"
+                            @click.stop="executeFC"
+                            type="button"
+                            class="button is-rounded is-primary is-outlined"
+                        >Execute</button>
+                        <button
+                            type="button"
+                            @click.stop="callFC"
+                            class="button is-rounded is-primary is-outlined"
+                        >Call</button>
+                        <button
+                            v-if="params.length"
+                            type="reset"
+                            class="button is-rounded is-primary is-outlined"
+                        >Reset</button>
+                    </div>
+                </b-field>
+                <b-field v-if="resp">
+                    <pre>{{resp}}</pre>
+                </b-field>
+            </form>
+            <div v-show="activeTab === tabs[1]">
+                <pre>{{item}}</pre>
+            </div>
+        </template>
+    </Panel>
 </template>
 <script lang="ts">
-  import Panel from './Panel.vue'
-  import AccountCall from '../mixin/AccountCall'
-  import { Vue, Component, Prop, Mixins } from 'vue-property-decorator'
-  import DB from '../database'
-  @Component({
+import Panel from './Panel.vue'
+import AccountCall from '../mixin/AccountCall'
+import { Vue, Component, Prop, Mixins } from 'vue-property-decorator'
+import DB from '../database'
+@Component({
     components: {
-      Panel
+        Panel
     }
-  })
-  export default class FunctionCard extends Mixins(AccountCall) {
+})
+export default class FunctionCard extends Mixins(AccountCall) {
     private tabs = ['Inputs', 'Description']
     private activeTab = 'Inputs'
     created() {
-      this.activeTab = this.tabs[0]
-      this.initMethod(this.address, this.item)
+        this.activeTab = this.tabs[0]
+        this.initMethod(this.address, this.item)
     }
 
     private addShortCut(name: string) {
-      this.$dialog.prompt({
-        title: 'Add Shortcut',
-        message: 'Input a shortcut',
-        inputAttrs: {
-          placeholder: 'Filter name',
-          value: name,
-          maxlength: 30,
-          required: true
-        },
-        onConfirm: (value: string) => {
-          this.saveShortCut(value)
-        }
-      })
+        this.$dialog.prompt({
+            title: 'Add Shortcut',
+            message: 'Input a shortcut',
+            inputAttrs: {
+                placeholder: 'Filter name',
+                value: name,
+                maxlength: 30,
+                required: true
+            },
+            onConfirm: (value: string) => {
+                this.saveShortCut(value)
+            }
+        })
     }
 
     private async saveShortCut(name: string) {
-      const contract =
-        (await DB.contracts
-          .where('address')
-          .equals(this.address)
-          .first()) || null
+        const contract =
+            (await DB.contracts
+                .where('address')
+                .equals(this.address)
+                .first()) || null
 
-      await DB.shortCuts.add({
-        name,
-        address: contract!.address,
-        contractName: contract!.name,
-        createdTime: Date.now(),
-        abi: this.item,
-        type: this.item.constant ? 'read' : 'write'
-      })
+        await DB.shortCuts.add({
+            name,
+            address: contract!.address,
+            contractName: contract!.name,
+            createdTime: Date.now(),
+            abi: this.item,
+            type: this.item.constant ? 'read' : 'write'
+        })
 
-      BUS.$emit('added-shortcut')
-      this.$toast.open({
-        message: 'Added success!',
-        type: 'is-success'
-      })
+        BUS.$emit('added-shortcut')
+        this.$toast.open({
+            message: 'Added success!',
+            type: 'is-success'
+        })
     }
-  }
+}
 </script>
 <style lang="scss" scoped>
-  .item-content {
+.item-content {
     padding: 0.5rem 5rem 0 0;
-  }
+}
+.item-content .buttons {
+    justify-content: flex-end;
+}
 </style>
