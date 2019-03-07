@@ -1,6 +1,6 @@
 <template>
     <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
-        <!-- <div class="container"> -->
+        <div class="container">
         <div class="navbar-brand is-marginless">
             <h2 class="subtitle has-text-white is-2" style="padding-left: 20px">Inspector</h2>
             <a role="button" class="navbar-burger" @click="burgerActive = !burgerActive" :class="{'is-active': burgerActive}">
@@ -49,8 +49,11 @@
                     :to="{name: 'short_cuts'}"
                 >Shortcuts</router-link>
             </div>
+            <div class="navbar-end">
+                <a class="navbar-item" href="https://github.com/vechain/inspector-app" target="_blank">GitHub</a>
+            </div>
         </div>
-        <!-- </div> -->
+        </div>
     </nav>
 </template>
 
