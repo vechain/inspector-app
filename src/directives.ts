@@ -5,7 +5,7 @@ import { VNode } from 'vue'
 Vue.directive('ident', {
   inserted(el: HTMLElement, binding: any) {
     if (binding.value !== binding.oldValue) {
-      const svg = picasso(binding.value)
+      const svg = picasso((binding.value as string).toLowerCase())
       if (el.nodeName === 'IMG') {
         const temp = el as HTMLImageElement
         temp.src = `data:image/svg+xml;utf8,${svg}`
