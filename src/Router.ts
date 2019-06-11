@@ -50,6 +50,9 @@ const router = new Router({
       name: 'short_cuts',
       component: ShortCuts,
       path: '/view/scs'
+    }, {
+      path: '*',
+      redirect: { name: 'contracts' }
     }
   ]
 })
