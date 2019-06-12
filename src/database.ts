@@ -38,6 +38,20 @@ class Database extends Dexie {
       // tslint:disable-next-line:no-console
       console.error(err)
     })
+    this.contracts.hook('deleting', (primKey: string, obj: Entities.Contract, transaction: Dexie.Transaction) => {
+      if (obj.address === '0x000000000000000000000050726f746f74797065') {
+        localStorage.setItem('prototype_deleted', JSON.stringify(true))
+      }
+    })
+  }
+
+  public async insetBuildInAbi(item: Entities.Contract) {
+    const temp = localStorage.getItem('prototype_deleted')
+    const isNeedInsert = temp === null ? true : false
+    if (isNeedInsert) {
+      localStorage.setItem('prototype_deleted', JSON.stringify(false))
+      await this.contracts.add(item)
+    }
   }
 
   public subscribe(

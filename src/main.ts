@@ -1,4 +1,4 @@
-import './database'
+import DB from './database'
 import './window.init'
 import Vue from 'vue'
 import Buefy from 'buefy'
@@ -31,6 +31,12 @@ Vue.use(VueAnalytics, {
 
 Vue.config.productionTip = false
 
+DB.insetBuildInAbi({
+  name: 'prototype',
+  // tslint:disable-next-line:no-var-requires
+  ...require('./abis/prototype.json'),
+  createdTime: Date.now()
+})
 new Vue({
   router,
   render: (h) => h(App)
