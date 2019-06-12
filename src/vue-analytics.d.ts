@@ -1,7 +1,7 @@
 import _Vue, { PluginFunction } from 'vue'
 
 declare class VueAnalytics {
-  public static install(Vue: typeof _Vue, options: any): void
+  public static install(vue: typeof _Vue, options: any): void
   public analyticsMiddleware: any
   public onAnalyticsReady: any
   public event: any
