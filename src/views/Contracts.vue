@@ -75,6 +75,7 @@
     }
 
     async created() {
+      this.$ga.page('/contracts')
       const loading = this.$loading.open({
         container: null
       })
