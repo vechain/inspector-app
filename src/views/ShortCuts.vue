@@ -76,6 +76,7 @@
     private currentPage = 1
     private caller = ''
     async created() {
+      this.$ga.page('/view/scs')
       await this.onPageChange(1)
       await this.countList()
     }

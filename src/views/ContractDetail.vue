@@ -178,6 +178,7 @@ export default class ContractDetail extends Vue {
     }
 
     private async created() {
+        this.$ga.page('/contract/detail')
         const idOrAddress: string =
             this.$route.query.id || this.$route.query.address
 
