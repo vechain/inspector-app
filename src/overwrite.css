@@ -9,12 +9,9 @@
 .modal-card-head, .modal-card-foot {
   background-color: #fff;
 }
-
-.is-fixed-font {
-  font-family: Menlo, Consolas, DejaVu Sans Mono;
+.display-6 {
+  font-size: 14px;
 }
-
-
 @-webkit-keyframes textChange {
   from {
     background: rgba(0, 209, 178, 0.8);
