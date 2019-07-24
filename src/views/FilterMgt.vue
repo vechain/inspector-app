@@ -36,7 +36,7 @@
             >{{props.row.name}}</router-link>
           </b-table-column>
           <b-table-column centered label="Address">
-            <span class="is-fixed-font">{{props.row.address}}</span>
+            <span class="is-family-monospace has-text-weight-semibold">{{props.row.address}}</span>
           </b-table-column>
           <b-table-column centered label="Operations">
             <div class="buttons has-addons is-centered">
