@@ -20,7 +20,7 @@
                         >As a view</button>
                         <button
                             type="button"
-                            @click="getResult"
+                            @click="onRefresh(0)"
                             class="button is-rounded is-primary is-outlined"
                         >Execute</button>
                         <button
@@ -36,20 +36,53 @@
                 <pre>{{item}}</pre>
             </div>
             <div v-show="activeTab === tabs[2]">
-                <LogList :keys="columns" :list="list"/>
+                <nav class="navbar is-transparent" style="margin-bottom: 2px;">
+                    <div class="navbar-item">
+                        <div class="buttons has-addons">
+                            <b-button
+                                @click="onRefresh"
+                                tag="button"
+                                class="is-primary"
+                                icon-left="sync-alt"
+                            ></b-button>
+                            <b-button
+                                @click="onPrev"
+                                tag="button"
+                                class="is-primary"
+                                :disabled="this.page < 1"
+                                icon-left="chevron-left"
+                            ></b-button>
+                            <b-button
+                                @click="onNext"
+                                tag="button"
+                                class="is-primary"
+                                :disabled="list.length < 5"
+                                icon-left="chevron-right"
+                            ></b-button>
+                        </div>
+                    </div>
+                    <div class="navbar-item">{{ranges}}</div>
+                </nav>
+                <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
+                <template v-for="(event, i) in list">
+                    <EventShowCard :item="event" :key="page * 5 + i" :params="item.inputs">
+                        <span slot="title">#{{page * 5 + i + 1}}</span>
+                    </EventShowCard>
+                </template>
             </div>
         </template>
     </Panel>
 </template>
 <script lang="ts">
 import Panel from './Panel.vue'
-import LogList from './LogList.vue'
-import { Vue, Component, Prop } from 'vue-property-decorator'
+
+import EventShowCard from './EventShowCard.vue'
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 import DB from '../database'
 @Component({
     components: {
         Panel,
-        LogList
+        EventShowCard
     }
 })
 export default class EventCard extends Vue {
@@ -59,11 +92,13 @@ export default class EventCard extends Vue {
     @Prop()
     private address!: string
 
-    private list: any[] = []
+    private page = 0
 
+    private list: any[] = []
     private params: any = {}
     private tabs = ['Filters', 'Description', 'Datas']
     private activeTab = ''
+    private isLoading = false
 
     private event!: Connex.Thor.EventVisitor
 
@@ -82,10 +117,28 @@ export default class EventCard extends Vue {
         })
     }
 
-    get columns() {
-        return this.item.inputs.map((item: ABI.EventInputItem) => {
-            return item.name
-        })
+    get ranges() {
+        return (this.page * 5 + (this.list.length ? 1 : 0)) + ' - ' + (this.page * 5 + this.list.length)
+    }
+    @Watch('activeTab')
+    onTabChange() {
+        if (this.activeTab === 'Datas') {
+            this.getResult(this.page)
+        }
+    }
+    private onNext() {
+        this.page++
+        this.getResult(this.page)
+    }
+    private onPrev() {
+        if (this.page > 0) {
+            this.page--
+            this.getResult(this.page)
+        }
+    }
+    private onRefresh() {
+        this.page = 0
+        this.getResult(0)
     }
 
     private addFilter(name: string) {
@@ -129,7 +182,8 @@ export default class EventCard extends Vue {
         })
     }
 
-    private async getResult() {
+    private async getResult(page: number) {
+        this.isLoading = true
         const params: any[] = []
 
         for (const key in this.params) {
@@ -146,7 +200,8 @@ export default class EventCard extends Vue {
         this.list = await this.event
             .filter(params)
             .order('desc')
-            .apply(0, 5)
+            .apply(page * 5, 5)
+        this.isLoading = false
         this.activeTab = this.tabs[2]
     }
 }
@@ -156,6 +211,6 @@ export default class EventCard extends Vue {
     padding: 0.5rem 5rem 0 0;
 }
 .item-content .buttons {
-  justify-content: flex-end;
+    justify-content: flex-end;
 }
 </style>
