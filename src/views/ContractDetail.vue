@@ -1,8 +1,18 @@
 <template>
     <section class="section contract-detail">
         <div v-if="contract" class="container">
-            <Contract :isShort="false" :item="contract"/>
-            <section class="section">
+            <Contract :isShort="false" :item="contract">
+                <slot slot="right">
+                    <b-button
+                        tag="a"
+                        size="is-small"
+                        :href="`https://explore.veforge.com/accounts/${contract.address}`"
+                        target="_blank"
+                        class="buttons-slot button is-primary"
+                    >Veforge</b-button>
+                </slot>
+            </Contract>
+            <section style="margin-top: 20px;">
                 <b-field grouped>
                     <b-field expanded>
                         <b-field class="is-pulled-right">
@@ -54,7 +64,7 @@
                     />
                 </div>
                 <div v-show="tabIndex === 2">
-                    <DescCard style="margin-bottom: 20px" :item="abi" title="ABI"/>
+                    <DescCard style="margin-bottom: 20px" :item="abi" title="ABI" />
                     <DescCard
                         class="code-pre"
                         v-if="code"
@@ -74,7 +84,7 @@
                     />
                 </div>
                 <div v-show="tabIndex === 4">
-                    <FallbackCard :fb="fb"/>
+                    <FallbackCard :fb="fb" />
                 </div>
             </section>
         </div>
