@@ -23,10 +23,10 @@
                     <b-input v-model.trim="vet" v-validate="'vet'" placeholder="number (optional)" name="vet" type="text"/>
                 </b-field>
                 <b-field label="Valid Hex value (wei)">
-                    <span class="is-fixed-font">{{haxValue}}</span>
+                    <span class="is-family-monospace has-text-weight-semibold">{{haxValue}}</span>
                 </b-field>
                 <b-field label="Valid Integer value (wei)">
-                    <span class="is-fixed-font">{{numberValue}}</span>
+                    <span class="is-family-monospace has-text-weight-semibold">{{numberValue}}</span>
                 </b-field>
                 <b-field class="is-clearfix">
                     <button type="submit" class="is-pulled-right button is-primary">Send</button>
