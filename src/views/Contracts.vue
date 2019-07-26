@@ -44,7 +44,7 @@
         </div>
       </div>
     </div>
-    <b-modal :canCancel="['outside']" :active.sync="isModalActive">
+    <b-modal :width="640" :canCancel="['outside']" :active.sync="isModalActive">
       <EditContract @cancel="onCancel" @finished="reload" :item="currentItem"/>
     </b-modal>
   </section>
