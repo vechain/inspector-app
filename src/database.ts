@@ -13,11 +13,13 @@ export namespace Entities {
 
   export interface Filter extends Contract {
     contractName?: string
+    fromPrototype?: boolean
   }
 
   export interface ShortCuts extends Contract {
     contractName?: string
     type: 'read' | 'write'
+    fromPrototype?: boolean
   }
 }
 
@@ -34,24 +36,14 @@ class Database extends Dexie {
       filters: '++id, address, name, contractName',
       shortCuts: '++id, address, name, contractName'
     })
+    this.version(3).stores({
+      shortCuts: '++id, address, name, contractName, fromPrototype',
+      filters: '++id, address, name, contractName, fromPrototype',
+    })
     this.open().catch((err) => {
       // tslint:disable-next-line:no-console
       console.error(err)
     })
-    this.contracts.hook('deleting', (primKey: string, obj: Entities.Contract, transaction: Dexie.Transaction) => {
-      if (obj.address === '0x000000000000000000000050726f746f74797065') {
-        localStorage.setItem('prototype_deleted', JSON.stringify(true))
-      }
-    })
-  }
-
-  public async insetBuildInAbi(item: Entities.Contract) {
-    const temp = localStorage.getItem('prototype_deleted')
-    const isNeedInsert = temp === null ? true : false
-    if (isNeedInsert) {
-      localStorage.setItem('prototype_deleted', JSON.stringify(false))
-      await this.contracts.add(item)
-    }
   }
 
   public subscribe(

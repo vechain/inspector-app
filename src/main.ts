@@ -29,12 +29,6 @@ Vue.use(VueAnalytics, {
 
 Vue.config.productionTip = false
 
-DB.insetBuildInAbi({
-  name: 'prototype',
-  // tslint:disable-next-line:no-var-requires
-  ...require('./abis/prototype.json'),
-  createdTime: Date.now()
-})
 new Vue({
   router,
   render: (h) => h(App)
