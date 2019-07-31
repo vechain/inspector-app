@@ -1,7 +1,9 @@
 <template>
 <body class="has-navbar-fixed-top">
-    <Navbar class="is-fixed-top"/>
-    <router-view class="router-view"></router-view>
+    <Navbar class="is-fixed-top" />
+    <div class="router-view">
+        <router-view></router-view>
+    </div>
 </body>
 </template>
 <script lang="ts">
