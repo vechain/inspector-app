@@ -26,7 +26,7 @@
                     v-for="(v, index) in item.inputs"
                     :key="index"
                 >
-                    <b-input ref="input" required v-model="params[index]" :placeholder="v.type"></b-input>
+                    <b-input ref="input" :readonly="(prototype && v.name === '_self')" required v-model="params[index]" :placeholder="v.type"></b-input>
                 </b-field>
                 <b-field v-if="item.payable" class="item-content" horizontal label="value">
                     <b-input type="number" placeholder="number" v-model="value"></b-input>
@@ -62,12 +62,16 @@ import Panel from './Panel.vue'
 import AccountCall from '../mixin/AccountCall'
 import { Vue, Component, Prop, Mixins } from 'vue-property-decorator'
 import DB from '../database'
+import { prototype } from 'stream';
 @Component({
     components: {
         Panel
     }
 })
 export default class SampleFuncCard extends Mixins(AccountCall) {
+    @Prop({ default: false })
+    prototype?: boolean
+
     private tabs = ['Inputs', 'Description']
     private activeTab = ''
 
@@ -75,6 +79,12 @@ export default class SampleFuncCard extends Mixins(AccountCall) {
         this.activeTab = this.tabs[0]
         const account = connex.thor.account(this.address)
         this.method = account.method(this.item)
+        if (this.prototype) {
+            const index = this.item.inputs.findIndex((ele: ABI.FunctionItem) => {
+                return ele.name === '_self'
+            })
+            this.params[index] = this.address
+        }
     }
 
     private switchTab(tab: string) {

@@ -34,8 +34,8 @@
                         </b-field>
                     </b-field>
                 </b-field>
-                <b-tabs type="is-centered" v-model="tabIndex" class="block">
-                    <b-tab-item v-for="(item, index) in tabs" :key="index">
+                <b-tabs v-model="tabIndex" class="block">
+                    <b-tab-item :visible="item.visible" v-for="(item, index) in tabs" :key="index">
                         <span slot="header">
                             {{item.text}}
                             <span class="is-size-7" v-if="item.count">({{item.count}})</span>
@@ -86,18 +86,53 @@
                 <div v-show="tabIndex === 4">
                     <FallbackCard :fb="fb" />
                 </div>
+
+                <div v-show="tabIndex === 5">
+                    <FunctionCard
+                        v-for="(item, index) in prList"
+                        :ref="item.name"
+                        :key="index"
+                        :prototype="true"
+                        :address="contract.address"
+                        style="margin-bottom: 20px"
+                        :item="item"
+                    />
+                </div>
+                <div v-show="tabIndex === 6">
+                    <FunctionCard
+                        v-for="(item, index) in pwList"
+                        :ref="item.name"
+                        :key="index"
+                        :prototype="true"
+                        :address="contract.address"
+                        style="margin-bottom: 20px"
+                        :item="item"
+                    />
+                </div>
+                <div v-show="tabIndex === 7">
+                    <EventCard
+                        v-for="(item, index) in peList"
+                        :ref="item.name"
+                        :key="index"
+                        :prototype="true"
+                        :address="contract.address"
+                        style="margin-bottom: 20px"
+                        :item="item"
+                    />
+                </div>
             </section>
         </div>
     </section>
 </template>
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
+import { Vue, Component, Mixins } from 'vue-property-decorator'
 import Contract from '../components/Contract.vue'
 import FunctionCard from '../components/FunctionCard.vue'
 import FallbackCard from '../components/FallbackCard.vue'
 import EventCard from '../components/EventCard.vue'
 import DescCard from '../components/DescCard.vue'
 import DB, { Entities } from '../database'
+import PrototypeAbi from '../mixin/Prototype'
 @Component({
     components: {
         Contract,
@@ -107,7 +142,7 @@ import DB, { Entities } from '../database'
         EventCard
     }
 })
-export default class ContractDetail extends Vue {
+export default class ContractDetail extends Mixins(PrototypeAbi) {
     get filterList() {
         const temp = this.abi
         return temp.filter((item: ABI.FunctionItem | ABI.EventItem) => {
@@ -144,11 +179,12 @@ export default class ContractDetail extends Vue {
     }
     private contract: Entities.Contract | null = null
     private tabIndex: number = 0
-    private tabs: Array<{ text: string; count: number | '' }> = []
+    private tabs: Array<{ text: string; count: number | '', visible: boolean }> = []
     private abi: any = []
     private code?: string = ''
     private name: string = ''
     private caller: string = ''
+    private isProtoType = true
     async getDetail(idOrAddress: string) {
         this.contract =
             (await DB.contracts
@@ -189,18 +225,23 @@ export default class ContractDetail extends Vue {
 
     private async created() {
         this.$ga.page('/contract/detail')
+        this.initAbi()
         const idOrAddress: string =
             this.$route.query.id || this.$route.query.address
 
         await this.getDetail(idOrAddress)
         this.tabs = [
-            { text: 'Read', count: this.readList.length },
-            { text: 'Write', count: this.writeList.length },
-            { text: 'Code & ABI', count: '' },
-            { text: 'Events', count: this.eventList.length },
-            { text: 'Fallback', count: '' }
+            { text: 'Read', count: this.readList.length, visible: !!this.readList.length },
+            { text: 'Write', count: this.writeList.length, visible: !!this.writeList.length },
+            { text: 'Code & ABI', count: '', visible: true },
+            { text: 'Events', count: this.eventList.length, visible: !!this.eventList.length },
+            { text: 'Fallback', count: '', visible: !!this.fb },
         ]
+        this.tabs = this.tabs.concat(this.protoTabs)
         await this.getCode(this.contract!.address || '')
+        this.tabIndex = this.tabs.findIndex((item) => {
+            return item.visible
+        })
     }
 
     private onSearchSelect(item: any) {
@@ -228,5 +269,9 @@ export default class ContractDetail extends Vue {
 .code-pre pre {
     word-wrap: break-word;
     white-space: pre-wrap;
+}
+.contract-detail {
+    max-width: 1000px;
+    margin: auto;
 }
 </style>

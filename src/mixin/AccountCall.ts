@@ -5,6 +5,9 @@ export default class AccountCall extends Vue {
   public item: ABI.FunctionItem | any
   @Prop() public address!: string
 
+  @Prop({ default: false })
+  public prototype?: boolean
+
   public value: string | null = null
   public resp: any = null
   public method: Connex.Thor.Method | null = null
@@ -36,7 +39,9 @@ export default class AccountCall extends Vue {
   }
 
   public initMethod(address: string, abi: object) {
-    const account = connex.thor.account(address.toLowerCase())
+    const account = connex.thor.account(this.prototype
+      ? '0x000000000000000000000050726f746f74797065'
+      : address.toLowerCase())
     this.method = account.method(abi)
   }
 

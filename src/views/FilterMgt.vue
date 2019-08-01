@@ -13,7 +13,17 @@
       >
         <template slot-scope="props">
           <b-table-column centered label="ID">{{props.row.id}}</b-table-column>
-          <b-table-column centered label="From Contract">
+          <b-table-column  label="Name">
+            <router-link
+              :to="{
+                name: 'filter_view',
+                params: {
+                  id: props.row.id
+                }
+              }"
+            >{{props.row.name}}</router-link>
+          </b-table-column>
+          <b-table-column  label="Contract">
             <router-link
               :to="{
                 name: 'contract_detail',
@@ -24,19 +34,12 @@
             >
             {{props.row.contractName}}
             </router-link>
+            <b-tooltip label="Prototype">
+              <b-icon style="margin-left: 5px" v-if="props.row.fromPrototype" icon="code-branch" size="is-small"></b-icon>
+            </b-tooltip>
           </b-table-column>
-          <b-table-column centered label="Name">
-            <router-link
-              :to="{
-                name: 'filter_view',
-                params: {
-                  id: props.row.id
-                }
-              }"
-            >{{props.row.name}}</router-link>
-          </b-table-column>
-          <b-table-column centered label="Address">
-            <span class="is-family-monospace has-text-weight-semibold">{{props.row.address}}</span>
+          <b-table-column label="Address">
+            <span class="is-family-monospace has-text-weight-semibold">{{props.row.address | toChecksumAddress | addr}}</span>
           </b-table-column>
           <b-table-column centered label="Operations">
             <div class="buttons has-addons is-centered">
