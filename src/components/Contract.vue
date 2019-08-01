@@ -3,12 +3,7 @@
         <article class="media">
             <div class="media-left">
                 <figure :class="{'could-hover': $listeners.select}" class="image is-64x64">
-                    <img
-                        @click.stop="$emit('select')"
-                        class="is-rounded"
-                        v-ident="item.address"
-                        alt="Image"
-                    />
+                    <img @click.stop="$emit('select')" v-ident="item.address" alt="Image" />
                 </figure>
             </div>
             <div class="media-content">
@@ -16,11 +11,15 @@
                     <p>
                         <strong>{{item.name || ''}}</strong>
                     </p>
-                    <p class="is-family-monospace has-text-weight-semibold display-6"
+                    <p
+                        class="is-family-monospace has-text-weight-semibold display-6"
                         v-if="isShort"
                     >{{item.address | addr}}</p>
                     <p class="is-family-monospace has-text-weight-semibold display-6" v-else>
-                        <a target="_blank" :href="`https://insight.vecha.in/#/accounts/${item.address}`">{{item.address}}</a>
+                        <a
+                            target="_blank"
+                            :href="`https://insight.vecha.in/#/accounts/${item.address}`"
+                        >{{item.address | toChecksumAddress}}</a>
                     </p>
                 </div>
                 <nav class="level">
@@ -34,7 +33,7 @@
             </div>
             <div class="media-right">
                 <div class="content">
-                    <slot name="right"/>
+                    <slot name="right" />
                 </div>
             </div>
         </article>
@@ -55,6 +54,9 @@ export default class Contract extends Vue {
 <style lang="css" scoped>
 .box {
     margin: auto;
+}
+.image img {
+    border-radius: 3px;
 }
 
 .img-hover .could-hover {

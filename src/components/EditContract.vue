@@ -131,7 +131,7 @@
       }
       const obj: Entities.Contract = {
         name: this.form.name,
-        address: this.form.address,
+        address: this.form.address.toLowerCase(),
         abi: JSON.parse(this.form.abi),
         createdTime: Date.now()
       }
