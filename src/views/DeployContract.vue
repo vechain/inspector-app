@@ -1,5 +1,5 @@
 <template>
-    <div class="section">
+    <div class="section" style="max-width: 1000px; margin: auto">
         <div class="container">
             <form @submit.prevent="sendCode">
                 <b-field
