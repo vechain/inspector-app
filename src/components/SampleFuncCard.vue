@@ -62,7 +62,6 @@ import Panel from './Panel.vue'
 import AccountCall from '../mixin/AccountCall'
 import { Vue, Component, Prop, Mixins } from 'vue-property-decorator'
 import DB from '../database'
-import { prototype } from 'stream';
 @Component({
     components: {
         Panel

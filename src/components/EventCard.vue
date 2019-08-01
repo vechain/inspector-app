@@ -206,8 +206,8 @@ export default class EventCard extends Vue {
                 .order('desc')
                 .apply(page * 5, 5)
         } catch (error) {
+            // tslint:disable-next-line:no-console
             console.error(error)
-            // todo
         } finally {
             this.isLoading = false
             this.activeTab = this.tabs[2]
