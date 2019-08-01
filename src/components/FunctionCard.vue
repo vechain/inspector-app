@@ -21,6 +21,7 @@
                         ref="input"
                         required
                         :name="v.name"
+                        :readonly="(prototype && v.name === '_self')"
                         v-model="params[index]"
                         :placeholder="v.type"
                     ></b-input>
@@ -76,8 +77,15 @@ import DB from '../database'
 export default class FunctionCard extends Mixins(AccountCall) {
     private tabs = ['Inputs', 'Description']
     private activeTab = 'Inputs'
+
     created() {
         this.activeTab = this.tabs[0]
+        if (this.prototype) {
+            const index = this.item.inputs.findIndex((ele: ABI.FunctionItem) => {
+                return ele.name === '_self'
+            })
+            this.params[index] = this.address
+        }
         this.initMethod(this.address, this.item)
     }
 
@@ -108,6 +116,7 @@ export default class FunctionCard extends Mixins(AccountCall) {
             name,
             address: contract!.address,
             contractName: contract!.name,
+            fromPrototype: this.prototype,
             createdTime: Date.now(),
             abi: this.item,
             type: this.item.constant ? 'read' : 'write'

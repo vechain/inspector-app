@@ -26,7 +26,8 @@
       >
         <template slot-scope="props">
           <b-table-column centered label="ID">{{props.row.id}}</b-table-column>
-          <b-table-column centered label="From Contract">
+          <b-table-column label="Name">{{props.row.name}}</b-table-column>
+          <b-table-column label="Contract">
             <router-link
               :to="{
                 name: 'contract_detail',
@@ -35,11 +36,15 @@
                 }
               }"
             >{{props.row.contractName}}</router-link>
+            <b-tooltip label="Prototype">
+              <b-icon style="margin-left: 5px" v-if="props.row.fromPrototype" icon="code-branch" size="is-small"></b-icon>
+            </b-tooltip>
           </b-table-column>
-          <b-table-column centered label="Name">{{props.row.name}}</b-table-column>
-          <b-table-column centered label="Type">{{props.row.type}}</b-table-column>
-          <b-table-column centered label="Address">
-            <span class="is-family-monospace has-text-weight-semibold">{{props.row.address}}</span>
+          <b-table-column label="Type">{{props.row.type}}</b-table-column>
+          <b-table-column label="Address">
+            <b-tooltip :label="props.row.address | toChecksumAddress">
+            <span class="is-family-monospace has-text-weight-semibold">{{props.row.address | toChecksumAddress | addr}}</span>
+            </b-tooltip>
           </b-table-column>
           <b-table-column centered label="Operations">
             <div class="buttons has-addons is-centered">
@@ -53,7 +58,7 @@
           </b-table-column>
         </template>
         <template slot="detail" slot-scope="props">
-          <SampleFuncCard caller="caller" :item="props.row.abi" :address="props.row.address"/>
+          <SampleFuncCard caller="caller" :prototype="props.row.fromPrototype" :item="props.row.abi" :address="props.row.address"/>
         </template>
       </b-table>
     </div>

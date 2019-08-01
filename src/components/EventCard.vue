@@ -92,6 +92,9 @@ export default class EventCard extends Vue {
     @Prop()
     private address!: string
 
+    @Prop({default: false})
+    private prototype?: boolean
+
     private page = 0
 
     private list: any[] = []
@@ -172,6 +175,7 @@ export default class EventCard extends Vue {
             name,
             address: contract!.address,
             contractName: contract!.name,
+            fromPrototype: this.prototype,
             createdTime: Date.now(),
             abi: this.item
         })
@@ -196,13 +200,18 @@ export default class EventCard extends Vue {
                 }
             }
         }
-
-        this.list = await this.event
-            .filter(params)
-            .order('desc')
-            .apply(page * 5, 5)
-        this.isLoading = false
-        this.activeTab = this.tabs[2]
+        try {
+            this.list = await this.event
+                .filter(params)
+                .order('desc')
+                .apply(page * 5, 5)
+        } catch (error) {
+            console.error(error)
+            // todo
+        } finally {
+            this.isLoading = false
+            this.activeTab = this.tabs[2]
+        }
     }
 }
 </script>
