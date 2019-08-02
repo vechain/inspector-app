@@ -13,6 +13,16 @@
                     </span>
                     <span
                         style="margin-left: 20px"
+                        class="is-family-secondary display-6 has-text-black-ter has-text-weight-semibold"
+                    >
+                        #Block
+                        <a
+                            target="_blank"
+                            :href="`https://insight.vecha.in/#/blocks/${item.meta.blockID}`"
+                        >{{item.meta.blockNumber}}</a>
+                    </span>
+                    <span
+                        style="margin-left: 20px"
                         class="is-family-secondary display-6"
                     >{{item.meta.blockTimestamp * 1000 | datetime}}</span>
                 </div>
@@ -143,7 +153,7 @@ export default class EventShowCard extends Vue {
     }
 
     created() {
-      this.onItemChange()
+        this.onItemChange()
     }
 }
 </script>
