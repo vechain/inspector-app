@@ -91,7 +91,7 @@ export default class FilterMgt extends Vue {
     }
   ]
   private async created() {
-    this.$ga.page('/view/mgt')
+    this.$ga.page('/inspector/view/mgt')
     this.onPageChange(1)
     this.count = await DB.filters.count()
   }

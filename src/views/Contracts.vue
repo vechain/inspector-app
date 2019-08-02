@@ -82,7 +82,7 @@ export default class Contracts extends Vue {
     }
 
     async created() {
-        this.$ga.page('/contracts')
+        this.$ga.page('/inspector/contracts')
         const loading = this.$loading.open({
             container: null
         })

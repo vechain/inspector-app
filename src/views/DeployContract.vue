@@ -79,5 +79,9 @@ export default class DeployContract extends Vue {
             }
         }
     }
+
+    private created() {
+        this.$ga.page('/inspector/deploy')
+    }
 }
 </script>

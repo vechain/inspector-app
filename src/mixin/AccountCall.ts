@@ -64,7 +64,6 @@ export default class AccountCall extends Vue {
   private async readMethod() {
     try {
       if (this.caller) {
-        // tslint:disable-next-line:max-line-length
         this.resp = await this.method!.value(this.hexValue).caller(this.caller).call(...this.params)
       } else {
         this.resp = await this.method!.value(this.hexValue).call(...this.params)
