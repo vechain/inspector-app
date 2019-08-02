@@ -27,7 +27,9 @@ export default class AccountCall extends Vue {
       element.$parent.newMessage = ''
     })
     this.params.forEach((item, index) => {
-      this.$set(this.params, index, '')
+      if (!(this.prototype && this.item.inputs[index].name === '_self')) {
+        this.$set(this.params, index, '')
+      }
     })
 
     this.resp = null
