@@ -17,6 +17,17 @@
                 </div>
             </div>
             <nav class="navbar is-transparent" style="margin-bottom: 2px; z-index: 20">
+                <div class="navbar-start">
+                    <div class="navbar-item" style="padding-left: 0">
+                        <b-field style="width: 350px" horizontal>
+                            <template slot="label">
+                                <div style="width: 100px; text-align: left">Block Range</div>
+                            </template>
+                            <b-input v-model="blockFrom" placeholder="from"></b-input>
+                            <b-input v-model="blockTo" placeholder="to"></b-input>
+                        </b-field>
+                    </div>
+                </div>
                 <div class="navbar-end">
                     <div class="navbar-item">{{ranges}}</div>
                     <div class="navbar-item">
@@ -67,6 +78,8 @@ export default class FilterView extends Vue {
         size: 10,
         order: true
     }
+    private blockFrom: number | null = null
+    private blockTo: number | null = null
 
     private list: any[] = []
     private metadata: boolean = false
@@ -150,8 +163,19 @@ export default class FilterView extends Vue {
         this.list = await this.event
             .filter(params)
             .order(this.page.order ? 'asc' : 'desc')
+            .range(this.getBlcokRange())
             .apply(page * this.page.size, this.page.size)
         this.isLoading = false
+    }
+
+    private getBlcokRange(): Connex.Thor.Filter.Range {
+        let from = this.blockFrom || 0
+        let to = this.blockTo || connex.thor.status.head.number
+        return {
+            unit: 'block',
+            from: BN(from).toNumber(),
+            to: BN(to).toNumber()
+        }
     }
 
     private async created() {
@@ -168,5 +192,8 @@ export default class FilterView extends Vue {
     padding: 1.1rem;
     overflow-x: auto;
     min-height: 100%;
+}
+.block-range.field-label {
+    width: 100px;
 }
 </style>
