@@ -224,7 +224,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
     }
 
     private async created() {
-        this.$ga.page('/contract/detail')
+        this.$ga.page('/inspector/contract/detail')
         this.initAbi()
         const idOrAddress: string =
             this.$route.query.id || this.$route.query.address

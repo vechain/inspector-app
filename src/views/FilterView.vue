@@ -179,7 +179,7 @@ export default class FilterView extends Vue {
     }
 
     private async created() {
-        this.$ga.page('/view/list')
+        this.$ga.page('/inspector/view/list')
         await this.init()
         this.getList(0)
     }
