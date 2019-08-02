@@ -169,8 +169,8 @@ export default class FilterView extends Vue {
     }
 
     private getBlcokRange(): Connex.Thor.Filter.Range {
-        let from = this.blockFrom || 0
-        let to = this.blockTo || connex.thor.status.head.number
+        const from = this.blockFrom || 0
+        const to = this.blockTo || connex.thor.status.head.number
         return {
             unit: 'block',
             from: BN(from).toNumber(),
