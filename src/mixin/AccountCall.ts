@@ -62,11 +62,14 @@ export default class AccountCall extends Vue {
   }
 
   private async readMethod() {
+    const params: any[] = this.params.map((item: string, index: number) => {
+      return this.item.inputs[index].type.endsWith('[]') ? JSON.parse(item) : item
+    })
     try {
       if (this.caller) {
-        this.resp = await this.method!.value(this.hexValue).caller(this.caller).call(...this.params)
+        this.resp = await this.method!.value(this.hexValue).caller(this.caller).call(...params)
       } else {
-        this.resp = await this.method!.value(this.hexValue).call(...this.params)
+        this.resp = await this.method!.value(this.hexValue).call(...params)
       }
     } catch (error) {
       // tslint:disable-next-line:no-console
@@ -75,11 +78,8 @@ export default class AccountCall extends Vue {
   }
   private async writeMethod() {
     try {
-      const params: any[] = []
-      this.params.forEach((item: string) => {
-        if (item) {
-          return params.push(item)
-        }
+      const params: any[] = this.params.map((item: string, index: number) => {
+        return this.item.inputs[index].type.endsWith('[]') ? JSON.parse(item) : item
       })
 
       connex.vendor
@@ -87,7 +87,7 @@ export default class AccountCall extends Vue {
         .comment(`inspect-${this.address}`)
         .request([
           {
-            ...this.method!.value(this.hexValue).asClause(...this.params),
+            ...this.method!.value(this.hexValue).asClause(...params),
             comment: this.item.name
           }
         ])
