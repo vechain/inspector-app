@@ -70,7 +70,7 @@ export default class DeployContract extends Vue {
                     .comment('Inspector deploy CT')
                     .request([{ value: this.haxValue || 0, data: this.code, to: null }])
             } catch (error) {
-                this.$toast.open({
+                this.$buefy.toast.open({
                     type: 'is-danger',
                     message: `${error.name}: ${error.message}`,
                     position: 'is-top',

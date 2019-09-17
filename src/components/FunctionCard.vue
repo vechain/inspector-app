@@ -8,7 +8,7 @@
                     message="Special address to call the method, it's not the param of the method"
                     label="Caller"
                 >
-                    <b-input v-model="caller" placeholder="Optional: Address"></b-input>
+                    <b-input custom-class="is-family-monospace has-text-weight-semibold" v-model="caller" placeholder="Optional: Address"></b-input>
                 </b-field>
                 <b-field
                     class="item-content"
@@ -19,6 +19,7 @@
                 >
                     <b-input
                         ref="input"
+                        custom-class="is-family-monospace has-text-weight-semibold"
                         required
                         :name="v.name"
                         :readonly="(prototype && v.name === '_self')"
@@ -27,7 +28,7 @@
                     ></b-input>
                 </b-field>
                 <b-field v-if="item.payable" class="item-content" horizontal label="value">
-                    <b-input type="text" placeholder="number(vet)" v-model.trim="value"></b-input>
+                    <b-input custom-class="is-family-monospace has-text-weight-semibold" type="text" placeholder="number(vet)" v-model.trim="value"></b-input>
                 </b-field>
                 <b-field class="item-content" horizontal>
                     <div class="buttons has-addons">
@@ -90,7 +91,7 @@ export default class FunctionCard extends Mixins(AccountCall) {
     }
 
     private addShortCut(name: string) {
-        this.$dialog.prompt({
+        this.$buefy.dialog.prompt({
             title: 'Add Shortcut',
             message: 'Input a shortcut',
             inputAttrs: {
@@ -123,7 +124,7 @@ export default class FunctionCard extends Mixins(AccountCall) {
         })
 
         BUS.$emit('added-shortcut')
-        this.$toast.open({
+        this.$buefy.toast.open({
             message: 'Added success!',
             type: 'is-success'
         })

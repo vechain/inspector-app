@@ -145,7 +145,7 @@ export default class EventCard extends Vue {
     }
 
     private addFilter(name: string) {
-        this.$dialog.prompt({
+        this.$buefy.dialog.prompt({
             title: 'Add quick view',
             message: 'Input a filter name',
             inputAttrs: {
@@ -180,7 +180,7 @@ export default class EventCard extends Vue {
             abi: this.item
         })
         BUS.$emit('added-filter')
-        this.$toast.open({
+        this.$buefy.toast.open({
             message: 'Added success!',
             type: 'is-success'
         })
