@@ -65,10 +65,11 @@ export default class DeployContract extends Vue {
     async sendCode() {
         if (await this.checkForm()) {
             try {
-                connex.vendor
+                const resp = await connex.vendor
                     .sign('tx')
                     .comment('Inspector deploy CT')
                     .request([{ value: this.haxValue || 0, data: this.code, to: null }])
+                window.open(`https://insight.vecha.in/#/txs/${resp.txid}`)
             } catch (error) {
                 this.$buefy.toast.open({
                     type: 'is-danger',
