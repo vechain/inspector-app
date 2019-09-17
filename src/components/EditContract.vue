@@ -19,6 +19,7 @@
         >
           <b-input
             @blur="checkAddress"
+            custom-class="is-family-monospace has-text-weight-semibold"
             :message="formMessage.address.message"
             v-model="form.address"
             type="text"

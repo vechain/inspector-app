@@ -96,7 +96,7 @@ export default class FilterMgt extends Vue {
     this.count = await DB.filters.count()
   }
   private edit(row: any) {
-    this.$dialog.prompt({
+    this.$buefy.dialog.prompt({
       title: 'Edit quick view',
       message: 'Edit filter name',
       inputAttrs: {
@@ -114,7 +114,7 @@ export default class FilterMgt extends Vue {
     })
   }
   private remove(row: any) {
-    this.$dialog.confirm({
+    this.$buefy.dialog.confirm({
       title: 'Remove',
       message: `Are you sure want to remove '${row.name}' contract`,
       cancelText: 'Cancel',

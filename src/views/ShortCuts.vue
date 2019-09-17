@@ -98,7 +98,7 @@
     }
 
     private edit(row: any) {
-      this.$dialog.prompt({
+      this.$buefy.dialog.prompt({
         title: 'Edit Shortcut',
         message: 'Edit shortcut name',
         inputAttrs: {
@@ -115,7 +115,7 @@
       })
     }
     private remove(row: any) {
-      this.$dialog.confirm({
+      this.$buefy.dialog.confirm({
         title: 'Remove',
         message: `Are you sure want to remove '${row.name}' contract`,
         cancelText: 'Cancel',

@@ -195,7 +195,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
                 .first()) || null
 
         if (!this.contract) {
-            const toast = this.$toast.open({
+            const toast = this.$buefy.toast.open({
                 duration: 3000,
                 message: `No item got`,
                 position: 'is-top',

@@ -83,7 +83,7 @@ export default class Contracts extends Vue {
 
     async created() {
         this.$ga.page('/inspector/contracts')
-        const loading = this.$loading.open({
+        const loading = this.$buefy.loading.open({
             container: null
         })
 
@@ -117,7 +117,7 @@ export default class Contracts extends Vue {
     }
 
     private remove(item: any) {
-        this.$dialog.confirm({
+        this.$buefy.dialog.confirm({
             title: 'Remove',
             message: `Are you sure want to remove ${item.name} contract`,
             cancelText: 'Cancel',
