@@ -67,7 +67,7 @@ export default class DeployContract extends Vue {
             try {
                 const resp = await connex.vendor
                     .sign('tx')
-                    .comment('Inspector deploy CT')
+                    .comment('Inspector deploy contract')
                     .request([{ value: this.haxValue || 0, data: this.code, to: null }])
                 window.open(`https://insight.vecha.in/#/txs/${resp.txid}`)
             } catch (error) {
