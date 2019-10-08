@@ -41,38 +41,6 @@
                 size="is-small"
                 type="is-toggle"
             >
-                <b-tab-item label="Raw">
-                    <div>
-                        <b-field
-                            custom-class="my-label"
-                            label-position="inside"
-                            horizontal
-                            label="Topics"
-                        >
-                            <ul>
-                                <li
-                                    class="is-family-monospace display-6 has-text-grey has-text-weight-semibold"
-                                    v-for="(topic, i) in item.topics"
-                                    :key="i"
-                                >
-                                    <span>[{{i}}]</span>
-                                    {{topic}}
-                                </li>
-                            </ul>
-                        </b-field>
-                        <b-field
-                            custom-class="my-label"
-                            label-position="on-border"
-                            horizontal
-                            label="Data"
-                        >
-                            <p
-                                style="word-break: break-all;"
-                                class="has-text-weight-semibold has-text-grey display-6 is-family-monospace"
-                            >{{item.data}}</p>
-                        </b-field>
-                    </div>
-                </b-tab-item>
                 <b-tab-item label="Decoded">
                     <b-table :data="data">
                         <template slot-scope="props">
@@ -100,6 +68,38 @@
                             </b-table-column>
                         </template>
                     </b-table>
+                </b-tab-item>
+                <b-tab-item label="Raw">
+                    <div>
+                        <b-field
+                            custom-class="my-label"
+                            label-position="inside"
+                            horizontal
+                            label="Topics"
+                        >
+                            <ul>
+                                <li
+                                    class="is-family-monospace display-6 has-text-grey has-text-weight-semibold"
+                                    v-for="(topic, i) in item.topics"
+                                    :key="item.meta.blockID + i"
+                                >
+                                    <span>[{{i}}]</span>
+                                    {{topic}}
+                                </li>
+                            </ul>
+                        </b-field>
+                        <b-field
+                            custom-class="my-label"
+                            label-position="on-border"
+                            horizontal
+                            label="Data"
+                        >
+                            <p
+                                style="word-break: break-all;"
+                                class="has-text-weight-semibold has-text-grey display-6 is-family-monospace"
+                            >{{item.data}}</p>
+                        </b-field>
+                    </div>
                 </b-tab-item>
             </b-tabs>
         </div>
