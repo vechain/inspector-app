@@ -49,9 +49,9 @@
                     </div>
                 </div>
             </nav>
-            <b-loading :is-full-page="false" :active.sync="isLoading" :can-cancel="true"></b-loading>
+            <b-loading class="log-loading" :is-full-page="false" :active.sync="isLoading" :can-cancel="true"></b-loading>
             <template v-for="(item, i) in list">
-                <EventShowCard :item="item" :key="i" :params="abi.inputs">
+                <EventShowCard :item="item" :key="item.meta.txID + page.num" :params="abi.inputs">
                     <span slot="title">#{{page.num * page.size + i + 1}}</span>
                 </EventShowCard>
             </template>
@@ -140,6 +140,7 @@ export default class FilterView extends Vue {
             this.getList(this.page.num)
         }
     }
+
     private nextPage() {
         this.page.num++
         this.getList(this.page.num)
@@ -195,5 +196,8 @@ export default class FilterView extends Vue {
 }
 .block-range.field-label {
     width: 100px;
+}
+.log-container .log-loading{
+    z-index: 111;
 }
 </style>
