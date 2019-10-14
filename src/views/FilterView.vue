@@ -49,7 +49,12 @@
                     </div>
                 </div>
             </nav>
-            <b-loading class="log-loading" :is-full-page="false" :active.sync="isLoading" :can-cancel="true"></b-loading>
+            <b-loading
+                class="log-loading"
+                :is-full-page="false"
+                :active.sync="isLoading"
+                :can-cancel="true"
+            ></b-loading>
             <template v-for="(item, i) in list">
                 <EventShowCard :item="item" :key="item.meta.txID + page.num" :params="abi.inputs">
                     <span slot="title">#{{page.num * page.size + i + 1}}</span>
@@ -161,12 +166,28 @@ export default class FilterView extends Vue {
             }
         }
 
-        this.list = await this.event
-            .filter(params)
-            .order(this.page.order ? 'asc' : 'desc')
-            .range(this.getBlcokRange())
-            .apply(page * this.page.size, this.page.size)
-        this.isLoading = false
+        try {
+            this.list = await this.event
+                .filter(params)
+                .order(this.page.order ? 'asc' : 'desc')
+                .range(this.getBlcokRange())
+                .apply(page * this.page.size, this.page.size)
+        } catch (error) {
+            this.$buefy.dialog.confirm({
+                title: 'Error',
+                type: 'is-danger',
+                message: `${error.message}`,
+                hasIcon: true,
+                cancelText: 'Report an issue',
+                confirmText: 'Close',
+                onCancel: () => {
+                    window.open('https://github.com/vechain/inspector-app/issues', '_blank')
+                }
+            })
+        } finally {
+            this.isLoading = false
+        }
+
     }
 
     private getBlcokRange(): Connex.Thor.Filter.Range {
@@ -197,7 +218,7 @@ export default class FilterView extends Vue {
 .block-range.field-label {
     width: 100px;
 }
-.log-container .log-loading{
+.log-container .log-loading {
     z-index: 111;
 }
 </style>
