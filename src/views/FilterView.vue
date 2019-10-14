@@ -10,8 +10,8 @@
                 <div class="column is-one-third">
                     <b-field label="Order">
                         <b-select expanded placeholder="Order" v-model="page.order">
-                            <option :value="true">ASC</option>
-                            <option :value="false">DESC</option>
+                            <option :value="false">ASC</option>
+                            <option :value="true">DESC</option>
                         </b-select>
                     </b-field>
                 </div>
@@ -169,7 +169,7 @@ export default class FilterView extends Vue {
         try {
             this.list = await this.event
                 .filter(params)
-                .order(this.page.order ? 'asc' : 'desc')
+                .order(this.page.order ? 'desc' : 'asc')
                 .range(this.getBlcokRange())
                 .apply(page * this.page.size, this.page.size)
         } catch (error) {
