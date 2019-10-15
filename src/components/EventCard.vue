@@ -207,7 +207,7 @@ export default class EventCard extends Vue {
         try {
             this.list = await this.event
                 .filter(params)
-                .order('asc')
+                .order('desc')
                 .apply(page * 5, 5)
         } catch (error) {
             BUS.$alert(error.message)
