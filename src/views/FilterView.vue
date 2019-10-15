@@ -173,21 +173,10 @@ export default class FilterView extends Vue {
                 .range(this.getBlcokRange())
                 .apply(page * this.page.size, this.page.size)
         } catch (error) {
-            this.$buefy.dialog.confirm({
-                title: 'Error',
-                type: 'is-danger',
-                message: `${error.message}`,
-                hasIcon: true,
-                cancelText: 'Report an issue',
-                confirmText: 'Close',
-                onCancel: () => {
-                    window.open('https://github.com/vechain/inspector-app/issues', '_blank')
-                }
-            })
+            BUS.$alert(error.message)
         } finally {
             this.isLoading = false
         }
-
     }
 
     private getBlcokRange(): Connex.Thor.Filter.Range {

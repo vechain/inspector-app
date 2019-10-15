@@ -92,7 +92,7 @@ export default class EventCard extends Vue {
     @Prop()
     private address!: string
 
-    @Prop({default: false})
+    @Prop({ default: false })
     private prototype?: boolean
 
     private page = 0
@@ -187,7 +187,11 @@ export default class EventCard extends Vue {
     }
 
     private async getResult(page: number) {
+        if (this.isLoading) {
+            return
+        }
         this.isLoading = true
+        this.activeTab = this.tabs[2]
         const params: any[] = []
 
         for (const key in this.params) {
@@ -203,14 +207,12 @@ export default class EventCard extends Vue {
         try {
             this.list = await this.event
                 .filter(params)
-                .order('desc')
+                .order('asc')
                 .apply(page * 5, 5)
         } catch (error) {
-            // tslint:disable-next-line:no-console
-            console.error(error)
+            BUS.$alert(error.message)
         } finally {
             this.isLoading = false
-            this.activeTab = this.tabs[2]
         }
     }
 }

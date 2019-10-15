@@ -72,8 +72,7 @@ export default class AccountCall extends Vue {
         this.resp = await this.method!.value(this.hexValue).call(...params)
       }
     } catch (error) {
-      // tslint:disable-next-line:no-console
-      console.error(error)
+      BUS.$alert(error.message)
     }
   }
   private async writeMethod() {
@@ -92,8 +91,7 @@ export default class AccountCall extends Vue {
           }
         ])
     } catch (error) {
-      // tslint:disable-next-line:no-console
-      console.error(error)
+      BUS.$alert(error.message)
     }
   }
 }
