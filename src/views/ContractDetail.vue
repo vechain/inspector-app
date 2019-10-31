@@ -2,15 +2,6 @@
     <section class="section contract-detail">
         <div v-if="contract" class="container">
             <Contract :isShort="false" :item="contract">
-                <slot slot="right">
-                    <b-button
-                        tag="a"
-                        size="is-small"
-                        :href="`https://explore.veforge.com/accounts/${contract.address}`"
-                        target="_blank"
-                        class="buttons-slot button is-primary"
-                    >Veforge</b-button>
-                </slot>
             </Contract>
             <section style="margin-top: 20px;">
                 <b-field grouped>
