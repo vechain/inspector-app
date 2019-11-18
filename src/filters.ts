@@ -10,5 +10,7 @@ Vue.filter('datetime', (v: number) => {
 })
 
 Vue.filter('toChecksumAddress', (val: string) => {
-    return toChecksumAddress(val)
+    if (val) {
+        return toChecksumAddress(val)
+    }
 })
