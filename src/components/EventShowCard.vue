@@ -44,7 +44,7 @@
                 <b-tab-item label="Decoded">
                     <b-table :data="data">
                         <template slot-scope="props">
-                            <b-table-column width="70" label="#" field="id">{{props.row.id}}</b-table-column>
+                            <b-table-column width="20" label="#" field="id">{{props.row.id}}</b-table-column>
                             <b-table-column width="170" label="Name" field="name">{{props.row.name}}</b-table-column>
                             <b-table-column width="220" label="Type" field="type">
                                 {{props.row.type}}
@@ -54,13 +54,17 @@
                                     v-if="props.row.indexed"
                                 >indexed</sup>
                             </b-table-column>
-                            <b-table-column label="Data" field="value">
+                            <b-table-column
+                                label="Data"
+                                field="value"
+                                style="max-width: 380px;word-wrap: break-word;"
+                            >
                                 <a
                                     v-if="props.row.type === 'address'"
                                     target="_blank"
                                     class="has-text-weight-semibold is-family-monospace display-6"
                                     :href="`https://insight.vecha.in/#/accounts/${props.row.value}`"
-                                >{{props.row.value | toChecksumAddress}}</a>
+                                >{{ props.row.value | toChecksumAddress}}</a>
                                 <span
                                     v-else
                                     class="has-text-weight-semibold is-family-monospace display-6 has-text-grey"

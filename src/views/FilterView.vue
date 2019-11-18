@@ -1,7 +1,7 @@
 <template>
     <section>
         <div class="log-container">
-            <div class="columns">
+            <div class="columns is-multiline">
                 <div class="column is-one-third" v-for="(v, index) in params" :key="index">
                     <b-field :label="v.name">
                         <b-input v-model="conditions[v.name]" :placeholder="v.type"></b-input>
