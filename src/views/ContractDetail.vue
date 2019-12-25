@@ -2,6 +2,7 @@
     <section class="section contract-detail">
         <div v-if="contract" class="container">
             <Contract :isShort="false" :item="contract">
+                <b-button size="is-small" @click="toExplorer" slot="right" type="is-info">Explorer</b-button>
             </Contract>
             <section style="margin-top: 20px;">
                 <b-field grouped>
@@ -170,7 +171,11 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
     }
     private contract: Entities.Contract | null = null
     private tabIndex: number = 0
-    private tabs: Array<{ text: string; count: number | '', visible: boolean }> = []
+    private tabs: Array<{
+        text: string
+        count: number | ''
+        visible: boolean
+    }> = []
     private abi: any = []
     private code?: string = ''
     private name: string = ''
@@ -201,7 +206,13 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
             this.abi = this.contract!.abi!
         }
     }
-
+    toExplorer() {
+        if (connex.thor.genesis.id === '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a') {
+            window.open(`https://explore.vechain.org/accounts/${this.contract!.address}`, '_blank')
+        } else {
+            window.open(`https://explore-testnet.vechain.org/accounts/${this.contract!.address}`, '_blank')
+        }
+    }
     async getCode(address: string) {
         try {
             if (address) {
@@ -222,15 +233,27 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
 
         await this.getDetail(idOrAddress)
         this.tabs = [
-            { text: 'Read', count: this.readList.length, visible: !!this.readList.length },
-            { text: 'Write', count: this.writeList.length, visible: !!this.writeList.length },
+            {
+                text: 'Read',
+                count: this.readList.length,
+                visible: !!this.readList.length
+            },
+            {
+                text: 'Write',
+                count: this.writeList.length,
+                visible: !!this.writeList.length
+            },
             { text: 'Code & ABI', count: '', visible: true },
-            { text: 'Events', count: this.eventList.length, visible: !!this.eventList.length },
-            { text: 'Fallback', count: '', visible: !!this.fb },
+            {
+                text: 'Events',
+                count: this.eventList.length,
+                visible: !!this.eventList.length
+            },
+            { text: 'Fallback', count: '', visible: !!this.fb }
         ]
         this.tabs = this.tabs.concat(this.protoTabs)
         await this.getCode(this.contract!.address || '')
-        this.tabIndex = this.tabs.findIndex((item) => {
+        this.tabIndex = this.tabs.findIndex(item => {
             return item.visible
         })
     }
@@ -244,7 +267,8 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
             event: 3
         }
 
-        let type: 'cb' | 'fb' | 'read' | 'write' | 'event' | 'function' = item.type
+        let type: 'cb' | 'fb' | 'read' | 'write' | 'event' | 'function' =
+            item.type
         if (type === 'function') {
             type = item.constant ? 'read' : 'write'
         }
