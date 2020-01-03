@@ -10,12 +10,14 @@ export default class AccountCall extends Vue {
 
   public value: string | null = null
   public resp: any = null
+  public request: any = null
   public method: Connex.Thor.Method | null = null
   public params: string[] = new Array(this.item.inputs.length)
 
   public caller?: string = ''
 
   public callFC() {
+    this.resetOutputs()
     if (this.validate()) {
       this.readMethod()
     }
@@ -32,9 +34,14 @@ export default class AccountCall extends Vue {
       }
     })
 
+    this.resetOutputs()
+  }
+  public resetOutputs() {
+    this.request = null
     this.resp = null
   }
   public executeFC() {
+    this.resetOutputs()
     if (this.validate()) {
       this.writeMethod()
     }
@@ -65,6 +72,9 @@ export default class AccountCall extends Vue {
     const params: any[] = this.params.map((item: string, index: number) => {
       return this.item.inputs[index].type.endsWith('[]') ? JSON.parse(item) : item
     })
+
+    this.request = this.method!.value(this.hexValue).asClause(...params)
+
     try {
       if (this.caller) {
         this.resp = await this.method!.value(this.hexValue).caller(this.caller).call(...params)
@@ -81,12 +91,15 @@ export default class AccountCall extends Vue {
         return this.item.inputs[index].type.endsWith('[]') ? JSON.parse(item) : item
       })
 
+      const clause = this.method!.value(this.hexValue).asClause(...params)
+      this.request = clause
+
       connex.vendor
         .sign('tx')
         .comment(`inspect-${this.address}`)
         .request([
           {
-            ...this.method!.value(this.hexValue).asClause(...params),
+            ...clause,
             comment: this.item.name
           }
         ])
