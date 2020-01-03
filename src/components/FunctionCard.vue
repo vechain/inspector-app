@@ -55,7 +55,10 @@
                         >Reset</button>
                     </div>
                 </b-field>
-                <b-field v-if="resp">
+                <b-field v-if="request" label="Request">
+                    <pre>{{request}}</pre>
+                </b-field>
+                <b-field v-if="resp" label="Response">
                     <pre>{{resp}}</pre>
                 </b-field>
             </form>
