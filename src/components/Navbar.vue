@@ -49,7 +49,7 @@
                     :to="{name: 'short_cuts'}"
                 >Shortcuts</router-link>
             </div>
-            <div class="navbar-end">
+            <div class="navbar-end" style="padding-right: 20px">
                 <a class="navbar-item" href="https://github.com/vechain/inspector-app" target="_blank">GitHub</a>
             </div>
         </div>
