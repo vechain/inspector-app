@@ -86,7 +86,7 @@ export default class AccountCall extends Vue {
   private async writeMethod() {
     try {
       const params: any[] = this.params.map((item: string, index: number) => {
-        return this.item.inputs[index].type.endsWith('[]') ? JSON.parse(item) : item
+        return this.item.inputs[index].type.endsWith(']') ? JSON.parse(item) : item
       })
 
       const clause = this.method!.value(this.hexValue).asClause(...params)
