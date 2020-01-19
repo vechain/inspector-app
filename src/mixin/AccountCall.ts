@@ -69,13 +69,11 @@ export default class AccountCall extends Vue {
   }
 
   private async readMethod() {
-    const params: any[] = this.params.map((item: string, index: number) => {
-      return this.item.inputs[index].type.endsWith('[]') ? JSON.parse(item) : item
-    })
-
-    this.request = this.method!.value(this.hexValue).asClause(...params)
-
     try {
+      const params: any[] = this.params.map((item: string, index: number) => {
+        return this.item.inputs[index].type.endsWith(']') ? JSON.parse(item) : item
+      })
+      this.request = this.method!.value(this.hexValue).asClause(...params)
       if (this.caller) {
         this.resp = await this.method!.value(this.hexValue).caller(this.caller).call(...params)
       } else {
