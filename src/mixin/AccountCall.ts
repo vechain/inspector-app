@@ -64,9 +64,12 @@ export default class AccountCall extends Vue {
     })
   }
 
+  get payable() {
+    return this.item.payable || this.item.stateMutability === 'payable'
+  }
+
   public get hexValue() {
-    const payable = this.item.payable || this.item.stateMutability === 'payable'
-    return BN(payable ? this.value || 0 : 0).multipliedBy(1e18).toFixed(0).toString(16)
+    return BN(this.payable ? this.value || 0 : 0).multipliedBy(1e18).toFixed(0).toString(16)
   }
 
   private async readMethod() {
