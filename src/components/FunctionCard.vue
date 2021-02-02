@@ -27,7 +27,7 @@
                         :placeholder="v.type"
                     ></b-input>
                 </b-field>
-                <b-field v-if="item.payable" class="item-content" horizontal label="value">
+                <b-field v-if="payable" class="item-content" horizontal label="value">
                     <b-input custom-class="is-family-monospace has-text-weight-semibold" type="text" placeholder="number(vet)" v-model.trim="value"></b-input>
                 </b-field>
                 <b-field class="item-content" horizontal>
