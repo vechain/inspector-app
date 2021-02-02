@@ -65,7 +65,8 @@ export default class AccountCall extends Vue {
   }
 
   public get hexValue() {
-    return BN(this.item.payable ? this.value || 0 : 0).multipliedBy(1e18).toFixed(0).toString(16)
+    const payable = this.item.payable || this.item.stateMutability === 'payable'
+    return BN(payable ? this.value || 0 : 0).multipliedBy(1e18).toFixed(0).toString(16)
   }
 
   private async readMethod() {

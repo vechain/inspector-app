@@ -150,12 +150,20 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
     }
     get readList() {
         return this.abi.filter((item: ABI.FunctionItem) => {
-            return item.type === 'function' && item.constant
+            return (
+                item.type === 'function' &&
+                (item.constant === true ||
+                    ['pure', 'view'].includes(item.stateMutability))
+            )
         })
     }
     get writeList() {
         return this.abi.filter((item: ABI.FunctionItem) => {
-            return item.type === 'function' && !item.constant
+            return (
+                item.type === 'function' &&
+                (item.constant === false ||
+                    !['pure', 'view'].includes(item.stateMutability))
+            )
         })
     }
 
@@ -207,10 +215,23 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
         }
     }
     toExplorer() {
-        if (connex.thor.genesis.id === '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a') {
-            window.open(`https://explore.vechain.org/accounts/${this.contract!.address}`, '_blank')
+        if (
+            connex.thor.genesis.id ===
+            '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a'
+        ) {
+            window.open(
+                `https://explore.vechain.org/accounts/${
+                    this.contract!.address
+                }`,
+                '_blank'
+            )
         } else {
-            window.open(`https://explore-testnet.vechain.org/accounts/${this.contract!.address}`, '_blank')
+            window.open(
+                `https://explore-testnet.vechain.org/accounts/${
+                    this.contract!.address
+                }`,
+                '_blank'
+            )
         }
     }
     async getCode(address: string) {
@@ -253,7 +274,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
         ]
         this.tabs = this.tabs.concat(this.protoTabs)
         await this.getCode(this.contract!.address || '')
-        this.tabIndex = this.tabs.findIndex(item => {
+        this.tabIndex = this.tabs.findIndex((item) => {
             return item.visible
         })
     }
