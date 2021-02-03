@@ -27,7 +27,7 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Install Dependencies
+      - name: Build Website
         run: npm run build
 
       - name: Deploy With CNAME
