@@ -164,6 +164,7 @@ export default class Contracts extends Vue {
     }
 
     reload() {
+        (this.$refs.files as HTMLInputElement).value = ''
         this.currentItem = null
         this.list()
         this.isModalActive = false
@@ -201,6 +202,7 @@ export default class Contracts extends Vue {
         this.isModalActive = true
     }
     private close() {
+        (this.$refs.files as HTMLInputElement).value = ''
         this.isModalActive = false
     }
     private async list() {
@@ -215,7 +217,6 @@ export default class Contracts extends Vue {
     private onCancel() {
         this.currentItem = null
         this.close()
-        ;(this.$refs.files as HTMLInputElement).value = ''
     }
     private edit(item: Entities.Contract) {
         this.currentItem = item
