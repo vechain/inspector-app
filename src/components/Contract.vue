@@ -14,7 +14,7 @@
                     <p
                         class="is-family-monospace has-text-weight-semibold display-6"
                         v-if="isShort"
-                    >{{item.address | addr}}</p>
+                    >{{item.address | toChecksumAddress | addr}}</p>
                     <p class="is-family-monospace has-text-weight-semibold display-6" v-else>
                         <a
                             target="_blank"
