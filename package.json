@@ -19,6 +19,7 @@
     "custom-protocol-detection": "1.0.1",
     "dexie": "2.0.4",
     "dexie-observable": "1.0.0-beta.5",
+    "file-saver-es": "^2.0.5",
     "mersenne-twister": "1.1.0",
     "thor-devkit": "^0.7.0",
     "vee-validate": "2.1.5",

@@ -37,6 +37,9 @@
             type="textarea"
           ></b-input>
         </b-field>
+        <b-message v-if="isImport && isEdit" type="is-warning">
+            The contract exists, are you sure to override it?
+        </b-message>
       </section>
       <footer class="modal-card-foot">
         <button class="button" type="button" @click.stop="close">Cancel</button>
@@ -64,7 +67,7 @@
 
       if (this.isEdit) {
         result.title = 'Edit Contract'
-        result.btn = 'Edit'
+        result.btn = this.isImport ? 'Override' : 'Edit'
       }
 
       return result
@@ -73,6 +76,10 @@
     get isEdit() {
       return this.item && this.item.id
     }
+
+    @Prop({ default: false })
+    private isImport!: boolean
+
     @Prop({ default: null })
     private item!: Entities.Contract | null
 

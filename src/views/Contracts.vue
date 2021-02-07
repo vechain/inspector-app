@@ -5,9 +5,13 @@
                 <h1 class="title level-item">Contracts</h1>
             </div>
             <div class="level-right">
+                <button @click="onImport" style="margin-right: 10px;" class="button is-primary is-outlined">
+                    <b-icon icon="file-import"></b-icon>
+                </button>
                 <button @click="addItem" class="button is-primary is-outlined">
                     <b-icon icon="plus"></b-icon>
                 </button>
+                <input class="is-hidden" ref="files" type="file" accept="application/json" />
             </div>
         </div>
         <div
@@ -25,6 +29,12 @@
                         <p class="buttons buttons-slot">
                             <button @click.stop="edit(item)" class="button is-primary is-inverted">
                                 <b-icon icon="edit" size="is-small"></b-icon>
+                            </button>
+                            <button
+                                @click.stop="exportJson(item)"
+                                class="button is-primary is-inverted"
+                            >
+                                <b-icon icon="file-export" size="is-small"></b-icon>
                             </button>
                         </p>
                     </slot>
@@ -52,7 +62,7 @@
             </div>
         </div>
         <b-modal :width="640" :canCancel="['outside']" :active.sync="isModalActive">
-            <EditContract @cancel="onCancel" @finished="reload" :item="currentItem" />
+            <EditContract @cancel="onCancel" @finished="reload" :item="currentItem" :isImport="isImport" />
         </b-modal>
     </section>
 </template>
@@ -61,6 +71,9 @@ import { Vue, Component } from 'vue-property-decorator'
 import EditContract from '../components/EditContract.vue'
 import Contract from '../components/Contract.vue'
 import DB, { Entities } from '../database'
+import { ansi16 } from 'color-convert/route'
+const FileSaver = require('file-saver-es')
+
 @Component({
     components: {
         Contract,
@@ -73,6 +86,7 @@ export default class Contracts extends Vue {
     private isModalActive = false
     private currentItem: Entities.Contract | null = null
     private contracts: Entities.Contract[] = []
+    private isImport: boolean = false
 
     onSelect(id: number) {
         this.$router.push({
@@ -96,6 +110,45 @@ export default class Contracts extends Vue {
         })
     }
 
+    mounted() {
+        const fileEle = this.$refs.files as HTMLInputElement
+        fileEle.onchange = () => {
+            const file = fileEle.files && fileEle.files[0]
+
+            if (file) {
+                const fr = new FileReader()
+                fr.onloadend = event => {
+                    const json: Entities.Contract = JSON.parse(
+                        (fr.result as string) || ''
+                    )
+                    if (json) {
+                        this.currentItem = {
+                            abi: json.abi,
+                            address: json.address,
+                            name: json.name
+                        }
+                        const temp = this.contracts.find(
+                            contract =>
+                                contract.address.toLowerCase() ===
+                                json.address.toLowerCase()
+                        )
+                        if (temp) {
+                            this.currentItem.id = temp.id
+                        }
+                        this.isImport = true
+                        this.open()
+                    }
+                }
+                fr.readAsText(file)
+            }
+        }
+    }
+
+    onImport() {
+        const fileEle = this.$refs.files as HTMLInputElement
+        fileEle.click()
+    }
+
     prepare() {
         const { action, address } = this.$route.query
         switch (action) {
@@ -116,6 +169,19 @@ export default class Contracts extends Vue {
         this.isModalActive = false
     }
 
+    private exportJson(item: any) {
+        const blob = new Blob(
+            [
+                JSON.stringify({
+                    name: item.name,
+                    abi: item.abi,
+                    address: item.address
+                })
+            ],
+            { type: 'text/plain' }
+        )
+        FileSaver.saveAs(blob, `${item.address}.json`)
+    }
     private remove(item: any) {
         this.$buefy.dialog.confirm({
             title: 'Remove',
@@ -143,14 +209,17 @@ export default class Contracts extends Vue {
     }
     private addItem() {
         this.currentItem = null
+        this.isImport = false
         this.open()
     }
     private onCancel() {
         this.currentItem = null
         this.close()
+        ;(this.$refs.files as HTMLInputElement).value = ''
     }
     private edit(item: Entities.Contract) {
         this.currentItem = item
+        this.isImport = false
         this.open()
     }
 }
