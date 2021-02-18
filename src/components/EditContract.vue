@@ -121,7 +121,7 @@
       if (val && val.address) {
         this.form.name = val.name || ''
         this.form.address = val.address || ''
-        this.form.abi = val.abi ? JSON.stringify(val.abi) : ''
+        this.form.abi = val.abi ? JSON.stringify(val.abi, null, 2) : ''
         this.form.id = val.id || 0
       } else {
         this.form = {
