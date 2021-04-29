@@ -38,7 +38,7 @@
                             class="button is-rounded is-primary is-outlined"
                         >Shortcut</button>
                         <button
-                            v-if="!item.constant"
+                            v-if="couldExc"
                             @click.stop="executeFC"
                             type="button"
                             class="button is-rounded is-primary is-outlined"
@@ -92,7 +92,9 @@ export default class FunctionCard extends Mixins(AccountCall) {
         }
         this.initMethod(this.address, this.item)
     }
-
+    get couldExc() {
+        return !(this.item.constant === true || ['view', 'pure'].includes(this.item.stateMutability))
+    }
     private addShortCut(name: string) {
         this.$buefy.dialog.prompt({
             title: 'Add Shortcut',
@@ -123,7 +125,7 @@ export default class FunctionCard extends Mixins(AccountCall) {
             fromPrototype: this.prototype,
             createdTime: Date.now(),
             abi: this.item,
-            type: this.item.constant ? 'read' : 'write'
+            type: this.couldExc ? 'write' : 'read'
         })
 
         BUS.$emit('added-shortcut')
