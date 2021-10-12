@@ -117,7 +117,7 @@ export default class Contracts extends Vue {
 
             if (file) {
                 const fr = new FileReader()
-                fr.onloadend = event => {
+                fr.onloadend = (event) => {
                     const json: Entities.Contract = JSON.parse(
                         (fr.result as string) || ''
                     )
@@ -128,7 +128,7 @@ export default class Contracts extends Vue {
                             name: json.name
                         }
                         const temp = this.contracts.find(
-                            contract =>
+                            (contract) =>
                                 contract.address.toLowerCase() ===
                                 json.address.toLowerCase()
                         )

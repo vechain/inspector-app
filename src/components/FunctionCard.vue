@@ -17,7 +17,20 @@
                     v-for="(v, index) in item.inputs"
                     :key="index"
                 >
+                    <div  v-if="v.type === 'bool'">
+                        <b-radio v-model="params[index]"
+                            name="True"
+                            :native-value="true">
+                            True
+                        </b-radio>
+                        <b-radio v-model="params[index]"
+                            name="False"
+                            :native-value="false">
+                            False
+                        </b-radio>
+                    </div>
                     <b-input
+                        v-else
                         ref="input"
                         custom-class="is-family-monospace has-text-weight-semibold"
                         required
