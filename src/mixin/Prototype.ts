@@ -1,4 +1,6 @@
 import { Vue, Component } from 'vue-property-decorator'
+import prototype from '../abis/prototype'
+import prototypeEvent from '../abis/prototypeEvent'
 @Component
 export default class Prototype extends Vue {
   public protoTabs: Array<{ text: string; count: number | '', visible: boolean }> = [{
@@ -37,7 +39,7 @@ export default class Prototype extends Vue {
   }
 
   public initAbi() {
-    this._abi = require('../abis/prototype.json')
-    this._abiEvent = require('../abis/prototypeEvent.json')
+    this._abi = prototype as ABI.FunctionItem[]
+    this._abiEvent = prototypeEvent as ABI.EventItem[]
   }
 }
