@@ -71,8 +71,6 @@ import { Vue, Component } from 'vue-property-decorator'
 import EditContract from '../components/EditContract.vue'
 import Contract from '../components/Contract.vue'
 import DB, { Entities } from '../database'
-import { ansi16 } from 'color-convert/route'
-const FileSaver = require('file-saver-es')
 
 @Component({
     components: {
@@ -171,6 +169,7 @@ export default class Contracts extends Vue {
     }
 
     private exportJson(item: any) {
+        const fileSaver = require('file-saver-es')
         const blob = new Blob(
             [
                 JSON.stringify({
@@ -181,7 +180,7 @@ export default class Contracts extends Vue {
             ],
             { type: 'text/plain' }
         )
-        FileSaver.saveAs(blob, `${item.address}.json`)
+        fileSaver.saveAs(blob, `${item.address}.json`)
     }
     private remove(item: any) {
         this.$buefy.dialog.confirm({

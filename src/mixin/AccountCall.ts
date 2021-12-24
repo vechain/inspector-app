@@ -2,7 +2,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator'
 @Component
 export default class AccountCall extends Vue {
   @Prop({ default: null })
-  public item: ABI.FunctionItem | any
+  public item!: ABI.FunctionItem | any
   @Prop() public address!: string
 
   @Prop({ default: false })
@@ -83,7 +83,7 @@ export default class AccountCall extends Vue {
       } else {
         this.resp = await this.method!.value(this.hexValue).call(...params)
       }
-    } catch (error) {
+    } catch (error: any) {
       BUS.$alert(error.message)
     }
   }
@@ -104,7 +104,7 @@ export default class AccountCall extends Vue {
             comment: this.item.name
           }
         ])
-    } catch (error) {
+    } catch (error: any) {
       BUS.$alert(error.message)
     }
   }

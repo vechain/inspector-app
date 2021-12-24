@@ -9,12 +9,11 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.5.0",
-    "@types/node": "10.12.18",
     "@vechain/connex": "1.4.0",
     "@vechain/picasso": "^2.1.1",
     "bignumber.js": "8.0.2",
-    "buefy": "0.8.3",
-    "bulma": "0.7.5",
+    "buefy": "^0.8.20",
+    "bulma": "^0.7.5",
     "color": "3.1.0",
     "custom-protocol-detection": "1.0.1",
     "dexie": "2.0.4",
@@ -26,18 +25,18 @@
     "vue": "2.5.21",
     "vue-analytics": "5.16.2",
     "vue-class-component": "^6.0.0",
-    "vue-property-decorator": "^7.0.0",
+    "vue-property-decorator": "^7.3.0",
     "vue-router": "3.0.1"
   },
   "devDependencies": {
     "@types/color": "3.0.0",
     "@types/mersenne-twister": "1.1.2",
-    "@vue/cli-plugin-pwa": "3.3.0",
-    "@vue/cli-plugin-typescript": "3.3.0",
-    "@vue/cli-service": "3.3.0",
-    "node-sass": "4.13.1",
-    "sass-loader": "7.1.0",
-    "typescript": "3.2.2",
+    "@vue/cli-plugin-pwa": "^4.5.15",
+    "@vue/cli-plugin-typescript": "^4.5.15",
+    "@vue/cli-service": "^4.5.15",
+    "node-sass": "^4.14.1",
+    "sass-loader": "^7.3.1",
+    "typescript": "~4.1.5",
     "vue-template-compiler": "2.5.21"
   }
 }

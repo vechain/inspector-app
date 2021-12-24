@@ -1,21 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "esnext",
     "module": "esnext",
     "strict": true,
     "jsx": "preserve",
     "importHelpers": true,
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "experimentalDecorators": true,
+    "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
-    "resolveJsonModule": true,
     "baseUrl": ".",
     "types": [
       "webpack-env",
-      "@vechain/connex",
-      "@types/node"
+      "@vechain/connex"
     ],
     "paths": {
       "@/*": [
