@@ -75,7 +75,7 @@ import DB, { Entities } from '../database'
 export default class FilterView extends Vue {
     private isLoading = true
     private filter!: Entities.Filter | null
-    private event!: Connex.Thor.EventVisitor
+    private event!: Connex.Thor.Account.Event
     private abi!: any
     private conditions: any = {}
     private page = {
@@ -128,7 +128,7 @@ export default class FilterView extends Vue {
                 .where('id')
                 .equals(parseInt(this.$route.params.id, 10))
                 .first()) || null
-        const account = connex.thor.account(this.filter!.address)
+        const account = this.$connex.thor.account(this.filter!.address)
         this.abi = this.filter!.abi ? this.filter!.abi : ''
         this.event = account.event(this.abi)
         this.setParams()
@@ -172,7 +172,7 @@ export default class FilterView extends Vue {
                 .order(this.page.order ? 'desc' : 'asc')
                 .range(this.getBlcokRange())
                 .apply(page * this.page.size, this.page.size)
-        } catch (error) {
+        } catch (error: any) {
             BUS.$alert(error.message)
         } finally {
             this.isLoading = false
@@ -181,7 +181,7 @@ export default class FilterView extends Vue {
 
     private getBlcokRange(): Connex.Thor.Filter.Range {
         const from = this.blockFrom || 0
-        const to = this.blockTo || connex.thor.status.head.number
+        const to = this.blockTo || this.$connex.thor.status.head.number
         return {
             unit: 'block',
             from: BN(from).toNumber(),

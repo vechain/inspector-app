@@ -51,7 +51,7 @@
 <script lang="ts">
   import { Vue, Prop, Component, Watch } from 'vue-property-decorator'
   import DB, { Entities } from '../database'
-  import { isAddress } from 'thor-devkit/es6/cry'
+  import { address as Address } from 'thor-devkit'
 
   interface FormError {
     isError: boolean
@@ -177,7 +177,7 @@
           JSON.parse(this.form.abi)
           this.formMessage.abi.isError = false
           this.formMessage.abi.message = ''
-        } catch (error) {
+        } catch (error: any) {
           this.formMessage.abi.isError = true
           this.formMessage.abi.message = error.name + ': ' + error.message
         }
@@ -189,7 +189,7 @@
 
     private checkAddress() {
       if (this.form.address) {
-        if (!isAddress(this.form.address)) {
+        if (!Address.test(this.form.address)) {
           this.formMessage.address.isError = true
           this.formMessage.address.message = 'Invalid address'
         } else {

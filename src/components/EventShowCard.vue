@@ -116,7 +116,7 @@ import { lab } from 'color-convert/conversions'
 @Component
 export default class EventShowCard extends Vue {
     @Prop(Object)
-    item?: Connex.Thor.Event
+    item?: Connex.Thor.Account.WithDecoded
     @Prop(Array)
     params?: ABI.EventInputItem[]
 

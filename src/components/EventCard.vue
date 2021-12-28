@@ -103,14 +103,14 @@ export default class EventCard extends Vue {
     private activeTab = ''
     private isLoading = false
 
-    private event!: Connex.Thor.EventVisitor
+    private event!: Connex.Thor.Account.Event
 
     created() {
         this.filters.forEach((item: ABI.EventInputItem) => {
             this.params[item.name] = ''
         })
         this.activeTab = this.tabs[0]
-        const account = connex.thor.account(this.address)
+        const account = this.$connex.thor.account(this.address)
         this.event = account.event(this.item)
     }
 
@@ -209,7 +209,7 @@ export default class EventCard extends Vue {
                 .filter(params)
                 .order('desc')
                 .apply(page * 5, 5)
-        } catch (error) {
+        } catch (error: any) {
             BUS.$alert(error.message)
         } finally {
             this.isLoading = false

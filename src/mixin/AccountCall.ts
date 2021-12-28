@@ -11,7 +11,7 @@ export default class AccountCall extends Vue {
   public value: string | null = null
   public resp: any = null
   public request: any = null
-  public method: Connex.Thor.Method | null = null
+  public method: Connex.Thor.Account.Method | null = null
   public params: string[] = new Array(this.item.inputs.length)
 
   public caller?: string = ''
@@ -48,7 +48,7 @@ export default class AccountCall extends Vue {
   }
 
   public initMethod(address: string, abi: object) {
-    const account = connex.thor.account(this.prototype
+    const account = this.$connex.thor.account(this.prototype
       ? '0x000000000000000000000050726f746f74797065'
       : address.toLowerCase())
     this.method = account.method(abi)
@@ -95,15 +95,15 @@ export default class AccountCall extends Vue {
       const clause = this.method!.value(this.hexValue).asClause(...params)
       this.request = clause
 
-      connex.vendor
-        .sign('tx')
-        .comment(`inspect-${this.address}`)
-        .request([
+      this.$connex.vendor
+        .sign('tx', [
           {
             ...clause,
             comment: this.item.name
           }
         ])
+        .comment(`inspect-${this.address}`)
+        .request()
     } catch (error: any) {
       BUS.$alert(error.message)
     }

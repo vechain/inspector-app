@@ -12,6 +12,14 @@ import './directives'
 import router from './Router'
 import './overwrite.css'
 import VueAnalytics from 'vue-analytics'
+import Connex from '@vechain/connex'
+
+
+declare module 'vue/types/vue' {
+  interface Vue {
+    $connex: Connex
+  }
+}
 
 Vue.use(Buefy, {
   defaultIconPack: 'fas'
@@ -28,6 +36,11 @@ Vue.use(VueAnalytics, {
 })
 
 Vue.config.productionTip = false
+
+Vue.prototype.$connex = new Connex({
+  node: 'https://sync-testnet.veblocks.net',
+  network: 'test'
+})
 
 new Vue({
   router,
