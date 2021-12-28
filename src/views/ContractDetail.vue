@@ -216,7 +216,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
     }
     toExplorer() {
         if (
-            connex.thor.genesis.id ===
+            this.$connex.thor.genesis.id ===
             '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a'
         ) {
             window.open(
@@ -237,7 +237,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
     async getCode(address: string) {
         try {
             if (address) {
-                const temp = await connex.thor.account(address).getCode()
+                const temp = await this.$connex.thor.account(address).getCode()
                 this.code = temp.code
             }
         } catch (error) {

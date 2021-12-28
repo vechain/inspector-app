@@ -79,7 +79,7 @@ export default class SampleFuncCard extends Mixins(AccountCall) {
 
     created() {
         this.activeTab = this.tabs[0]
-        const account = connex.thor.account(this.address)
+        const account = this.$connex.thor.account(this.address)
         this.method = account.method(this.item)
         if (this.prototype) {
             const index = this.item.inputs.findIndex((ele: ABI.FunctionItem) => {

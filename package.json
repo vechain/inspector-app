@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.5.0",
-    "@vechain/connex": "1.4.0",
+    "@vechain/connex": "^2.0.9",
     "@vechain/picasso": "^2.1.1",
     "bignumber.js": "8.0.2",
     "buefy": "^0.8.20",
@@ -20,7 +20,7 @@
     "dexie-observable": "1.0.0-beta.5",
     "file-saver-es": "^2.0.5",
     "mersenne-twister": "1.1.0",
-    "thor-devkit": "^0.7.0",
+    "thor-devkit": "^2.0.4",
     "vee-validate": "2.1.5",
     "vue": "2.5.21",
     "vue-analytics": "5.16.2",
