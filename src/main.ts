@@ -57,7 +57,24 @@ if (window.connex) {
     // Vue.prototype.$connex = new Connex({
     //   node: '',
     //   network: JSON.parse(
-    //     `{"beneficiary":"0x0000000000000000000000000000000000000000","gasLimit":10000000,"gasUsed":0,"id":"0x00000000c05a20fbca2bf6ae3affba6af4a74b800b585bf7a4988aba7aea69f6","isTrunk":true,"number":0,"parentID":"0xffffffff00000000000000000000000000000000000000000000000000000000","receiptsRoot":"0x45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0","signer":"0x0000000000000000000000000000000000000000","size":170,"stateRoot":"0x93de0ffb1f33bc0af053abc2a87c4af44594f5dcb1cb879dd823686a15d68550","timestamp":1526400000,"totalScore":0,"transactions":[],"txsFeatures":0,"txsRoot":"0x45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"}`
+    //     `{
+    //         "beneficiary":"0x0000000000000000000000000000000000000000",
+    //         "gasLimit":10000000,
+    //         "gasUsed":0,
+    //         "id":"0x00000000c05a20fbca2bf6ae3affba6af4a74b800b585bf7a4988aba7aea69f6",
+    //         "isTrunk":true,
+    //         "number":0,
+    //         "parentID":"0xffffffff00000000000000000000000000000000000000000000000000000000",
+    //         "receiptsRoot":"0x45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0",
+    //         "signer":"0x0000000000000000000000000000000000000000",
+    //         "size":170,
+    //         "stateRoot":"0x93de0ffb1f33bc0af053abc2a87c4af44594f5dcb1cb879dd823686a15d68550",
+    //         "timestamp":1526400000,
+    //         "totalScore":0,
+    //         "transactions":[],
+    //         "txsFeatures":0,
+    //         "txsRoot":"0x45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
+    //       }`
     //   ),
     //   noV1Compat: false
     // })
@@ -66,10 +83,18 @@ if (window.connex) {
   // Default is testnet for sync2
   // If you want customize network, please reset the options
   // More https://docs.vechain.org/connex/#setup
-  Vue.prototype.$connex = new Connex({
-    network: 'test',
-    node: 'https://sync-testnet.veblocks.net'
-  })
+
+  if (window.location.host.includes('testnet')) {
+    Vue.prototype.$connex = new Connex({
+      network: 'test',
+      node: 'https://sync-testnet.veblocks.net'
+    })
+  } else {
+    Vue.prototype.$connex = new Connex({
+      network: 'main',
+      node: 'https://sync-mainnet.veblocks.net'
+    })
+  }
 }
 
 new Vue({
