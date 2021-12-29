@@ -39,3 +39,14 @@ jobs:
           publish_dir: dist/
           cname: inspector.vecha.in
           force_orphan: true
+
+      - name: Deploy with test net CNAME
+      if: ${{ github.repository_owner == 'vechain' }}
+
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: dist/
+        external_repository: vechain/testnet.inspector.app
+        cname: inspector-testnet.vecha.in
+        force_orphan: true
