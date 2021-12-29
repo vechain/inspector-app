@@ -1,8 +1,10 @@
+import { Connex } from '@vechain/connex'
 import Vue from 'vue'
 // tslint:disable-next-line:no-var-requires
 const BN = require('bignumber.js')
 declare global {
   interface Window {
+    readonly connex: Connex,
     readonly BUS: Vue | any,
     readonly BN: any
   }

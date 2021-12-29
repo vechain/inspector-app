@@ -19,6 +19,11 @@ export default class App extends Vue {
     public created() {
         this.$ga.page('/inspector')
     }
+    mounted() {
+        if (!this.$connex) {
+            this.$router.push({name: 'notSupport'})
+        }
+    }
 }
 </script>
 <style>

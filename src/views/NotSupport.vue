@@ -1,6 +1,6 @@
 <template>
   <div>
-    home
+    Not Support the Unknown network.
   </div>
 </template>
 <script lang="ts">
