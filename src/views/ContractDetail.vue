@@ -2,7 +2,11 @@
     <section class="section contract-detail">
         <div v-if="contract" class="container">
             <Contract :isShort="false" :item="contract">
-                <b-button size="is-small" @click="toExplorer" slot="right" type="is-info">Explorer</b-button>
+                <div slot="right">
+                    <b-button expanded size="is-small" @click="toExplorer" type="is-info">Explorer</b-button>
+                    <br/>
+                    <b-button type="is-light" tag="a" size="is-small" href="https://github.com/vechain/b32/new/master/ABIs" target="_blank"> Submit JSON ABI </b-button >
+                </div>
             </Contract>
             <section style="margin-top: 20px;">
                 <b-field grouped>
