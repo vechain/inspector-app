@@ -50,7 +50,7 @@
                 >Shortcuts</router-link>
             </div>
             <div class="navbar-end" style="padding-right: 20px">
-                <template v-if="!unknownNet" >
+                <template v-if="!isSync1" >
                     <a class="navbar-item" v-if="isTest" href="https://inspector.vecha.in/" target="_self">Mainnet</a>
                     <a class="navbar-item"  v-else href="https://inspector-testnet.vecha.in/" target="_self">Testet</a>
                 </template>
@@ -84,8 +84,8 @@ export default class Navbar extends Vue {
         this.shortCuts = await DB.shortCuts.count()
     }
 
-    get unknownNet() {
-        return !['0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a', '0x000000000b2bce3c70bc649a02749e8687721b09ed2e15997f466536b20bb127'].includes(this.$connex.thor.genesis.id)
+    get isSync1() {
+        return !!window.connex
     }
 
     get isTest() {
