@@ -1,6 +1,6 @@
 import { Vue, Component } from 'vue-property-decorator'
 import Router from 'vue-router'
-import Home from './views/Home.vue'
+import NotSupport from './views/NotSupport.vue'
 import Contracts from './views/Contracts.vue'
 import Deploy from './views/DeployContract.vue'
 import ContractDetail from './views/ContractDetail.vue'
@@ -19,9 +19,9 @@ const router = new Router({
       path: '/'
     },
     {
-      name: 'home',
-      component: Home,
-      path: '/home'
+      name: 'notSupport',
+      component: NotSupport,
+      path: '/not-support'
     },
     {
       name: 'contracts',
