@@ -51,8 +51,8 @@
             </div>
             <div class="navbar-end" style="padding-right: 20px">
                 <template v-if="!unknownNet" >
-                    <a class="navbar-item" v-if="isTest" href="https://inspector-testnet.vecha.in/" target="_self">Testet</a>
-                    <a class="navbar-item" v-else href="https://inspector.vecha.in/" target="_self">Mainnet</a>
+                    <a class="navbar-item" v-if="isTest" href="https://inspector.vecha.in/" target="_self">Mainnet</a>
+                    <a class="navbar-item"  v-else href="https://inspector-testnet.vecha.in/" target="_self">Testet</a>
                 </template>
                 <a class="navbar-item" href="https://github.com/vechain/inspector-app" target="_blank">GitHub</a>
             </div>
