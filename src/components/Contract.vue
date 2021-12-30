@@ -18,7 +18,7 @@
                     <p class="is-family-monospace has-text-weight-semibold display-6" v-else>
                         <a
                             target="_blank"
-                            :href="`${$explorer}accounts/${item.address}`"
+                            :href="`${$explorerAccount}${item.address}`"
                         >{{item.address | toChecksumAddress}}</a>
                     </p>
                 </div>
