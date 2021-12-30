@@ -45,6 +45,9 @@ class Database extends Dexie {
     this.version(4).stores({
       contracts: '++id, &address, name, network'
     })
+    this.version(5).stores({
+      contracts: '++id, address, name, network'
+    })
     this.open().catch((err) => {
       // tslint:disable-next-line:no-console
       console.error(err)
