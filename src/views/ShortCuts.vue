@@ -65,70 +65,76 @@
   </section>
 </template>
 <script lang="ts">
-  import { Vue, Component } from 'vue-property-decorator'
-  import SampleFuncCard from '../components/SampleFuncCard.vue'
-  import DB, { Entities } from '../database'
+import { Vue, Component } from 'vue-property-decorator'
+import SampleFuncCard from '../components/SampleFuncCard.vue'
+import DB, { Entities } from '../database'
 
-  @Component({
-    components: {
-      SampleFuncCard
-    }
-  })
-  export default class ShortCuts extends Vue {
-    private list: Entities.ShortCuts[] = []
-    private count = 0
-    private perPage = 10
-    private currentPage = 1
-    private caller = ''
-    async created() {
-      this.$ga.page('/view/scs')
-      await this.onPageChange(1)
-      await this.countList()
-    }
-
-    private async countList() {
-      this.count = await DB.shortCuts.count()
-    }
-
-    private async onPageChange(page: number) {
-      this.list = await DB.shortCuts
-        .offset((page - 1) * this.perPage)
-        .limit(this.perPage)
-        .toArray()
-    }
-
-    private edit(row: any) {
-      this.$buefy.dialog.prompt({
-        title: 'Edit Shortcut',
-        message: 'Edit shortcut name',
-        inputAttrs: {
-          placeholder: 'Shortcut name',
-          value: row.name,
-          maxlength: 30,
-          required: true
-        },
-        onConfirm: (value: string) => {
-          DB.shortCuts.update(row.id, { name: value }).then(() => {
-            this.onPageChange(this.currentPage)
-          })
-        }
-      })
-    }
-    private remove(row: any) {
-      this.$buefy.dialog.confirm({
-        title: 'Remove',
-        message: `Are you sure want to remove '${row.name}' contract`,
-        cancelText: 'Cancel',
-        confirmText: 'YES',
-        type: 'is-danger',
-        scroll: 'clip',
-        onConfirm: () => {
-          DB.shortCuts.delete(row.id).then(() => {
-            this.onPageChange(this.currentPage)
-          })
-        }
-      })
-    }
+@Component({
+  components: {
+    SampleFuncCard
   }
+})
+export default class ShortCuts extends Vue {
+  private list: Entities.ShortCuts[] = []
+  private count = 0
+  private perPage = 10
+  private currentPage = 1
+  private caller = ''
+  async created() {
+    this.$ga.page('/view/scs')
+    await this.onPageChange(1)
+    await this.countList()
+  }
+
+  get network() {
+    return this.$connex.thor.genesis.id
+  }
+
+  private async countList() {
+    this.count = await DB.shortCuts
+      .filter((item) => (item.network === this.network) || (item.network === undefined)).count()
+  }
+
+  private async onPageChange(page: number) {
+    this.list = await DB.shortCuts
+      .filter((item) => (item.network === this.network) || (item.network === undefined))
+      .offset((page - 1) * this.perPage)
+      .limit(this.perPage)
+      .toArray()
+  }
+
+  private edit(row: any) {
+    this.$buefy.dialog.prompt({
+      title: 'Edit Shortcut',
+      message: 'Edit shortcut name',
+      inputAttrs: {
+        placeholder: 'Shortcut name',
+        value: row.name,
+        maxlength: 30,
+        required: true
+      },
+      onConfirm: (value: string) => {
+        DB.shortCuts.update(row.id, { name: value }).then(() => {
+          this.onPageChange(this.currentPage)
+        })
+      }
+    })
+  }
+  private remove(row: any) {
+    this.$buefy.dialog.confirm({
+      title: 'Remove',
+      message: `Are you sure want to remove '${row.name}' contract`,
+      cancelText: 'Cancel',
+      confirmText: 'YES',
+      type: 'is-danger',
+      scroll: 'clip',
+      onConfirm: () => {
+        DB.shortCuts.delete(row.id).then(() => {
+          this.onPageChange(this.currentPage)
+        })
+      }
+    })
+  }
+}
 </script>
 

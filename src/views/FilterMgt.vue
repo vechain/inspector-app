@@ -90,10 +90,15 @@ export default class FilterMgt extends Vue {
       centered: true
     }
   ]
+
+  get network() {
+    return this.$connex.thor.genesis.id
+  }
   private async created() {
     this.$ga.page('/inspector/view/mgt')
     this.onPageChange(1)
-    this.count = await DB.filters.count()
+    this.count = await DB.filters
+      .filter((item) => (item.network === this.network) || (item.network === undefined)).count()
   }
   private edit(row: any) {
     this.$buefy.dialog.prompt({
@@ -131,6 +136,7 @@ export default class FilterMgt extends Vue {
 
   private async onPageChange(page: number) {
     this.list = await DB.filters
+      .filter((item) => (item.network === this.network) || (item.network === undefined))
       .offset((page - 1) * this.perPage)
       .limit(this.perPage)
       .toArray()

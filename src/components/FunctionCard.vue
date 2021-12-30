@@ -138,6 +138,7 @@ export default class FunctionCard extends Mixins(AccountCall) {
             fromPrototype: this.prototype,
             createdTime: Date.now(),
             abi: this.item,
+            network: this.$connex.thor.genesis.id,
             type: this.couldExc ? 'write' : 'read'
         })
 
