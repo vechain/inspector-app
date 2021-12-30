@@ -25,18 +25,18 @@
                         <router-link
                             class="navbar-item"
                             :to="{
-                name: 'filter_mgt'
-              }"
+                                name: 'filter_mgt'
+                            }"
                         >All</router-link>
                         <hr class="navbar-divider">
                         <router-link
                             class="navbar-item"
                             :to="{
-                name: 'filter_view',
-                params: {
-                  id: view.id
-                }
-              }"
+                                name: 'filter_view',
+                                params: {
+                                id: view.id
+                                }
+                            }"
                             v-for="(view, index) in views"
                             :key="index"
                         >{{view.name}}</router-link>
@@ -50,10 +50,6 @@
                 >Shortcuts</router-link>
             </div>
             <div class="navbar-end" style="padding-right: 20px">
-                <template v-if="!isSync1" >
-                    <a class="navbar-item" v-if="isTest" href="https://inspector.vecha.in/" target="_self">Mainnet</a>
-                    <a class="navbar-item"  v-else href="https://inspector-testnet.vecha.in/" target="_self">Testet</a>
-                </template>
                 <a class="navbar-item" href="https://github.com/vechain/inspector-app" target="_blank">GitHub</a>
             </div>
         </div>
@@ -76,20 +72,19 @@ export default class Navbar extends Vue {
     private views: Entities.Filter[] = []
     private shortCuts: number = 0
 
+
+
+    get network() {
+        return this.$connex.thor.genesis.id
+    }
     private async getList() {
-        this.views = await DB.filters.limit(5).toArray()
+        this.views = await DB.filters
+            .filter((item) => (item.network === this.network) || (item.network === undefined)).limit(5).toArray()
     }
 
     private async countShortCuts() {
-        this.shortCuts = await DB.shortCuts.count()
-    }
-
-    get isSync1() {
-        return !!window.connex
-    }
-
-    get isTest() {
-        return window.location.host.includes('test')
+        this.shortCuts = await DB.shortCuts
+            .filter((item) => (item.network === this.network) || (item.network === undefined)).count()
     }
 
     private async created() {

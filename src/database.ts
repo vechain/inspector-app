@@ -9,6 +9,7 @@ export namespace Entities {
     address: string
     createdTime?: number
     abi?: object | []
+    network?: string
   }
 
   export interface Filter extends Contract {
@@ -39,6 +40,10 @@ class Database extends Dexie {
     this.version(3).stores({
       shortCuts: '++id, address, name, contractName, fromPrototype',
       filters: '++id, address, name, contractName, fromPrototype',
+    })
+
+    this.version(4).stores({
+      contracts: '++id, &address, name, network'
     })
     this.open().catch((err) => {
       // tslint:disable-next-line:no-console

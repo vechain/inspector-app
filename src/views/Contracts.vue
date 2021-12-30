@@ -205,7 +205,9 @@ export default class Contracts extends Vue {
         this.isModalActive = false
     }
     private async list() {
-        this.contracts = await DB.contracts.toArray()
+        const network = this.$connex.thor.genesis.id
+        this.contracts = await DB.contracts
+            .filter((item) => (item.network === network) || (item.network === undefined)).toArray()
         this.isloading = false
     }
     private addItem() {

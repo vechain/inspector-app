@@ -141,6 +141,7 @@
         name: this.form.name,
         address: this.form.address.toLowerCase(),
         abi: JSON.parse(this.form.abi),
+        network: this.$connex.thor.genesis.id,
         createdTime: Date.now()
       }
       try {

@@ -177,6 +177,7 @@ export default class EventCard extends Vue {
             contractName: contract!.name,
             fromPrototype: this.prototype,
             createdTime: Date.now(),
+            network: this.$connex.thor.genesis.id,
             abi: this.item
         })
         BUS.$emit('added-filter')
