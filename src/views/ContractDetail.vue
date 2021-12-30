@@ -220,7 +220,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
     }
     toExplorer() {
             window.open(
-                `${this.$explorer}accounts/${this.contract!.address}`,
+                `${this.$explorerAccount}${this.contract!.address}`,
                 '_blank'
             )
     }
