@@ -16,6 +16,7 @@ import Connex from '@vechain/connex'
 declare module 'vue/types/vue' {
   interface Vue {
     $connex: Connex
+    $explorer: string
   }
 }
 
@@ -42,10 +43,12 @@ if (window.connex) {
       node: '',
       noV1Compat: false
     })
+
+    Vue.prototype.$explorer='https://insight.vecha.in/#/'
 } else {
   // Default is main net for sync2
   const net = localStorage.getItem('last-net') || 'main'
-
+  Vue.prototype.$explorer=`https://insight.vecha.in/#/${net === 'custom' ? '' : net}/`
   if (net === 'test') {
     Vue.prototype.$connex = new Connex({
       network: 'test',
