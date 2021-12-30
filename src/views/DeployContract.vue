@@ -69,7 +69,7 @@ export default class DeployContract extends Vue {
                     .sign('tx', [{ value: this.haxValue || 0, data: this.code, to: null }])
                     .comment('Inspector deploy contract')
                     .request()
-                window.open(`https://insight.vecha.in/#/txs/${resp.txid}`)
+                window.open(`${this.$explorer}txs/${resp.txid}`)
             } catch (error: any) {
                 this.$buefy.toast.open({
                     type: 'is-danger',

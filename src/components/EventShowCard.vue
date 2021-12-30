@@ -18,7 +18,7 @@
                         #Block
                         <a
                             target="_blank"
-                            :href="`https://insight.vecha.in/#/blocks/${item.meta.blockID}`"
+                            :href="`${$explorer}blocks/${item.meta.blockID}`"
                         >{{item.meta.blockNumber}}</a>
                     </span>
                     <span
@@ -30,7 +30,7 @@
                     <a
                         class="is-family-monospace display-6 has-text-weight-semibold"
                         target="_blank"
-                        :href="`https://insight.vecha.in/#/txs/${item.meta.txID}`"
+                        :href="`${$explorer}txs/${item.meta.txID}`"
                     >{{item.meta.txID | addr}}</a>
                 </div>
             </div>
@@ -63,7 +63,7 @@
                                     v-if="props.row.type === 'address'"
                                     target="_blank"
                                     class="has-text-weight-semibold is-family-monospace display-6"
-                                    :href="`https://insight.vecha.in/#/accounts/${props.row.value}`"
+                                    :href="`${$explorer}accounts/${props.row.value}`"
                                 >{{ props.row.value | toChecksumAddress}}</a>
                                 <span
                                     v-else
