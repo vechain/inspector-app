@@ -50,6 +50,20 @@
                 >Shortcuts</router-link>
             </div>
             <div class="navbar-end" style="padding-right: 20px">
+                <b-dropdown v-model="netType" aria-role="list">
+                    <template slot="trigger">
+                        <b-button class="navbar-item" type="is-dark" :label="netLabel" icon-right="caret-down"/>
+                    </template>
+                    <b-dropdown-item @click="onChange('main')" value="main">
+                        Mainnet
+                    </b-dropdown-item>
+                    <b-dropdown-item @click="onChange('test')" value="test">
+                        Testnet
+                    </b-dropdown-item>
+                    <b-dropdown-item v-if="hasCustom" @click="onChange('custom')" value="custom">
+                        Custom
+                    </b-dropdown-item>
+                </b-dropdown>
                 <a class="navbar-item" href="https://github.com/vechain/inspector-app" target="_blank">GitHub</a>
             </div>
         </div>
@@ -71,11 +85,30 @@ export default class Navbar extends Vue {
 
     private views: Entities.Filter[] = []
     private shortCuts: number = 0
+    private netType = localStorage.getItem('last-net') || 'main'
+    private node = localStorage.getItem('custom-node')
+    private genesis = localStorage.getItem('custom-network')
 
+    get netLabel() {
+        const labels = {
+            main: 'Mainnet',
+            test: 'Testnet',
+            custom: 'Custom'
+        }
+        return labels[this.netType as 'main' | 'test' | 'custom']
+    }
 
+    get hasCustom() {
+        return !!this.node && !!this.genesis
+    }
 
     get network() {
         return this.$connex.thor.genesis.id
+    }
+
+    onChange(type: 'main' | 'test' | 'custom') {
+        localStorage.setItem('last-net', type)
+        window.location.href = window.location.origin
     }
     private async getList() {
         this.views = await DB.filters
