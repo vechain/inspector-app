@@ -2,15 +2,34 @@ import { Vue } from 'vue-property-decorator'
 import { picasso } from '@vechain/picasso'
 import { VNode } from 'vue'
 
+function getImg(el: HTMLElement, address: string): string {
+  const svg = picasso(address.toLowerCase())
+  if (el.nodeName === 'IMG') {
+    return `data:image/svg+xml;utf8,${svg}`
+  } else {
+    return `no-repeat url('data:image/svg+xml;utf8,${svg}')`
+  }
+}
+
 Vue.directive('ident', {
-  inserted(el: HTMLElement, binding: any) {
+  update(el: HTMLElement, binding: any) {
     if (binding.value !== binding.oldValue) {
-      const svg = picasso((binding.value as string).toLowerCase())
       if (el.nodeName === 'IMG') {
         const temp = el as HTMLImageElement
-        temp.src = `data:image/svg+xml;utf8,${svg}`
+        temp.src = getImg(el, binding.value)
       } else {
-        el.style.background = `no-repeat url('data:image/svg+xml;utf8,${svg}')`
+        el.style.background = getImg(el, binding.value)
+        el.style.backgroundSize = 'cover'
+      }
+    }
+  },
+  inserted(el: HTMLElement, binding: any) {
+    if (binding.value !== binding.oldValue) {
+      if (el.nodeName === 'IMG') {
+        const temp = el as HTMLImageElement
+        temp.src = getImg(el, binding.value)
+      } else {
+        el.style.background = getImg(el, binding.value)
         el.style.backgroundSize = 'cover'
       }
     }
