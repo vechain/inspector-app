@@ -50,7 +50,7 @@
                 >Shortcuts</router-link>
             </div>
             <div class="navbar-end" style="padding-right: 20px">
-                <b-dropdown v-model="netType" aria-role="list">
+                <b-dropdown v-if="!hasConnex" v-model="netType" aria-role="list">
                     <template slot="trigger">
                         <b-button class="navbar-item" type="is-dark" :label="netLabel" icon-right="caret-down"/>
                     </template>
@@ -96,6 +96,9 @@ export default class Navbar extends Vue {
             custom: 'Custom'
         }
         return labels[this.netType as 'main' | 'test' | 'custom']
+    }
+    get hasConnex() {
+        return !!window.connex
     }
 
     get hasCustom() {
