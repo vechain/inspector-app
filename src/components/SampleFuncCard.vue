@@ -48,10 +48,10 @@
                     </div>
                 </b-field>
                 <b-field v-if="request" label="Request">
-                    <pre>{{request}}</pre>
+                    <pre style="width: 100%;white-space: break-spaces; word-break: break-all;">{{request}}</pre>
                 </b-field>
                 <b-field v-if="resp" label="Response">
-                    <pre>{{resp}}</pre>
+                    <pre style="width: 100%;white-space: break-spaces; word-break: break-all;">{{resp}}</pre>
                 </b-field>
             </form>
             <div v-show="activeTab === tabs[1]">
