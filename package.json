@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.5.0",
-    "@vechain/connex": "^2.0.10",
+    "@vechain/connex": "^2.0.14",
     "@vechain/picasso": "^2.1.1",
     "bignumber.js": "8.0.2",
     "buefy": "^0.8.20",
