@@ -4,7 +4,6 @@ import Vue from 'vue'
 const BN = require('bignumber.js')
 declare global {
   interface Window {
-    readonly connex: Connex,
     readonly BUS: Vue | any,
     readonly BN: any
   }
