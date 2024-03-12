@@ -49,6 +49,7 @@ function setExplorerUrl(path: string) {
 if (window.connex) {
     // sync1
     Vue.prototype.$connex = new Connex({
+        //@ts-ignore
       network: window.connex.thor.genesis,
       node: '',
       noV1Compat: false

@@ -1,0 +1,50 @@
+name: Build and Deploy to GH pages
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  BuildAndDeploy:
+    runs-on: ubuntu-latest
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install & Patch packages
+        run: yarn install
+
+      - name: Build app
+        run: yarn build
+
+      - name: Deploy Without CNAME
+        if: ${{ github.repository_owner != 'vechain' }}
+
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: dist/
+          force_orphan: true
+
+      - name: Deploy With CNAME
+        if: ${{ github.repository_owner == 'vechain' }}
+
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: dist/
+          cname: insight.vecha.in
+          force_orphan: true
