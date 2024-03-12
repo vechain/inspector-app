@@ -50,7 +50,7 @@
                 >Shortcuts</router-link>
             </div>
             <div class="navbar-end" style="padding-right: 20px">
-                <b-badge v-if="networks.length === 1" size="sm" variant="warning" style="margin: auto 0px;"  >{{networks[0].label}}</b-badge>
+                <b-tag v-if="networks.length === 1" size="is-medium" type="is-warning" style="margin: auto 0px;"  >{{networks[0].label}}</b-tag>
                 <b-dropdown
                 v-if="networks.length > 1"
                 size="sm"

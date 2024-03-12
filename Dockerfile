@@ -40,6 +40,12 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 
 # Copy the rest of the source files into the image.
 COPY . .
+
+ARG VUE_APP_SOLO_URL
+ENV VUE_APP_SOLO_URL=$VUE_APP_SOLO_URL
+
+ENV NODE_ENV=production
+
 # Run the build script.
 RUN yarn run build
 
