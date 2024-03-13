@@ -2,25 +2,90 @@
 
 Static web site for contract call with ABI and contract address.
 
+[Try it out!](https://inspector.vecha.in/#/)
+
+## Screenshots
+
+![Homepage](./screenshots/homepage.png)
+
 ## Project setup
+
+### Install dependencies
+
 ```
-npm install
+yarn
 ```
 
-### Compiles and hot-reloads for development
+### Compiles with hot-reload for development
+
 ```
-npm run serve
+yarn serve
 ```
 
 ### Compiles and minifies for production
+
 ```
-npm run build
+yarn build
 ```
 
-### Lints and fixes files
+## Build and run with Docker
+
 ```
-npm run lint
+docker build -t inspector-app .
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+```
+docker run -dp 127.0.0.1:8080:80 inspector-app
+```
+
+or with docker compose
+
+```
+docker compose up -d --build
+```
+
+### In your local machine 
+
+Create a `.env` file with the url of the solo node you want to connect
+
+```
+VUE_APP_SOLO_URL=http://localhost:8080
+```
+
+### With docker 
+
+We can provide runtime env variables using -e 
+
+#### Using image from registry 
+
+```
+docker run ghcr.io/vechain/insight-app:master -e VUE_APP_SOLO_URL=http://localhost:8080
+```
+
+#### Build local image 
+```
+docker build -t inspector-app 
+docker run -e VUE_APP_SOLO_URL=http://localhost:8080
+```
+
+### With compose 
+
+Use the image and pass the env variable in the compose file directly
+
+```
+version: "3.7"
+services:
+  insight:
+    image: ghcr.io/vechain/inspector-app:master
+    hostname: inspector
+    container_name: inspector
+    environment:
+      - VUE_APP_SOLO_URL=http://localhost:8669
+    ports:
+      - "8080:80"
+```
+
+
+## Contributing
+
+Everyone is always welcome to contribute on the codebase.

@@ -1,9 +1,9 @@
-
 services:
   inspector:
     build:
       context: .
     environment:
       NODE_ENV: production
+      VUE_APP_SOLO_URL: http://localhost:8669
     ports:
-      - 8080:80
+      - 8083:80

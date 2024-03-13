@@ -1,4 +1,4 @@
-import DB from './database'
+
 import './window.init'
 import Vue from 'vue'
 import Buefy from 'buefy'
@@ -13,6 +13,7 @@ import router from './Router'
 import './overwrite.css'
 import VueAnalytics from 'vue-analytics'
 import Connex from '@vechain/connex'
+import { createConnex, isSoloNode } from './create-connex'
 declare module 'vue/types/vue' {
   interface Vue {
     $connex: Connex
@@ -48,6 +49,7 @@ function setExplorerUrl(path: string) {
 
 if (window.connex) {
     // sync1
+    console.log("Connex ok", window.connex)
     Vue.prototype.$connex = new Connex({
         //@ts-ignore
       network: window.connex.thor.genesis,
@@ -56,22 +58,15 @@ if (window.connex) {
     })
     setExplorerUrl('')
 } else {
+    
   // Default is main net for sync2
-  const net = localStorage.getItem('last-net') || 'main'
+  const defaultNetwork = isSoloNode ? 'solo' : 'main'
+  const net = localStorage.getItem('last-net') || defaultNetwork
+  console.log("net", net)
 
-  if (['test', 'main'].includes(net)) {
+  if (['test', 'main', 'solo'].includes(net)) {
     setExplorerUrl(net)
-    if (net === 'test') {
-      Vue.prototype.$connex = new Connex({
-        network: 'test',
-        node: 'https://sync-testnet.veblocks.net'
-      })
-    } else {
-      Vue.prototype.$connex = new Connex({
-        network: 'main',
-        node: 'https://sync-mainnet.veblocks.net'
-      })
-    }
+    Vue.prototype.$connex = createConnex(net as "test" | "main" | "solo")
   } else {
     const node = localStorage.getItem('custom-node')
     const network = JSON.parse(localStorage.getItem('custom-network') || '') as Connex.Thor.Block // genesis block

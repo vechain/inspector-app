@@ -50,21 +50,25 @@
                 >Shortcuts</router-link>
             </div>
             <div class="navbar-end" style="padding-right: 20px">
-                <b-dropdown v-if="!hasConnex" v-model="netType" aria-role="list">
-                    <template slot="trigger">
-                        <b-button class="navbar-item" type="is-dark" :label="netLabel" icon-right="caret-down"/>
+                <b-tag v-if="networks.length === 1" size="is-medium" type="is-warning" style="margin: auto 0px;"  >{{networks[0].label}}</b-tag>
+                <b-dropdown
+                v-if="networks.length > 1"
+                size="sm"
+                :text="network"
+                toggle-class="py-0 px-1"
+                style="vertical-align:top"
+                >
+                <template slot="trigger">
+                        <b-button class="navbar-item" type="is-dark" :label="network" icon-right="caret-down"/>
                     </template>
-                    <b-dropdown-item @click="onChange('main')" value="main">
-                        Mainnet
-                    </b-dropdown-item>
-                    <b-dropdown-item @click="onChange('test')" value="test">
-                        Testnet
-                    </b-dropdown-item>
-                    <b-dropdown-item v-if="hasCustom" @click="onChange('custom')" value="custom">
-                        Custom
-                    </b-dropdown-item>
-                </b-dropdown>
-                <a class="navbar-item" href="https://github.com/vechain/inspector-app" target="_blank">GitHub</a>
+                        <b-dropdown-item
+                            v-for="(n, i) in switchableNetworks"
+                            :key="i"
+                            :value="n.name"
+                            @click="onChange(n.name)"
+                        >{{n.label}}</b-dropdown-item>
+                    </b-dropdown>
+                <a class="navbar-item " href="https://github.com/vechain/inspector-app" target="_blank">GitHub</a>
             </div>
         </div>
         </div>
@@ -74,6 +78,9 @@
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
 import DB, { Entities } from '../database'
+import { isSoloNode } from '@/create-connex'
+import { networkToGenesisId, genesisIdToNetwork } from '@/utils'
+
 @Component
 export default class Navbar extends Vue {
     private routes = [
@@ -85,18 +92,9 @@ export default class Navbar extends Vue {
 
     private views: Entities.Filter[] = []
     private shortCuts: number = 0
-    private netType = localStorage.getItem('last-net') || 'main'
     private node = localStorage.getItem('custom-node')
     private genesis = localStorage.getItem('custom-network')
 
-    get netLabel() {
-        const labels = {
-            main: 'Mainnet',
-            test: 'Testnet',
-            custom: 'Custom'
-        }
-        return labels[this.netType as 'main' | 'test' | 'custom']
-    }
     get hasConnex() {
         return !!window.connex
     }
@@ -105,11 +103,32 @@ export default class Navbar extends Vue {
         return !!this.node && !!this.genesis
     }
 
-    get network() {
-        return this.$connex.thor.genesis.id
-    }
 
-    onChange(type: 'main' | 'test' | 'custom') {
+    get network() {
+            switch (genesisIdToNetwork(this.$connex.thor.genesis.id)) {
+                case 'main': return 'Mainnet'
+                case 'test': return 'Testnet'
+                case 'solo': return 'Solonet'
+                default: return 'Custom'
+            }
+        }
+
+    get networks(): Array<{ name: string, label: string }> {
+            if(isSoloNode) return [ {
+                name: 'solo',
+                label: 'SoloNet',
+                }]
+            return [
+                { name: 'main',label: 'Mainnet',  },
+                { name: 'test',label: 'Testnet', },
+                ...(isSoloNode ? [{ name:'solo',label: 'Solonet', }] : []),
+            ]
+        }
+    get switchableNetworks(): Array<{ name: string, label: string }> {
+        return this.networks.filter(i =>  this.$connex.thor.genesis.id !== networkToGenesisId(i.name))
+    }
+        
+    onChange(type: 'main' | 'test' | 'solo' | 'custom') {
         localStorage.setItem('last-net', type)
         window.location.href = window.location.origin
     }
@@ -123,18 +142,6 @@ export default class Navbar extends Vue {
             .filter((item) => (item.network === this.network) || (item.network === undefined)).count()
     }
 
-    private async created() {
-        await this.getList()
-        await this.countShortCuts()
-
-        DB.subscribe('filters', () => {
-            this.getList()
-        })
-
-        DB.subscribe('shortCuts', () => {
-            this.countShortCuts()
-        })
-    }
 }
 </script>
 
@@ -142,4 +149,7 @@ export default class Navbar extends Vue {
 .navbar-brand.is-marginless .subtitle:not(:last-child) {
   margin-bottom: 0;
 }
-</style>
+</style>import { isSoloNode } from '@/create-connex'
+import { isSoloNode } from '@/create-connex'
+import { isSoloNode } from '@/create-connex'
+genesisIdToNetwork, 
