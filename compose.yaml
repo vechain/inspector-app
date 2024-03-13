@@ -5,5 +5,7 @@ services:
     environment:
       NODE_ENV: production
       VUE_APP_SOLO_URL: http://localhost:8669
+    volumes:
+      - "./public/abis:/usr/share/nginx/html/abis"
     ports:
       - 8083:80

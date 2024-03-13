@@ -14,6 +14,7 @@ import './overwrite.css'
 import VueAnalytics from 'vue-analytics'
 import Connex from '@vechain/connex'
 import { createConnex, isSoloNode } from './create-connex'
+import {prePopulate} from '@/pre-population'
 declare module 'vue/types/vue' {
   interface Vue {
     $connex: Connex
@@ -58,7 +59,7 @@ if (window.connex) {
     })
     setExplorerUrl('')
 } else {
-    
+
   // Default is main net for sync2
   const defaultNetwork = isSoloNode ? 'solo' : 'main'
   const net = localStorage.getItem('last-net') || defaultNetwork
@@ -91,6 +92,8 @@ if (window.connex) {
     }
   }
 }
+
+prePopulate()
 
 new Vue({
   router,
