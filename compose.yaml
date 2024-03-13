@@ -6,6 +6,7 @@ services:
       NODE_ENV: production
       VUE_APP_SOLO_URL: http://localhost:8669
     volumes:
-      - "./public/abis:/usr/share/nginx/html/abis"
+      # This allows us to pre-populate the contracts. Your local path should contain a file called `contracts.json`
+      - "./examples/abis:/usr/share/nginx/html/abis"
     ports:
       - 8083:80

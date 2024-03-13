@@ -14,7 +14,7 @@ import './overwrite.css'
 import VueAnalytics from 'vue-analytics'
 import Connex from '@vechain/connex'
 import { createConnex, isSoloNode } from './create-connex'
-import {prePopulate} from '@/pre-population'
+import { prePopulate } from '@/pre-populate'
 declare module 'vue/types/vue' {
   interface Vue {
     $connex: Connex

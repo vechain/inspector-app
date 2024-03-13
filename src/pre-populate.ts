@@ -26,10 +26,12 @@ const importContract = async (contract: Contract) => {
   await DB.contracts.add(entity)
 }
 
-
+/**
+ * Pre-populate the database with contracts. This is useful for local development
+ */
 export const prePopulate = async () => {
 
-  const request = await fetch('/abis/pre-population.json')
+  const request = await fetch('/abis/contracts.json')
 
   if (!request.ok) {
     return
