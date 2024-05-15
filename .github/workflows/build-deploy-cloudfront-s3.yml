@@ -1,4 +1,4 @@
-name: Build & Deploy FE
+name: Build & Deploy Cloudfront/S3
 
 on:
   workflow_dispatch:
