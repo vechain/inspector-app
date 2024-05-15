@@ -1,0 +1,79 @@
+name: Build & Deploy Cloudfront/S3
+
+on:
+  workflow_dispatch:
+    inputs:
+      account:
+        description: AWS account to deploy to
+        required: true
+        type: choice
+        options:
+          - b3tr-dev
+        default: b3tr-dev
+      s3_bucket_name:
+        description: Name of the S3 bucket which stores static FE
+        required: true
+        type: choice
+        options:
+          - dev-b3tr-inspector-20240326103303104500000002
+        default: dev-b3tr-inspector-20240326103303104500000002
+      cloudfront_distribution_id:
+        description: ID of the Cloudfront distribution to invalidate
+        required: true
+        type: string
+        default: E3SE3E501W07RH
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-deploy-fe
+  cancel-in-progress: true
+
+# Required for authentication through GitHub OIDC
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '16'
+
+      - name: Install
+        run: yarn
+
+      - name: Build
+        run: yarn build
+
+      - name: Determine AWS account ID and role
+        id: determine-account
+        # For any account requiring insights depoyment, configure OIDC authentication in that account and update this step accordingly
+        run: |
+            case ${{ inputs.account }} in
+              b3tr-dev)
+                echo "role_arn=${{ secrets.B3TR_DEV_AWS_ACC_ROLE }}" >> $GITHUB_OUTPUT
+                ;;
+              *)
+                echo "Invalid account specified. Please ensure the OIDC role for the desired account has been added to this repository's secrets."
+                exit 1
+                ;;
+            esac
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+            aws-region: eu-west-1
+            role-to-assume: ${{ steps.determine-account.outputs.role_arn }}
+
+      - name: Upload to S3
+        run: aws s3 sync ./dist s3://${{ inputs.s3_bucket_name }} --delete
+
+      - name: Cloudfront Invalidation
+        run: |
+          AWS_MAX_ATTEMPTS=10 aws cloudfront create-invalidation --distribution-id ${{ inputs.cloudfront_distribution_id }} --paths '/' '/*'
