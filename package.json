@@ -42,7 +42,7 @@
     "vue-template-compiler": "^2.6.11"
   },
   "engines": {
-    "node": "16.20.0",
+    "node": "16.20.2",
     "yarn": "^1.22"
   }
 }
