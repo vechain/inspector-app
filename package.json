@@ -10,6 +10,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.5.0",
     "@vechain/connex": "2.0.14",
+    "@vechain/connex-types": "2.0.12",
     "@vechain/picasso": "^2.1.1",
     "bignumber.js": "8.0.2",
     "buefy": "^0.8.20",
@@ -42,7 +43,7 @@
     "vue-template-compiler": "^2.6.11"
   },
   "engines": {
-    "node": "16.20.2",
+    "node": "^16.20.0",
     "yarn": "^1.22"
   }
 }
