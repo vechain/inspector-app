@@ -13,7 +13,7 @@ import router from './Router'
 import './overwrite.css'
 import VueAnalytics from 'vue-analytics'
 import Connex from '@vechain/connex'
-import { createConnex, isSoloNode } from './create-connex'
+import { createConnex, isSoloNode, isVeWorldAvailable } from './create-connex'
 import { prePopulate } from '@/pre-populate'
 declare module 'vue/types/vue' {
   interface Vue {
@@ -55,7 +55,8 @@ if (window.connex) {
         //@ts-ignore
       network: window.connex.thor.genesis,
       node: '',
-      noV1Compat: false
+      noV1Compat: false,
+      noExtension: !isVeWorldAvailable
     })
     setExplorerUrl('')
 } else {

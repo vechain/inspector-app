@@ -41,25 +41,27 @@ const soloGenesis = {
   transactions: [],
 };
 
+export const isVeWorldAvailable = !!window.vechain
+
 export function createConnex(net?: "main" | "test" | "solo") {
   if (net) {
     // net specified
     const url = nodeUrls[net];
     if (net == "solo") {
-      return new Connex({ node: url, network: soloGenesis });
+      return new Connex({ node: url, network: soloGenesis, noExtension: !isVeWorldAvailable })
 }
-    return new Connex({ node: url, network: net });
+    return new Connex({ node: url, network: net, noExtension: !isVeWorldAvailable })
   } else {
     const injected = (window as any).connex;
     // net unspecified
     if (injected) {
-      return new Connex({ node: "", network: injected.thor.genesis });
+      return new Connex({ node: "", network: injected.thor.genesis, noExtension: !isVeWorldAvailable });
     } else {
       // defaults to main net, or soloUrl if solo is provided
       if (isSoloNode) {
-        return new Connex({ node: nodeUrls.solo, network: soloGenesis });
+        return new Connex({ node: nodeUrls.solo, network: soloGenesis, noExtension: !isVeWorldAvailable });
       }
-      return new Connex({ node: nodeUrls.main });
+      return new Connex({ node: nodeUrls.main, noExtension: !isVeWorldAvailable })
     }
   }
 }
