@@ -137,7 +137,7 @@
     private async onAddressChange(newAddress: string) {
       const addrRegexp = /^0x[0-9a-fA-F]{40}$/
       if (addrRegexp.test(newAddress)) {
-        await this.loadABI()
+        await this.loadABI(newAddress)
       }
     }
 
@@ -162,8 +162,8 @@
     }
 
     async submit() {
-      if (!this.form.abi) {
-        await this.loadABI()
+      if (!this.form.abi && this.form.address) {
+        await this.loadABI(this.form.address)
       }
 
       if (!this.checkform()) {
@@ -193,7 +193,7 @@
       }
     }
 
-    private async loadABI() {
+    private async loadABI(address: string) {
       let chainID;
       if (this.$connex.thor.genesis.id === '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a') {
         chainID = '100009'
@@ -202,7 +202,7 @@
       }
         
       if (chainID) {
-        const res = await fetch(`https://sourcify.dev/server/repository/contracts/full_match/${chainID}/${this.form.address}/metadata.json`)
+        const res = await fetch(`https://sourcify.dev/server/repository/contracts/full_match/${chainID}/${address}/metadata.json`)
         if (res.status === 200) {
           const data = await res.json()
           this.form.abi = JSON.stringify(data.output.abi, null, 2)
