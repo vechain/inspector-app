@@ -143,6 +143,9 @@
 
     @Watch('form.abi')
     private async onAbiChange(abi: string) {
+      if (this.form.name) {
+        return
+      }
       let json: any
       try {
         json = JSON.parse(abi)
