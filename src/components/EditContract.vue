@@ -133,7 +133,42 @@
       }
     }
 
+    @Watch('form.address')
+    private async onAddressChange(newAddress: string) {
+      const addrRegexp = /^0x[0-9a-fA-F]{40}$/
+      if (addrRegexp.test(newAddress)) {
+        await this.loadABI(newAddress)
+      }
+    }
+
+    @Watch('form.abi')
+    private async onAbiChange(abi: string) {
+      if (this.form.name) {
+        return
+      }
+      let json: any
+      try {
+        json = JSON.parse(abi)
+      } catch(e) {
+        return
+      }
+      if (this.form.address) {
+        // if the contract implements the `name`, fetch it from chain
+        const nameABI = json.filter((item: any) => item.name === "name")
+        if (nameABI.length > 0) {
+          const nameRes = await this.$connex.thor.account(this.form.address).method(nameABI[0]).call()
+          if (!nameRes.reverted && !nameRes.vmError && nameRes.decoded) {
+            this.form.name = nameRes.decoded[0]
+          }
+        }
+      }
+    }
+
     async submit() {
+      if (!this.form.abi && this.form.address) {
+        await this.loadABI(this.form.address)
+      }
+
       if (!this.checkform()) {
         return
       }
@@ -158,6 +193,23 @@
         console.error(error)
       } finally {
         this.$emit('finished')
+      }
+    }
+
+    private async loadABI(address: string) {
+      let chainID;
+      if (this.$connex.thor.genesis.id === '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a') {
+        chainID = '100009'
+      } else if (this.$connex.thor.genesis.id === '0x000000000b2bce3c70bc649a02749e8687721b09ed2e15997f466536b20bb127'){
+        chainID = '100010'
+      }
+        
+      if (chainID) {
+        const res = await fetch(`https://sourcify.dev/server/repository/contracts/full_match/${chainID}/${address}/metadata.json`)
+        if (res.status === 200) {
+          const data = await res.json()
+          this.form.abi = JSON.stringify(data.output.abi, null, 2)
+        }
       }
     }
 
