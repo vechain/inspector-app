@@ -70,7 +70,7 @@
   import { Vue, Prop, Component, Watch } from 'vue-property-decorator'
   import DB, { Entities } from '../database'
   import { address as Address } from 'thor-devkit'
-  import { B3tr } from '../contracts/config'
+  import { ContractConfig } from '../contracts/config'
 
   interface FormError {
     isError: boolean
@@ -139,7 +139,7 @@
     
     loadBuiltinContracts() {
       const genesisId = this.$connex.thor.genesis.id
-      const contracts = B3tr[genesisId] || {}
+      const contracts = ContractConfig[genesisId] || {}
       
       this.allContracts = Object.entries(contracts).map(([address, config]) => ({
         name: config.name,
@@ -156,7 +156,7 @@
       
       // Load ABI for the selected contract
       const genesisId = this.$connex.thor.genesis.id
-      const contracts = B3tr[genesisId] || {}
+      const contracts = ContractConfig[genesisId] || {}
       const contractConfig = contracts[option.address]
       
       if (contractConfig && contractConfig.abi) {

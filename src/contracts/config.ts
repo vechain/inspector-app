@@ -119,7 +119,7 @@ const common = {
 }
 
 // genesis ID -> contract address -> ContractConfig
-export const B3tr: Record<string, Record<string, ContractConfig>> = {
+export const ContractConfig: Record<string, Record<string, ContractConfig>> = {
     "0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a": {
         ...common,
         "0x5ef79995FE8a89e0812330E4378eB2660ceDe699": b3tr,
