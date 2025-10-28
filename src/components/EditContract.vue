@@ -55,6 +55,20 @@
             type="textarea"
           ></b-input>
         </b-field>
+        <b-field label="Category (optional)">
+          <b-autocomplete
+            v-model="form.category"
+            :data="filteredCategories"
+            placeholder="Select or create a category"
+            @typing="getFilteredCategories"
+            open-on-focus
+            clearable
+            append-to-body
+            max-height="200"
+          >
+            <template slot="empty">Type to create new category</template>
+          </b-autocomplete>
+        </b-field>
         <b-message v-if="isImport && isEdit" type="is-warning">
             The contract exists, are you sure to override it?
         </b-message>
@@ -86,7 +100,7 @@
 
       if (this.isEdit) {
         result.title = 'Edit Contract'
-        result.btn = this.isImport ? 'Override' : 'Edit'
+        result.btn = this.isImport ? 'Override' : 'Save'
       }
 
       return result
@@ -125,14 +139,18 @@
       id: 0,
       name: '',
       address: '',
-      abi: ''
+      abi: '',
+      category: ''
     }
 
     private nameInput = ''
     private filteredContracts: Array<{name: string, address: string}> = []
     private allContracts: Array<{name: string, address: string}> = []
+    private categories: string[] = []
+    private filteredCategories: string[] = []
 
-    created() {
+    async created() {
+      await this.loadCategories()
       this.initForm()
       this.loadBuiltinContracts()
     }
@@ -186,6 +204,28 @@
       this.$emit('cancel')
     }
 
+    async loadCategories() {
+      const network = this.$connex.thor.genesis.id
+      const contracts = await DB.contracts
+        .filter((item) => (item.network === network) || (item.network === undefined))
+        .toArray()
+      
+      const categorySet = new Set<string>()
+      contracts.forEach(contract => {
+        if (contract.category) {
+          categorySet.add(contract.category)
+        }
+      })
+      this.categories = Array.from(categorySet).sort()
+      this.filteredCategories = this.categories
+    }
+
+    getFilteredCategories(text: string) {
+      this.filteredCategories = this.categories.filter((category) => {
+        return category.toLowerCase().indexOf(text.toLowerCase()) >= 0
+      })
+    }
+
     initForm() {
       const val = this.item
       if (val && val.address) {
@@ -194,12 +234,14 @@
         this.form.address = val.address || ''
         this.form.abi = val.abi ? JSON.stringify(val.abi, null, 2) : ''
         this.form.id = val.id || 0
+        this.form.category = val.category || ''
       } else {
         this.form = {
           name: '',
           address: '',
           abi: '',
-          id: 0
+          id: 0,
+          category: ''
         }
         this.nameInput = ''
       }
@@ -261,12 +303,31 @@
       if (!this.checkform()) {
         return
       }
+
+      // Calculate order for new contracts
+      let order: number | undefined
+      if (!this.isEdit) {
+        const network = this.$connex.thor.genesis.id
+        const categoryContracts = await DB.contracts
+          .filter((item) => 
+            ((item.network === network) || (item.network === undefined)) &&
+            ((item.category || '') === (this.form.category || ''))
+          )
+          .toArray()
+        
+        const maxOrder = categoryContracts.reduce((max, c) => 
+          Math.max(max, c.order || 0), -1)
+        order = maxOrder + 1
+      }
+
       const obj: Entities.Contract = {
         name: this.form.name,
         address: this.form.address.toLowerCase(),
         abi: JSON.parse(this.form.abi),
         network: this.$connex.thor.genesis.id,
-        createdTime: Date.now()
+        createdTime: Date.now(),
+        category: this.form.category || undefined,
+        order: order
       }
       try {
         if (!this.isEdit) {
