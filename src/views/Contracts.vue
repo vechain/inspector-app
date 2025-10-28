@@ -14,39 +14,39 @@
                 <input class="is-hidden" ref="files" type="file" accept="application/json" />
             </div>
         </div>
-        <div
-            v-if="contracts.length"
-            :class="{'is-centered': contracts.length < 4}"
-            class="columns section is-variable is-1 is-multiline"
-        >
-            <div
-                class="column is-3-fullhd is-4-desktop is-6-tablet"
-                v-for="(item, index) in contracts"
-                :key="index"
-            >
-                <Contract @select="onSelect(item.id)" :item="item" class="contract-box">
-                    <slot>
-                        <p class="buttons buttons-slot">
-                            <button @click.stop="edit(item)" class="button is-primary is-inverted">
+        <div v-if="contracts.length" class="section">
+            <div v-for="category in sortedCategories" :key="category" class="category-section">
+                <div class="container">
+                    <div class="category-header">
+                        <h2 class="subtitle category-title">
+                            {{ category || 'Uncategorized' }}
+                            <span class="tag is-light is-rounded">{{ getCategoryContracts(category).length }}</span>
+                            <button v-if="category" @click="renameCategory(category)" class="button is-small is-text">
                                 <b-icon icon="edit" size="is-small"></b-icon>
                             </button>
-                            <button
-                                @click.stop="exportJson(item)"
-                                class="button is-primary is-inverted"
-                            >
-                                <b-icon icon="file-export" size="is-small"></b-icon>
-                            </button>
-                        </p>
-                    </slot>
-                    <slot slot="right">
-                        <button
-                            @click.stop="remove(item)"
-                            class="buttons-slot button is-danger is-inverted"
-                        >
-                            <b-icon icon="trash-alt" size="is-small"></b-icon>
-                        </button>
-                    </slot>
-                </Contract>
+                        </h2>
+                    </div>
+                </div>
+                <div class="columns section is-variable is-1 is-multiline">
+                    <div
+                        class="column is-3-fullhd is-4-desktop is-6-tablet"
+                        v-for="(item, index) in getCategoryContracts(category)"
+                        :key="item.id"
+                    >
+                        <Contract 
+                            variant="list"
+                            :item="item"
+                            :canMoveUp="index > 0"
+                            :canMoveDown="index < getCategoryContracts(category).length - 1"
+                            @select="onSelect(item.id)"
+                            @edit="edit(item)"
+                            @moveUp="moveUp(item, category)"
+                            @moveDown="moveDown(item, category)"
+                            @export="exportJson(item)"
+                            @delete="remove(item)"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
         <div v-if="!isloading && !contracts.length" class="section">
@@ -85,6 +85,25 @@ export default class Contracts extends Vue {
     private currentItem: Entities.Contract | null = null
     private contracts: Entities.Contract[] = []
     private isImport: boolean = false
+
+    get sortedCategories(): string[] {
+        const categories = new Set<string>()
+        this.contracts.forEach(contract => {
+            categories.add(contract.category || '')
+        })
+        const sorted = Array.from(categories).sort((a, b) => {
+            if (!a) return 1
+            if (!b) return -1
+            return a.localeCompare(b)
+        })
+        return sorted
+    }
+
+    getCategoryContracts(category: string): Entities.Contract[] {
+        return this.contracts
+            .filter(c => (c.category || '') === category)
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
+    }
 
     onSelect(id: number) {
         this.$router.push({
@@ -147,14 +166,27 @@ export default class Contracts extends Vue {
         fileEle.click()
     }
 
-    prepare() {
-        const { action, address } = this.$route.query
+    async prepare() {
+        const { action, address, id } = this.$route.query
         switch (action) {
             case 'add':
                 this.currentItem = {
                     address
                 }
                 this.open()
+                break
+            case 'edit':
+                if (id) {
+                    const contract = await DB.contracts
+                        .where('id')
+                        .equals(parseInt(id as string, 10))
+                        .first()
+                    if (contract) {
+                        this.currentItem = contract
+                        this.isImport = false
+                        this.open()
+                    }
+                }
                 break
             default:
                 break
@@ -224,20 +256,85 @@ export default class Contracts extends Vue {
         this.isImport = false
         this.open()
     }
+
+    // Move up/down handlers
+    async moveUp(item: Entities.Contract, category: string) {
+        const categoryContracts = this.getCategoryContracts(category)
+        const currentIndex = categoryContracts.findIndex(c => c.id === item.id)
+        
+        if (currentIndex > 0) {
+            const prevItem = categoryContracts[currentIndex - 1]
+            const tempOrder = item.order || currentIndex
+            
+            await DB.contracts.where('id').equals(item.id!).modify({ order: prevItem.order || (currentIndex - 1) })
+            await DB.contracts.where('id').equals(prevItem.id!).modify({ order: tempOrder })
+            await this.list()
+        }
+    }
+
+    async moveDown(item: Entities.Contract, category: string) {
+        const categoryContracts = this.getCategoryContracts(category)
+        const currentIndex = categoryContracts.findIndex(c => c.id === item.id)
+        
+        if (currentIndex < categoryContracts.length - 1) {
+            const nextItem = categoryContracts[currentIndex + 1]
+            const tempOrder = item.order || currentIndex
+            
+            await DB.contracts.where('id').equals(item.id!).modify({ order: nextItem.order || (currentIndex + 1) })
+            await DB.contracts.where('id').equals(nextItem.id!).modify({ order: tempOrder })
+            await this.list()
+        }
+    }
+
+    // Category management
+    async renameCategory(oldCategory: string) {
+        this.$buefy.dialog.prompt({
+            message: 'Enter new category name',
+            inputAttrs: {
+                value: oldCategory,
+                maxlength: 50
+            },
+            trapFocus: true,
+            onConfirm: async (newCategory: string) => {
+                if (newCategory && newCategory !== oldCategory) {
+                    const categoryContracts = this.contracts.filter(c => c.category === oldCategory)
+                    for (const contract of categoryContracts) {
+                        await DB.contracts.where('id').equals(contract.id!).modify({ category: newCategory })
+                    }
+                    await this.list()
+                }
+            }
+        })
+    }
+
+    // Helper to reorder contracts in a category
+    async reorderCategoryContracts(category: string) {
+        const categoryContracts = this.getCategoryContracts(category)
+        for (let i = 0; i < categoryContracts.length; i++) {
+            await DB.contracts.where('id').equals(categoryContracts[i].id!).modify({ order: i })
+        }
+    }
 }
 </script>
 <style lang="css" scoped>
 .column:last-child {
     margin-bottom: 1.5rem;
 }
-.buttons-slot {
-    opacity: 0.3;
-    transition: opacity 0.2s ease-in-out;
+
+/* Category styles */
+.category-section {
+    margin-bottom: 2rem;
 }
-.contract-box {
-    width: 320px;
+
+.category-header {
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
 }
-.contract-box:hover .buttons-slot {
-    opacity: 1;
+
+.category-title {
+    margin-bottom: 0 !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 </style>

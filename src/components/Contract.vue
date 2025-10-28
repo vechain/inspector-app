@@ -1,5 +1,70 @@
 <template>
-    <div class="box" :class="{'img-hover': $listeners.select}">
+    <!-- List View (new UI) -->
+    <div v-if="variant === 'list'" class="contract-card" @click="handleCardClick">
+        <!-- Header -->
+        <div class="contract-header">
+            <div class="contract-info">
+                <div class="contract-avatar">
+                    <img v-ident="item.address" alt="Contract avatar" />
+                </div>
+                <div class="contract-details">
+                    <h4 class="contract-name">{{item.name || ''}}</h4>
+                    <p class="contract-address is-family-monospace">{{item.address | toChecksumAddress | addr}}</p>
+                </div>
+            </div>
+
+            <!-- 3-dots menu (visible on hover) -->
+            <div class="dropdown is-right more-menu" :class="{'is-active': isMenuOpen}" @click.stop>
+                <div class="dropdown-trigger">
+                    <button 
+                        class="button is-small is-ghost more-button" 
+                        @click="toggleMenu"
+                        aria-haspopup="true"
+                    >
+                        <b-icon icon="ellipsis-v" size="is-small"></b-icon>
+                    </button>
+                </div>
+                <div class="dropdown-menu">
+                    <div class="dropdown-content">
+                        <a class="dropdown-item" @click="handleExport">
+                            <b-icon icon="file-export" size="is-small"></b-icon>
+                            <span>Export</span>
+                        </a>
+                        <hr class="dropdown-divider">
+                        <a class="dropdown-item has-text-danger" @click="handleDelete">
+                            <b-icon icon="trash-alt" size="is-small"></b-icon>
+                            <span>Delete</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="contract-actions">
+            <button class="button is-small is-outlined action-edit" @click.stop="handleEdit">
+                <b-icon icon="edit" size="is-small"></b-icon>
+                <span>Edit</span>
+            </button>
+            <button 
+                class="button is-small is-outlined action-move" 
+                @click.stop="handleMoveUp"
+                :disabled="!canMoveUp"
+            >
+                <b-icon icon="chevron-up" size="is-small"></b-icon>
+            </button>
+            <button 
+                class="button is-small is-outlined action-move" 
+                @click.stop="handleMoveDown"
+                :disabled="!canMoveDown"
+            >
+                <b-icon icon="chevron-down" size="is-small"></b-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- Detail View (old UI with 3-dots menu) -->
+    <div v-else class="box detail-box" :class="{'img-hover': $listeners.select}">
         <article class="media">
             <div class="media-left">
                 <figure :class="{'could-hover': $listeners.select}" class="image is-64x64">
@@ -26,13 +91,45 @@
                     <div class="level-left">
                         <div class="level-item">
                             <slot />
-                            <!-- <a class="button is-info">Submit</a> -->
                         </div>
                     </div>
                 </nav>
             </div>
             <div class="media-right">
                 <div class="content">
+                    <!-- 3-dots menu for detail view -->
+                    <div class="dropdown is-right detail-more-menu" :class="{'is-active': isMenuOpen}" @click.stop>
+                        <div class="dropdown-trigger">
+                            <button 
+                                class="button is-small is-ghost" 
+                                @click="toggleMenu"
+                                aria-haspopup="true"
+                            >
+                                <b-icon icon="ellipsis-v" size="is-small"></b-icon>
+                            </button>
+                        </div>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-content">
+                                <a class="dropdown-item" @click="handleEdit">
+                                    <b-icon icon="edit" size="is-small"></b-icon>
+                                    <span>Edit</span>
+                                </a>
+                                <a class="dropdown-item" @click="handleExport">
+                                    <b-icon icon="file-export" size="is-small"></b-icon>
+                                    <span>Export</span>
+                                </a>
+                                <a class="dropdown-item" @click="handleSubmitABI">
+                                    <b-icon icon="upload" size="is-small"></b-icon>
+                                    <span>Submit JSON ABI</span>
+                                </a>
+                                <hr class="dropdown-divider">
+                                <a class="dropdown-item has-text-danger" @click="handleDelete">
+                                    <b-icon icon="trash-alt" size="is-small"></b-icon>
+                                    <span>Delete</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                     <slot name="right" />
                 </div>
             </div>
@@ -47,25 +144,291 @@ export default class Contract extends Vue {
     @Prop()
     private item!: Contract.Item
 
+    @Prop({ default: 'detail' })
+    private variant!: 'list' | 'detail'
+
     @Prop({ default: true })
     private isShort!: boolean
+
+    @Prop({ default: true })
+    private canMoveUp!: boolean
+
+    @Prop({ default: true })
+    private canMoveDown!: boolean
+
+    private isMenuOpen = false
+
+    handleCardClick() {
+        this.$emit('select')
+    }
+
+    handleEdit() {
+        this.$emit('edit')
+    }
+
+    handleMoveUp() {
+        this.$emit('moveUp')
+    }
+
+    handleMoveDown() {
+        this.$emit('moveDown')
+    }
+
+    handleExport() {
+        this.isMenuOpen = false
+        this.$emit('export')
+    }
+
+    handleDelete() {
+        this.isMenuOpen = false
+        this.$emit('delete')
+    }
+
+    handleSubmitABI() {
+        this.isMenuOpen = false
+        this.$emit('submitABI')
+    }
+
+    toggleMenu() {
+        this.isMenuOpen = !this.isMenuOpen
+    }
+
+    mounted() {
+        // Close dropdown when clicking outside
+        document.addEventListener('click', this.closeMenu)
+    }
+
+    beforeDestroy() {
+        document.removeEventListener('click', this.closeMenu)
+    }
+
+    closeMenu() {
+        this.isMenuOpen = false
+    }
 }
 </script>
 <style lang="css" scoped>
-.box {
+.contract-card {
+    position: relative;
+    overflow: visible;
+    border: 1px solid #dbdbdb;
+    border-radius: 12px;
+    padding: 1.25rem;
+    background: white;
+    transition: all 0.2s ease;
+    cursor: pointer;
     margin: auto;
 }
-.image img {
+
+.contract-card:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-color: #3273dc;
+}
+
+/* Header */
+.contract-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.contract-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.contract-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.contract-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.contract-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.contract-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #363636;
+    margin: 0;
+    margin-bottom: 0.25rem;
+}
+
+.contract-address {
+    font-size: 0.75rem;
+    color: #7a7a7a;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 3-dots menu */
+.more-menu {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    position: relative;
+    z-index: 10;
+}
+
+.contract-card:hover .more-menu,
+.more-menu.is-active {
+    opacity: 1;
+}
+
+.more-button {
+    border: none;
+    background: transparent;
+    padding: 0.25rem 0.5rem;
+}
+
+.more-button:hover {
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 20;
+    min-width: 160px;
+    padding-top: 4px;
+    display: none;
+}
+
+.dropdown.is-active .dropdown-menu {
+    display: block;
+}
+
+.dropdown-content {
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    padding: 0.5rem 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f5f5f5;
+}
+
+.dropdown-divider {
+    margin: 0.5rem 0;
+    border-top: 1px solid #ededed;
+}
+
+/* Actions */
+.contract-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-edit {
+    flex: 1;
+    justify-content: center;
+}
+
+.action-move {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+}
+
+.contract-actions .button {
+    font-size: 0.75rem;
+}
+
+.contract-actions .button:not(:disabled):hover {
+    border-color: #3273dc;
+    color: #3273dc;
+}
+
+.contract-actions .button:disabled {
+    opacity: 0.4;
+}
+
+/* Detail View (old UI) styles */
+.detail-box {
+    margin: auto;
+}
+
+.detail-box .image img {
     border-radius: 3px;
 }
 
 .img-hover .could-hover {
     cursor: pointer;
-    transition: transform 0.2s, filter 0.2s ease-in-out;
+    transition: filter 0.2s ease-in-out;
 }
+
 .img-hover:hover .could-hover {
-    transform: scale(1.1);
     filter: brightness(1.2);
+}
+
+.detail-more-menu {
+    position: relative;
+    z-index: 10;
+}
+
+.detail-more-menu .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 20;
+    min-width: 160px;
+    padding-top: 4px;
+    display: none;
+}
+
+.detail-more-menu.is-active .dropdown-menu {
+    display: block;
+}
+
+.detail-more-menu .dropdown-content {
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    padding: 0.5rem 0;
+}
+
+.detail-more-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.detail-more-menu .dropdown-item:hover {
+    background-color: #f5f5f5;
+}
+
+.detail-more-menu .dropdown-divider {
+    margin: 0.5rem 0;
+    border-top: 1px solid #ededed;
 }
 </style>
 

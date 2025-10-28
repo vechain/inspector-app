@@ -1,13 +1,14 @@
 <template>
     <section class="section contract-detail">
         <div v-if="contract" class="container">
-            <Contract :isShort="false" :item="contract">
-                <div slot="right">
-                    <b-button expanded size="is-small" @click="toExplorer" type="is-info">Explorer</b-button>
-                    <br/>
-                    <b-button type="is-light" tag="a" size="is-small" href="https://github.com/vechain/b32/new/master/ABIs" target="_blank"> Submit JSON ABI </b-button >
-                </div>
-            </Contract>
+            <Contract 
+                :isShort="false" 
+                :item="contract"
+                @edit="editContract"
+                @export="exportContract"
+                @delete="deleteContract"
+                @submitABI="submitABI"
+            />
             <section style="margin-top: 20px;">
                 <b-field grouped>
                     <b-field expanded>
@@ -118,11 +119,15 @@
                 </div>
             </section>
         </div>
+        <b-modal :width="640" :canCancel="['outside']" :active.sync="isModalActive">
+            <EditContract @cancel="onCancelEdit" @finished="onFinishEdit" :item="contract" :isImport="false" />
+        </b-modal>
     </section>
 </template>
 <script lang="ts">
 import { Vue, Component, Mixins } from 'vue-property-decorator'
 import Contract from '../components/Contract.vue'
+import EditContract from '../components/EditContract.vue'
 import FunctionCard from '../components/FunctionCard.vue'
 import FallbackCard from '../components/FallbackCard.vue'
 import EventCard from '../components/EventCard.vue'
@@ -132,6 +137,7 @@ import PrototypeAbi from '../mixin/Prototype'
 @Component({
     components: {
         Contract,
+        EditContract,
         FunctionCard,
         FallbackCard,
         DescCard,
@@ -193,6 +199,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
     private name: string = ''
     private caller: string = ''
     private isProtoType = true
+    private isModalActive = false
     async getDetail(idOrAddress: string) {
         this.contract =
             (await DB.contracts
@@ -218,12 +225,76 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
             this.abi = this.contract!.abi!
         }
     }
-    toExplorer() {
-            window.open(
-                `${this.$explorerAccount}${this.contract!.address}`,
-                '_blank'
-            )
+    editContract() {
+        this.isModalActive = true
     }
+
+    onCancelEdit() {
+        this.isModalActive = false
+    }
+
+    async onFinishEdit() {
+        this.isModalActive = false
+        // Reload the contract data
+        const idOrAddress: string = this.$route.query.id || this.$route.query.address
+        await this.getDetail(idOrAddress)
+        // Re-initialize tabs since the ABI might have changed
+        this.tabs = [
+            {
+                text: 'Read',
+                count: this.readList.length,
+                visible: !!this.readList.length
+            },
+            {
+                text: 'Write',
+                count: this.writeList.length,
+                visible: !!this.writeList.length
+            },
+            { text: 'Code & ABI', count: '', visible: true },
+            {
+                text: 'Events',
+                count: this.eventList.length,
+                visible: !!this.eventList.length
+            },
+            { text: 'Fallback', count: '', visible: !!this.fb }
+        ]
+        this.tabs = this.tabs.concat(this.protoTabs)
+    }
+
+    exportContract() {
+        const fileSaver = require('file-saver-es')
+        const blob = new Blob(
+            [
+                JSON.stringify({
+                    name: this.contract!.name,
+                    abi: this.contract!.abi,
+                    address: this.contract!.address
+                })
+            ],
+            { type: 'text/plain' }
+        )
+        fileSaver.saveAs(blob, `${this.contract!.address}.json`)
+    }
+
+    deleteContract() {
+        this.$buefy.dialog.confirm({
+            title: 'Remove',
+            message: `Are you sure want to remove ${this.contract!.name} contract`,
+            cancelText: 'Cancel',
+            confirmText: 'YES',
+            type: 'is-danger',
+            scroll: 'clip',
+            onConfirm: async () => {
+                await DB.contracts.where('id').equals(this.contract!.id!).delete()
+                this.$router.push({ name: 'contracts' })
+            }
+        })
+    }
+
+    submitABI() {
+        window.open('https://github.com/vechain/b32/new/master/ABIs', '_blank')
+    }
+
     async getCode(address: string) {
         try {
             if (address) {
