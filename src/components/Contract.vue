@@ -34,6 +34,10 @@
                 </div>
                 <div class="dropdown-menu">
                     <div class="dropdown-content">
+                        <a class="dropdown-item" @click="handleCopyAddress">
+                            <b-icon icon="copy" size="is-small"></b-icon>
+                            <span>Copy Address</span>
+                        </a>
                         <a class="dropdown-item" @click="handleExport">
                             <b-icon icon="file-export" size="is-small"></b-icon>
                             <span>Export</span>
@@ -108,6 +112,10 @@
                                     <b-icon icon="edit" size="is-small"></b-icon>
                                     <span>Edit</span>
                                 </a>
+                                <a class="dropdown-item" @click="handleCopyAddress">
+                                    <b-icon icon="copy" size="is-small"></b-icon>
+                                    <span>Copy Address</span>
+                                </a>
                                 <a class="dropdown-item" @click="handleExport">
                                     <b-icon icon="file-export" size="is-small"></b-icon>
                                     <span>Export</span>
@@ -153,6 +161,55 @@ export default class Contract extends Vue {
 
     handleEdit() {
         this.$emit('edit')
+    }
+
+    handleCopyAddress() {
+        this.isMenuOpen = false
+        const address = this.item.address
+        
+        // Copy to clipboard
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(address).then(() => {
+                this.$buefy.toast.open({
+                    message: 'Address copied to clipboard!',
+                    type: 'is-success',
+                    duration: 2000,
+                    position: 'is-bottom'
+                })
+            }).catch(() => {
+                // Fallback
+                this.fallbackCopyToClipboard(address)
+            })
+        } else {
+            // Fallback for older browsers
+            this.fallbackCopyToClipboard(address)
+        }
+    }
+
+    fallbackCopyToClipboard(text: string) {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.select()
+        try {
+            document.execCommand('copy')
+            this.$buefy.toast.open({
+                message: 'Address copied to clipboard!',
+                type: 'is-success',
+                duration: 2000,
+                position: 'is-bottom'
+            })
+        } catch (err) {
+            this.$buefy.toast.open({
+                message: 'Failed to copy address',
+                type: 'is-danger',
+                duration: 2000,
+                position: 'is-bottom'
+            })
+        }
+        document.body.removeChild(textArea)
     }
 
     handleExport() {
