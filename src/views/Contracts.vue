@@ -33,11 +33,31 @@
                     <div class="category-header">
                         <h2 class="subtitle category-title">
                             {{ category || 'Uncategorized' }}
-                            <span class="tag is-light is-rounded">{{ getCategoryContracts(category).length }}</span>
                             <button v-if="category" @click="renameCategory(category)" class="button is-small is-text">
                                 <b-icon icon="pen" size="is-small"></b-icon>
                             </button>
+                            <span class="tag is-light is-rounded" style="background-color: #e9ecef;">{{ getCategoryContracts(category).length }}</span>
                         </h2>
+                        <div class="category-actions">
+
+                            <button 
+                                @click="moveCategoryUp(category)" 
+                                class="button is-small is-text"
+                                :disabled="sortedCategories.indexOf(category) === 0"
+                                title="Move category up"
+                            >
+                                <b-icon icon="chevron-up" size="is-small"></b-icon>
+                            </button>
+                            <button 
+                                @click="moveCategoryDown(category)" 
+                                class="button is-small is-text"
+                                :disabled="sortedCategories.indexOf(category) === sortedCategories.length - 1"
+                                title="Move category down"
+                            >
+                                <b-icon icon="chevron-down" size="is-small"></b-icon>
+                            </button>
+                          
+                        </div>
                     </div>
             
                     <div class="columns is-variable is-2 is-multiline">
@@ -112,6 +132,7 @@ export default class Contracts extends Vue {
     private contracts: Entities.Contract[] = []
     private isImport: boolean = false
     private searchQuery: string = ''
+    private categoryOrder: { [key: string]: number } = {}
 
     get filteredContracts(): Entities.Contract[] {
         if (!this.searchQuery.trim()) {
@@ -131,7 +152,17 @@ export default class Contracts extends Vue {
         this.filteredContracts.forEach(contract => {
             categories.add(contract.category || '')
         })
+        
+        // Sort by custom order first, then alphabetically
         const sorted = Array.from(categories).sort((a, b) => {
+            const orderA = this.categoryOrder[a] ?? 9999
+            const orderB = this.categoryOrder[b] ?? 9999
+            
+            if (orderA !== orderB) {
+                return orderA - orderB
+            }
+            
+            // If same order or no order, sort alphabetically
             if (!a) return 1
             if (!b) return -1
             return a.localeCompare(b)
@@ -162,6 +193,7 @@ export default class Contracts extends Vue {
             container: null
         })
 
+        this.loadCategoryOrder()
         await this.list()
         this.prepare()
         loading.close()
@@ -331,6 +363,51 @@ export default class Contracts extends Vue {
     }
 
     // Category management
+    loadCategoryOrder() {
+        const stored = localStorage.getItem('categoryOrder')
+        if (stored) {
+            try {
+                this.categoryOrder = JSON.parse(stored)
+            } catch (e) {
+                this.categoryOrder = {}
+            }
+        }
+    }
+
+    saveCategoryOrder() {
+        localStorage.setItem('categoryOrder', JSON.stringify(this.categoryOrder))
+    }
+
+    moveCategoryUp(category: string) {
+        const categories = this.sortedCategories
+        const currentIndex = categories.indexOf(category)
+        
+        if (currentIndex > 0) {
+            const prevCategory = categories[currentIndex - 1]
+            const currentOrder = this.categoryOrder[category] ?? currentIndex
+            const prevOrder = this.categoryOrder[prevCategory] ?? (currentIndex - 1)
+            
+            this.categoryOrder[category] = prevOrder
+            this.categoryOrder[prevCategory] = currentOrder
+            this.saveCategoryOrder()
+        }
+    }
+
+    moveCategoryDown(category: string) {
+        const categories = this.sortedCategories
+        const currentIndex = categories.indexOf(category)
+        
+        if (currentIndex < categories.length - 1) {
+            const nextCategory = categories[currentIndex + 1]
+            const currentOrder = this.categoryOrder[category] ?? currentIndex
+            const nextOrder = this.categoryOrder[nextCategory] ?? (currentIndex + 1)
+            
+            this.categoryOrder[category] = nextOrder
+            this.categoryOrder[nextCategory] = currentOrder
+            this.saveCategoryOrder()
+        }
+    }
+
     async renameCategory(oldCategory: string) {
         this.$buefy.dialog.prompt({
             message: 'Enter new category name',
@@ -345,6 +422,14 @@ export default class Contracts extends Vue {
                     for (const contract of categoryContracts) {
                         await DB.contracts.where('id').equals(contract.id!).modify({ category: newCategory })
                     }
+                    
+                    // Update category order if exists
+                    if (this.categoryOrder[oldCategory] !== undefined) {
+                        this.categoryOrder[newCategory] = this.categoryOrder[oldCategory]
+                        delete this.categoryOrder[oldCategory]
+                        this.saveCategoryOrder()
+                    }
+                    
                     await this.list()
                 }
             }
@@ -378,7 +463,12 @@ export default class Contracts extends Vue {
 
 .category-header {
     margin-bottom: 0.5rem;
-    padding: 0.5rem 0;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #f8f9fa;
+    border-radius: 4px;
 }
 
 .category-title {
@@ -386,5 +476,10 @@ export default class Contracts extends Vue {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+.category-actions {
+    display: flex;
+    gap: 0.25rem;
 }
 </style>
