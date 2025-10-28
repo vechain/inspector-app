@@ -6,7 +6,7 @@
             </div>
             <div class="level-right">
                 <button @click="onImport" style="margin-right: 10px;" class="button is-primary is-outlined">
-                    <b-icon icon="file-import"></b-icon>
+                    <b-icon icon="upload"></b-icon>
                 </button>
                 <button @click="addItem" class="button is-primary is-outlined">
                     <b-icon icon="plus"></b-icon>
