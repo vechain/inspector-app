@@ -1,6 +1,12 @@
 declare namespace Contract {
   interface Item {
-    name: string
-    address: string
+    id?: number;
+    name?: string;
+    address: string;
+    createdTime?: number;
+    abi?: object | [];
+    network?: string;
+    category?: string;
+    order?: number;
   }
 }

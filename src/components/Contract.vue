@@ -1,6 +1,14 @@
 <template>
     <!-- List View (new UI) -->
-    <div v-if="variant === 'list'" class="contract-card" @click="handleCardClick">
+    <div 
+        v-if="variant === 'list'" 
+        class="contract-card" 
+        :class="{'is-dragging': isDragging}"
+        draggable="true"
+        @dragstart="handleDragStart"
+        @dragend="handleDragEnd"
+        @click="handleCardClick"
+    >
         <!-- Header -->
         <div class="contract-header">
             <div class="contract-info">
@@ -26,6 +34,14 @@
                 </div>
                 <div class="dropdown-menu">
                     <div class="dropdown-content">
+                        <a class="dropdown-item" @click="handleEdit">
+                            <b-icon icon="edit" size="is-small"></b-icon>
+                            <span>Edit</span>
+                        </a>
+                        <a class="dropdown-item" @click="handleCopyAddress">
+                            <b-icon icon="copy" size="is-small"></b-icon>
+                            <span>Copy Address</span>
+                        </a>
                         <a class="dropdown-item" @click="handleExport">
                             <b-icon icon="file-export" size="is-small"></b-icon>
                             <span>Export</span>
@@ -42,23 +58,9 @@
 
         <!-- Actions -->
         <div class="contract-actions">
-            <button class="button is-small is-outlined action-edit" @click.stop="handleEdit">
-                <b-icon icon="edit" size="is-small"></b-icon>
-                <span>Edit</span>
-            </button>
-            <button 
-                class="button is-small is-outlined action-move" 
-                @click.stop="handleMoveUp"
-                :disabled="!canMoveUp"
-            >
-                <b-icon icon="chevron-up" size="is-small"></b-icon>
-            </button>
-            <button 
-                class="button is-small is-outlined action-move" 
-                @click.stop="handleMoveDown"
-                :disabled="!canMoveDown"
-            >
-                <b-icon icon="chevron-down" size="is-small"></b-icon>
+            <button class="button is-small is-outlined action-edit" @click.stop="handleView">
+                <b-icon icon="eye" size="is-small"></b-icon>
+                <span>View</span>
             </button>
         </div>
     </div>
@@ -114,6 +116,10 @@
                                     <b-icon icon="edit" size="is-small"></b-icon>
                                     <span>Edit</span>
                                 </a>
+                                <a class="dropdown-item" @click="handleCopyAddress">
+                                    <b-icon icon="copy" size="is-small"></b-icon>
+                                    <span>Copy Address</span>
+                                </a>
                                 <a class="dropdown-item" @click="handleExport">
                                     <b-icon icon="file-export" size="is-small"></b-icon>
                                     <span>Export</span>
@@ -150,28 +156,69 @@ export default class Contract extends Vue {
     @Prop({ default: true })
     private isShort!: boolean
 
-    @Prop({ default: true })
-    private canMoveUp!: boolean
-
-    @Prop({ default: true })
-    private canMoveDown!: boolean
-
     private isMenuOpen = false
+    private isDragging = false
 
     handleCardClick() {
         this.$emit('select')
     }
 
     handleEdit() {
+        this.isMenuOpen = false
         this.$emit('edit')
     }
 
-    handleMoveUp() {
-        this.$emit('moveUp')
+    handleView() {
+        this.$emit('select')
     }
 
-    handleMoveDown() {
-        this.$emit('moveDown')
+    handleCopyAddress() {
+        this.isMenuOpen = false
+        const address = this.item.address
+        
+        // Copy to clipboard
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(address).then(() => {
+                this.$buefy.toast.open({
+                    message: 'Address copied to clipboard!',
+                    type: 'is-success',
+                    duration: 2000,
+                    position: 'is-bottom'
+                })
+            }).catch(() => {
+                // Fallback
+                this.fallbackCopyToClipboard(address)
+            })
+        } else {
+            // Fallback for older browsers
+            this.fallbackCopyToClipboard(address)
+        }
+    }
+
+    fallbackCopyToClipboard(text: string) {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.select()
+        try {
+            document.execCommand('copy')
+            this.$buefy.toast.open({
+                message: 'Address copied to clipboard!',
+                type: 'is-success',
+                duration: 2000,
+                position: 'is-bottom'
+            })
+        } catch (err) {
+            this.$buefy.toast.open({
+                message: 'Failed to copy address',
+                type: 'is-danger',
+                duration: 2000,
+                position: 'is-bottom'
+            })
+        }
+        document.body.removeChild(textArea)
     }
 
     handleExport() {
@@ -191,6 +238,23 @@ export default class Contract extends Vue {
 
     toggleMenu() {
         this.isMenuOpen = !this.isMenuOpen
+    }
+
+    handleDragStart(e: DragEvent) {
+        this.isDragging = true
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'move'
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                id: this.item.id,
+                address: this.item.address
+            }))
+        }
+        this.$emit('dragstart', this.item)
+    }
+
+    handleDragEnd(e: DragEvent) {
+        this.isDragging = false
+        this.$emit('dragend')
     }
 
     mounted() {
@@ -216,13 +280,18 @@ export default class Contract extends Vue {
     padding: 1.25rem;
     background: white;
     transition: all 0.2s ease;
-    cursor: pointer;
+    cursor: grab;
     margin: auto;
 }
 
 .contract-card:hover {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     border-color: #3273dc;
+}
+
+.contract-card.is-dragging {
+    opacity: 0.5;
+    cursor: grabbing;
 }
 
 /* Header */
@@ -278,7 +347,7 @@ export default class Contract extends Vue {
 
 /* 3-dots menu */
 .more-menu {
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.2s ease;
     position: relative;
     z-index: 10;
@@ -350,12 +419,6 @@ export default class Contract extends Vue {
     justify-content: center;
 }
 
-.action-move {
-    width: 40px;
-    padding: 0;
-    justify-content: center;
-}
-
 .contract-actions .button {
     font-size: 0.75rem;
 }
@@ -363,10 +426,6 @@ export default class Contract extends Vue {
 .contract-actions .button:not(:disabled):hover {
     border-color: #3273dc;
     color: #3273dc;
-}
-
-.contract-actions .button:disabled {
-    opacity: 0.4;
 }
 
 /* Detail View (old UI) styles */

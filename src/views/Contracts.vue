@@ -33,11 +33,31 @@
                     <div class="category-header">
                         <h2 class="subtitle category-title">
                             {{ category || 'Uncategorized' }}
-                            <span class="tag is-light is-rounded">{{ getCategoryContracts(category).length }}</span>
                             <button v-if="category" @click="renameCategory(category)" class="button is-small is-text">
                                 <b-icon icon="pen" size="is-small"></b-icon>
                             </button>
+                            <span class="tag is-light is-rounded" style="background-color: #e9ecef;">{{ getCategoryContracts(category).length }}</span>
                         </h2>
+                        <div class="category-actions">
+
+                            <button 
+                                @click="moveCategoryUp(category)" 
+                                class="button is-small is-text"
+                                :disabled="sortedCategories.indexOf(category) === 0"
+                                title="Move category up"
+                            >
+                                <b-icon icon="chevron-up" size="is-small"></b-icon>
+                            </button>
+                            <button 
+                                @click="moveCategoryDown(category)" 
+                                class="button is-small is-text"
+                                :disabled="sortedCategories.indexOf(category) === sortedCategories.length - 1"
+                                title="Move category down"
+                            >
+                                <b-icon icon="chevron-down" size="is-small"></b-icon>
+                            </button>
+                          
+                        </div>
                     </div>
             
                     <div class="columns is-variable is-2 is-multiline">
@@ -45,19 +65,33 @@
                             class="column is-3-fullhd is-6-desktop is-6-tablet is-12-mobile"
                             v-for="(item, index) in getCategoryContracts(category)"
                             :key="item.id"
+                            @dragover.prevent="handleDragOver($event, category, index)"
+                            @dragleave="handleDragLeave"
+                            @drop="handleDrop($event, category, index)"
+                            :class="{ 'drop-target': dropTarget && dropTarget.category === category && dropTarget.index === index }"
                         >
+                            <div class="drop-indicator" v-if="dropTarget && dropTarget.category === category && dropTarget.index === index"></div>
                             <Contract 
                                 variant="list"
                                 :item="item"
-                                :canMoveUp="index > 0"
-                                :canMoveDown="index < getCategoryContracts(category).length - 1"
                                 @select="onSelect(item.id)"
                                 @edit="edit(item)"
-                                @moveUp="moveUp(item, category)"
-                                @moveDown="moveDown(item, category)"
+                                @dragstart="handleDragStartContract"
+                                @dragend="handleDragEndContract"
                                 @export="exportJson(item)"
                                 @delete="remove(item)"
                             />
+                        </div>
+                        <!-- Drop zone at the end of category -->
+                        <div
+                            v-if="getCategoryContracts(category).length > 0"
+                            class="column is-3-fullhd is-6-desktop is-6-tablet is-12-mobile drop-zone-end"
+                            @dragover.prevent="handleDragOver($event, category, getCategoryContracts(category).length)"
+                            @dragleave="handleDragLeave"
+                            @drop="handleDrop($event, category, getCategoryContracts(category).length)"
+                            :class="{ 'drop-target': dropTarget && dropTarget.category === category && dropTarget.index === getCategoryContracts(category).length }"
+                        >
+                            <div class="drop-indicator" v-if="dropTarget && dropTarget.category === category && dropTarget.index === getCategoryContracts(category).length"></div>
                         </div>
                     </div>
                 </div>
@@ -112,6 +146,9 @@ export default class Contracts extends Vue {
     private contracts: Entities.Contract[] = []
     private isImport: boolean = false
     private searchQuery: string = ''
+    private categoryOrder: { [key: string]: number } = {}
+    private draggedContract: Entities.Contract | null = null
+    private dropTarget: { category: string; index: number } | null = null
 
     get filteredContracts(): Entities.Contract[] {
         if (!this.searchQuery.trim()) {
@@ -131,7 +168,17 @@ export default class Contracts extends Vue {
         this.filteredContracts.forEach(contract => {
             categories.add(contract.category || '')
         })
+        
+        // Sort by custom order first, then alphabetically
         const sorted = Array.from(categories).sort((a, b) => {
+            const orderA = this.categoryOrder[a] ?? 9999
+            const orderB = this.categoryOrder[b] ?? 9999
+            
+            if (orderA !== orderB) {
+                return orderA - orderB
+            }
+            
+            // If same order or no order, sort alphabetically
             if (!a) return 1
             if (!b) return -1
             return a.localeCompare(b)
@@ -162,6 +209,7 @@ export default class Contracts extends Vue {
             container: null
         })
 
+        this.loadCategoryOrder()
         await this.list()
         this.prepare()
         loading.close()
@@ -301,36 +349,127 @@ export default class Contracts extends Vue {
         this.open()
     }
 
-    // Move up/down handlers
-    async moveUp(item: Entities.Contract, category: string) {
-        const categoryContracts = this.getCategoryContracts(category)
-        const currentIndex = categoryContracts.findIndex(c => c.id === item.id)
-        
-        if (currentIndex > 0) {
-            const prevItem = categoryContracts[currentIndex - 1]
-            const tempOrder = item.order || currentIndex
-            
-            await DB.contracts.where('id').equals(item.id!).modify({ order: prevItem.order || (currentIndex - 1) })
-            await DB.contracts.where('id').equals(prevItem.id!).modify({ order: tempOrder })
-            await this.list()
+    // Drag and drop handlers
+    handleDragStartContract(contract: Entities.Contract) {
+        this.draggedContract = contract
+    }
+
+    handleDragEndContract() {
+        this.draggedContract = null
+        this.dropTarget = null
+    }
+
+    handleDragOver(e: DragEvent, category: string, index: number) {
+        e.preventDefault()
+        if (this.draggedContract) {
+            this.dropTarget = { category, index }
         }
     }
 
-    async moveDown(item: Entities.Contract, category: string) {
-        const categoryContracts = this.getCategoryContracts(category)
-        const currentIndex = categoryContracts.findIndex(c => c.id === item.id)
+    handleDragLeave(e: DragEvent) {
+        // Only clear if we're leaving the drop zone entirely
+        const relatedTarget = e.relatedTarget as HTMLElement
+        if (!relatedTarget || !relatedTarget.closest('.column')) {
+            this.dropTarget = null
+        }
+    }
+
+    async handleDrop(e: DragEvent, targetCategory: string, targetIndex: number) {
+        e.preventDefault()
         
-        if (currentIndex < categoryContracts.length - 1) {
-            const nextItem = categoryContracts[currentIndex + 1]
-            const tempOrder = item.order || currentIndex
-            
-            await DB.contracts.where('id').equals(item.id!).modify({ order: nextItem.order || (currentIndex + 1) })
-            await DB.contracts.where('id').equals(nextItem.id!).modify({ order: tempOrder })
-            await this.list()
+        if (!this.draggedContract) {
+            return
+        }
+
+        const draggedContract = this.draggedContract
+        const sourceCategory = draggedContract.category || ''
+        const categoryContracts = this.getCategoryContracts(sourceCategory)
+        const sourceIndex = categoryContracts.findIndex(c => c.id === draggedContract.id)
+
+        // If dropping in the same position, do nothing
+        if (sourceCategory === targetCategory && sourceIndex === targetIndex) {
+            this.dropTarget = null
+            return
+        }
+
+        // Update category if changed
+        if (sourceCategory !== targetCategory) {
+            await DB.contracts.where('id').equals(draggedContract.id!).modify({ 
+                category: targetCategory || undefined 
+            })
+        }
+
+        // Reorder contracts in the target category
+        await this.reorderAfterDrop(targetCategory, draggedContract, targetIndex)
+        
+        this.dropTarget = null
+        await this.list()
+    }
+
+    async reorderAfterDrop(category: string, draggedContract: Entities.Contract, targetIndex: number) {
+        const categoryContracts = this.getCategoryContracts(category)
+        const draggedIndex = categoryContracts.findIndex(c => c.id === draggedContract.id)
+        
+        // Remove dragged item from current position
+        if (draggedIndex !== -1) {
+            categoryContracts.splice(draggedIndex, 1)
+        }
+        
+        // Insert at new position
+        categoryContracts.splice(targetIndex, 0, draggedContract)
+        
+        // Update order for all contracts in category
+        for (let i = 0; i < categoryContracts.length; i++) {
+            await DB.contracts.where('id').equals(categoryContracts[i].id!).modify({ order: i })
         }
     }
 
     // Category management
+    loadCategoryOrder() {
+        const stored = localStorage.getItem('categoryOrder')
+        if (stored) {
+            try {
+                this.categoryOrder = JSON.parse(stored)
+            } catch (e) {
+                this.categoryOrder = {}
+            }
+        }
+    }
+
+    saveCategoryOrder() {
+        localStorage.setItem('categoryOrder', JSON.stringify(this.categoryOrder))
+    }
+
+    moveCategoryUp(category: string) {
+        const categories = this.sortedCategories
+        const currentIndex = categories.indexOf(category)
+        
+        if (currentIndex > 0) {
+            const prevCategory = categories[currentIndex - 1]
+            const currentOrder = this.categoryOrder[category] ?? currentIndex
+            const prevOrder = this.categoryOrder[prevCategory] ?? (currentIndex - 1)
+            
+            this.$set(this.categoryOrder, category, prevOrder)
+            this.$set(this.categoryOrder, prevCategory, currentOrder)
+            this.saveCategoryOrder()
+        }
+    }
+
+    moveCategoryDown(category: string) {
+        const categories = this.sortedCategories
+        const currentIndex = categories.indexOf(category)
+        
+        if (currentIndex < categories.length - 1) {
+            const nextCategory = categories[currentIndex + 1]
+            const currentOrder = this.categoryOrder[category] ?? currentIndex
+            const nextOrder = this.categoryOrder[nextCategory] ?? (currentIndex + 1)
+            
+            this.$set(this.categoryOrder, category, nextOrder)
+            this.$set(this.categoryOrder, nextCategory, currentOrder)
+            this.saveCategoryOrder()
+        }
+    }
+
     async renameCategory(oldCategory: string) {
         this.$buefy.dialog.prompt({
             message: 'Enter new category name',
@@ -340,11 +479,29 @@ export default class Contracts extends Vue {
             },
             trapFocus: true,
             onConfirm: async (newCategory: string) => {
-                if (newCategory && newCategory !== oldCategory) {
+                const normalized = (newCategory || '').trim()
+                if (normalized.toLowerCase() === 'uncategorized') {
+                    this.$buefy.toast.open({
+                        message: 'Category name "Uncategorized" is reserved. Please choose another name.',
+                        type: 'is-danger',
+                        duration: 2500,
+                        position: 'is-bottom'
+                    })
+                    return
+                }
+                if (normalized && normalized !== oldCategory) {
                     const categoryContracts = this.contracts.filter(c => c.category === oldCategory)
                     for (const contract of categoryContracts) {
-                        await DB.contracts.where('id').equals(contract.id!).modify({ category: newCategory })
+                        await DB.contracts.where('id').equals(contract.id!).modify({ category: normalized })
                     }
+                    
+                    // Update category order if exists
+                    if (this.categoryOrder[oldCategory] !== undefined) {
+                        this.$set(this.categoryOrder, normalized, this.categoryOrder[oldCategory])
+                        this.$delete(this.categoryOrder, oldCategory)
+                        this.saveCategoryOrder()
+                    }
+                    
                     await this.list()
                 }
             }
@@ -378,7 +535,12 @@ export default class Contracts extends Vue {
 
 .category-header {
     margin-bottom: 0.5rem;
-    padding: 0.5rem 0;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #f8f9fa;
+    border-radius: 4px;
 }
 
 .category-title {
@@ -386,5 +548,51 @@ export default class Contracts extends Vue {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+.category-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+/* Drag and drop styles */
+.column.drop-target {
+    position: relative;
+}
+
+.drop-indicator {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #3273dc;
+    border-radius: 2px;
+    z-index: 100;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 8px rgba(50, 115, 220, 0.6);
+    }
+    50% {
+        opacity: 0.6;
+        box-shadow: 0 0 16px rgba(50, 115, 220, 0.8);
+    }
+}
+
+.drop-zone-end {
+    min-height: 100px;
+    position: relative;
+}
+
+.drop-zone-end .drop-indicator {
+    width: 100%;
+    height: 4px;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
 }
 </style>
