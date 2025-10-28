@@ -296,6 +296,16 @@
     }
 
     async submit() {
+      // Prevent using reserved default category label
+      if (this.form.category && this.form.category.trim().toLowerCase() === 'uncategorized') {
+        this.$buefy.toast.open({
+          message: 'Category name "Uncategorized" is reserved. Please choose another name.',
+          type: 'is-danger',
+          duration: 2500,
+          position: 'is-bottom'
+        })
+        return
+      }
       if (!this.form.abi && this.form.address) {
         await this.loadABI(this.form.address)
       }

@@ -449,8 +449,8 @@ export default class Contracts extends Vue {
             const currentOrder = this.categoryOrder[category] ?? currentIndex
             const prevOrder = this.categoryOrder[prevCategory] ?? (currentIndex - 1)
             
-            this.categoryOrder[category] = prevOrder
-            this.categoryOrder[prevCategory] = currentOrder
+            this.$set(this.categoryOrder, category, prevOrder)
+            this.$set(this.categoryOrder, prevCategory, currentOrder)
             this.saveCategoryOrder()
         }
     }
@@ -464,8 +464,8 @@ export default class Contracts extends Vue {
             const currentOrder = this.categoryOrder[category] ?? currentIndex
             const nextOrder = this.categoryOrder[nextCategory] ?? (currentIndex + 1)
             
-            this.categoryOrder[category] = nextOrder
-            this.categoryOrder[nextCategory] = currentOrder
+            this.$set(this.categoryOrder, category, nextOrder)
+            this.$set(this.categoryOrder, nextCategory, currentOrder)
             this.saveCategoryOrder()
         }
     }
@@ -479,16 +479,26 @@ export default class Contracts extends Vue {
             },
             trapFocus: true,
             onConfirm: async (newCategory: string) => {
-                if (newCategory && newCategory !== oldCategory) {
+                const normalized = (newCategory || '').trim()
+                if (normalized.toLowerCase() === 'uncategorized') {
+                    this.$buefy.toast.open({
+                        message: 'Category name "Uncategorized" is reserved. Please choose another name.',
+                        type: 'is-danger',
+                        duration: 2500,
+                        position: 'is-bottom'
+                    })
+                    return
+                }
+                if (normalized && normalized !== oldCategory) {
                     const categoryContracts = this.contracts.filter(c => c.category === oldCategory)
                     for (const contract of categoryContracts) {
-                        await DB.contracts.where('id').equals(contract.id!).modify({ category: newCategory })
+                        await DB.contracts.where('id').equals(contract.id!).modify({ category: normalized })
                     }
                     
                     // Update category order if exists
                     if (this.categoryOrder[oldCategory] !== undefined) {
-                        this.categoryOrder[newCategory] = this.categoryOrder[oldCategory]
-                        delete this.categoryOrder[oldCategory]
+                        this.$set(this.categoryOrder, normalized, this.categoryOrder[oldCategory])
+                        this.$delete(this.categoryOrder, oldCategory)
                         this.saveCategoryOrder()
                     }
                     
