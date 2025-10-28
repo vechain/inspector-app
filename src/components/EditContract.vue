@@ -45,6 +45,8 @@
             @typing="getFilteredCategories"
             open-on-focus
             clearable
+            append-to-body
+            max-height="200"
           >
             <template slot="empty">Type to create new category</template>
           </b-autocomplete>
