@@ -10,7 +10,25 @@
           :message="formMessage.name.message"
           label="name"
         >
-          <b-input @blur="checkName" v-model="form.name" type="text"></b-input>
+          <b-autocomplete
+            @blur="checkName"
+            @select="onSelectContract"
+            v-model="nameInput"
+            :data="filteredContracts"
+            field="name"
+            @typing="filterContractsByName"
+            :clearable="true"
+            open-on-focus
+          >
+            <template #default="{ option }">
+              <div class="media">
+                <div class="media-content">
+                  <p>{{ option.name }}</p>
+                  <p class="is-size-7 has-text-grey-light">{{ option.address }}</p>
+                </div>
+              </div>
+            </template>
+          </b-autocomplete>
         </b-field>
         <b-field
           :type="formMessage.address.isError ? 'is-danger' : ''"
@@ -66,6 +84,7 @@
   import { Vue, Prop, Component, Watch } from 'vue-property-decorator'
   import DB, { Entities } from '../database'
   import { address as Address } from 'thor-devkit'
+  import { ContractConfig } from '../contracts/config'
 
   interface FormError {
     isError: boolean
@@ -124,13 +143,63 @@
       category: ''
     }
 
+    private nameInput = ''
+    private filteredContracts: Array<{name: string, address: string}> = []
+    private allContracts: Array<{name: string, address: string}> = []
     private categories: string[] = []
     private filteredCategories: string[] = []
 
     async created() {
       await this.loadCategories()
       this.initForm()
+      this.loadBuiltinContracts()
     }
+    
+    loadBuiltinContracts() {
+      const genesisId = this.$connex.thor.genesis.id
+      const contracts = ContractConfig[genesisId] || {}
+      
+      this.allContracts = Object.entries(contracts).map(([address, config]) => ({
+        name: config.name,
+        address
+      }))
+    }
+    
+    async onSelectContract(option: {name: string, address: string} | null) {
+      if (!option) return
+      
+      this.form.name = option.name
+      this.nameInput = option.name
+      this.form.address = option.address
+      
+      // Load ABI for the selected contract
+      const genesisId = this.$connex.thor.genesis.id
+      const contracts = ContractConfig[genesisId] || {}
+      const contractConfig = contracts[option.address]
+      
+      if (contractConfig && contractConfig.abi) {
+        if (typeof contractConfig.abi !== 'string') {
+          this.form.abi = JSON.stringify(contractConfig.abi, null, 2)
+          return
+        }
+        try {
+          const abiResponse = await fetch(contractConfig.abi)
+          if (abiResponse.ok) {
+            const abiJson = await abiResponse.json()
+            this.form.abi = JSON.stringify(abiJson, null, 2)
+          } else {
+            // If failed to fetch from URL, try loading from Sourcify
+            await this.loadABI(option.address)
+          }
+        } catch (error) {
+          console.error("Failed to load ABI from URL", error)
+          await this.loadABI(option.address)
+        }
+      } else {
+        await this.loadABI(option.address)
+      }
+    }
+
     close() {
       this.$emit('cancel')
     }
@@ -161,6 +230,7 @@
       const val = this.item
       if (val && val.address) {
         this.form.name = val.name || ''
+        this.nameInput = val.name || ''
         this.form.address = val.address || ''
         this.form.abi = val.abi ? JSON.stringify(val.abi, null, 2) : ''
         this.form.id = val.id || 0
@@ -173,9 +243,15 @@
           id: 0,
           category: ''
         }
+        this.nameInput = ''
       }
     }
 
+    @Watch('nameInput')
+    private onNameInputChange(value: string) {
+      this.form.name = value
+    }
+    
     @Watch('form.address')
     private async onAddressChange(newAddress: string) {
       const addrRegexp = /^0x[0-9a-fA-F]{40}$/
@@ -205,6 +281,18 @@
           }
         }
       }
+    }
+    
+    filterContractsByName(text: string) {
+      if (!text) {
+        this.filteredContracts = []
+        return
+      }
+      
+      const lowerText = text.toLowerCase()
+      this.filteredContracts = this.allContracts.filter(contract => 
+        contract.name.toLowerCase().includes(lowerText)
+      )
     }
 
     async submit() {
