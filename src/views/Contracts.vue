@@ -22,29 +22,30 @@
                             {{ category || 'Uncategorized' }}
                             <span class="tag is-light is-rounded">{{ getCategoryContracts(category).length }}</span>
                             <button v-if="category" @click="renameCategory(category)" class="button is-small is-text">
-                                <b-icon icon="edit" size="is-small"></b-icon>
+                                <b-icon icon="pen" size="is-small"></b-icon>
                             </button>
                         </h2>
                     </div>
-                </div>
-                <div class="columns section is-variable is-1 is-multiline">
-                    <div
-                        class="column is-3-fullhd is-4-desktop is-6-tablet"
-                        v-for="(item, index) in getCategoryContracts(category)"
-                        :key="item.id"
-                    >
-                        <Contract 
-                            variant="list"
-                            :item="item"
-                            :canMoveUp="index > 0"
-                            :canMoveDown="index < getCategoryContracts(category).length - 1"
-                            @select="onSelect(item.id)"
-                            @edit="edit(item)"
-                            @moveUp="moveUp(item, category)"
-                            @moveDown="moveDown(item, category)"
-                            @export="exportJson(item)"
-                            @delete="remove(item)"
-                        />
+            
+                    <div class="columns is-variable is-2 is-multiline">
+                        <div
+                            class="column is-3-fullhd is-6-desktop is-6-tablet is-12-mobile"
+                            v-for="(item, index) in getCategoryContracts(category)"
+                            :key="item.id"
+                        >
+                            <Contract 
+                                variant="list"
+                                :item="item"
+                                :canMoveUp="index > 0"
+                                :canMoveDown="index < getCategoryContracts(category).length - 1"
+                                @select="onSelect(item.id)"
+                                @edit="edit(item)"
+                                @moveUp="moveUp(item, category)"
+                                @moveDown="moveDown(item, category)"
+                                @export="exportJson(item)"
+                                @delete="remove(item)"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -327,7 +328,7 @@ export default class Contracts extends Vue {
 }
 
 .category-header {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     padding: 0.5rem 0;
 }
 
