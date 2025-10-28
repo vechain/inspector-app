@@ -14,7 +14,20 @@
                 <input class="is-hidden" ref="files" type="file" accept="application/json" />
             </div>
         </div>
-        <div v-if="contracts.length" class="section">
+        <div class="container search-container">
+            <b-field>
+                <b-input
+                    v-model="searchQuery"
+                    placeholder="Search by name or address..."
+                    icon="search"
+                    icon-right="times-circle"
+                    icon-right-clickable
+                    @icon-right-click="clearSearch"
+                    expanded
+                />
+            </b-field>
+        </div>
+        <div v-if="filteredContracts.length" class="section">
             <div v-for="category in sortedCategories" :key="category" class="category-section">
                 <div class="container">
                     <div class="category-header">
@@ -46,6 +59,18 @@
                                 @delete="remove(item)"
                             />
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div v-if="!isloading && contracts.length && !filteredContracts.length" class="section">
+            <div class="container">
+                <div class="card">
+                    <div class="card-content has-text-centered is-size-4 has-text-grey-light">
+                        No contracts found matching "{{ searchQuery }}"
+                    </div>
+                    <div class="card-footer">
+                        <a @click="clearSearch" class="card-footer-item">Clear Search</a>
                     </div>
                 </div>
             </div>
@@ -86,10 +111,24 @@ export default class Contracts extends Vue {
     private currentItem: Entities.Contract | null = null
     private contracts: Entities.Contract[] = []
     private isImport: boolean = false
+    private searchQuery: string = ''
+
+    get filteredContracts(): Entities.Contract[] {
+        if (!this.searchQuery.trim()) {
+            return this.contracts
+        }
+        
+        const query = this.searchQuery.toLowerCase()
+        return this.contracts.filter(contract => {
+            const name = (contract.name || '').toLowerCase()
+            const address = contract.address.toLowerCase()
+            return name.includes(query) || address.includes(query)
+        })
+    }
 
     get sortedCategories(): string[] {
         const categories = new Set<string>()
-        this.contracts.forEach(contract => {
+        this.filteredContracts.forEach(contract => {
             categories.add(contract.category || '')
         })
         const sorted = Array.from(categories).sort((a, b) => {
@@ -101,9 +140,13 @@ export default class Contracts extends Vue {
     }
 
     getCategoryContracts(category: string): Entities.Contract[] {
-        return this.contracts
+        return this.filteredContracts
             .filter(c => (c.category || '') === category)
             .sort((a, b) => (a.order || 0) - (b.order || 0))
+    }
+
+    clearSearch() {
+        this.searchQuery = ''
     }
 
     onSelect(id: number) {
@@ -320,6 +363,12 @@ export default class Contracts extends Vue {
 <style lang="css" scoped>
 .column:last-child {
     margin-bottom: 1.5rem;
+}
+
+/* Search container */
+.search-container {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 /* Category styles */
