@@ -34,6 +34,10 @@
                 </div>
                 <div class="dropdown-menu">
                     <div class="dropdown-content">
+                        <a class="dropdown-item" @click="handleEdit">
+                            <b-icon icon="edit" size="is-small"></b-icon>
+                            <span>Edit</span>
+                        </a>
                         <a class="dropdown-item" @click="handleCopyAddress">
                             <b-icon icon="copy" size="is-small"></b-icon>
                             <span>Copy Address</span>
@@ -54,9 +58,9 @@
 
         <!-- Actions -->
         <div class="contract-actions">
-            <button class="button is-small is-outlined action-edit" @click.stop="handleEdit">
-                <b-icon icon="edit" size="is-small"></b-icon>
-                <span>Edit</span>
+            <button class="button is-small is-outlined action-edit" @click.stop="handleView">
+                <b-icon icon="eye" size="is-small"></b-icon>
+                <span>View</span>
             </button>
         </div>
     </div>
@@ -160,7 +164,12 @@ export default class Contract extends Vue {
     }
 
     handleEdit() {
+        this.isMenuOpen = false
         this.$emit('edit')
+    }
+
+    handleView() {
+        this.$emit('select')
     }
 
     handleCopyAddress() {
@@ -338,7 +347,7 @@ export default class Contract extends Vue {
 
 /* 3-dots menu */
 .more-menu {
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.2s ease;
     position: relative;
     z-index: 10;
