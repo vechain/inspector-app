@@ -1,6 +1,14 @@
 <template>
     <!-- List View (new UI) -->
-    <div v-if="variant === 'list'" class="contract-card" @click="handleCardClick">
+    <div 
+        v-if="variant === 'list'" 
+        class="contract-card" 
+        :class="{'is-dragging': isDragging}"
+        draggable="true"
+        @dragstart="handleDragStart"
+        @dragend="handleDragEnd"
+        @click="handleCardClick"
+    >
         <!-- Header -->
         <div class="contract-header">
             <div class="contract-info">
@@ -45,20 +53,6 @@
             <button class="button is-small is-outlined action-edit" @click.stop="handleEdit">
                 <b-icon icon="edit" size="is-small"></b-icon>
                 <span>Edit</span>
-            </button>
-            <button 
-                class="button is-small is-outlined action-move" 
-                @click.stop="handleMoveUp"
-                :disabled="!canMoveUp"
-            >
-                <b-icon icon="chevron-up" size="is-small"></b-icon>
-            </button>
-            <button 
-                class="button is-small is-outlined action-move" 
-                @click.stop="handleMoveDown"
-                :disabled="!canMoveDown"
-            >
-                <b-icon icon="chevron-down" size="is-small"></b-icon>
             </button>
         </div>
     </div>
@@ -150,13 +144,8 @@ export default class Contract extends Vue {
     @Prop({ default: true })
     private isShort!: boolean
 
-    @Prop({ default: true })
-    private canMoveUp!: boolean
-
-    @Prop({ default: true })
-    private canMoveDown!: boolean
-
     private isMenuOpen = false
+    private isDragging = false
 
     handleCardClick() {
         this.$emit('select')
@@ -164,14 +153,6 @@ export default class Contract extends Vue {
 
     handleEdit() {
         this.$emit('edit')
-    }
-
-    handleMoveUp() {
-        this.$emit('moveUp')
-    }
-
-    handleMoveDown() {
-        this.$emit('moveDown')
     }
 
     handleExport() {
@@ -191,6 +172,23 @@ export default class Contract extends Vue {
 
     toggleMenu() {
         this.isMenuOpen = !this.isMenuOpen
+    }
+
+    handleDragStart(e: DragEvent) {
+        this.isDragging = true
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'move'
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                id: this.item.id,
+                address: this.item.address
+            }))
+        }
+        this.$emit('dragstart', this.item)
+    }
+
+    handleDragEnd(e: DragEvent) {
+        this.isDragging = false
+        this.$emit('dragend')
     }
 
     mounted() {
@@ -216,13 +214,18 @@ export default class Contract extends Vue {
     padding: 1.25rem;
     background: white;
     transition: all 0.2s ease;
-    cursor: pointer;
+    cursor: grab;
     margin: auto;
 }
 
 .contract-card:hover {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     border-color: #3273dc;
+}
+
+.contract-card.is-dragging {
+    opacity: 0.5;
+    cursor: grabbing;
 }
 
 /* Header */
@@ -350,12 +353,6 @@ export default class Contract extends Vue {
     justify-content: center;
 }
 
-.action-move {
-    width: 40px;
-    padding: 0;
-    justify-content: center;
-}
-
 .contract-actions .button {
     font-size: 0.75rem;
 }
@@ -363,10 +360,6 @@ export default class Contract extends Vue {
 .contract-actions .button:not(:disabled):hover {
     border-color: #3273dc;
     color: #3273dc;
-}
-
-.contract-actions .button:disabled {
-    opacity: 0.4;
 }
 
 /* Detail View (old UI) styles */

@@ -65,19 +65,33 @@
                             class="column is-3-fullhd is-6-desktop is-6-tablet is-12-mobile"
                             v-for="(item, index) in getCategoryContracts(category)"
                             :key="item.id"
+                            @dragover.prevent="handleDragOver($event, category, index)"
+                            @dragleave="handleDragLeave"
+                            @drop="handleDrop($event, category, index)"
+                            :class="{ 'drop-target': dropTarget && dropTarget.category === category && dropTarget.index === index }"
                         >
+                            <div class="drop-indicator" v-if="dropTarget && dropTarget.category === category && dropTarget.index === index"></div>
                             <Contract 
                                 variant="list"
                                 :item="item"
-                                :canMoveUp="index > 0"
-                                :canMoveDown="index < getCategoryContracts(category).length - 1"
                                 @select="onSelect(item.id)"
                                 @edit="edit(item)"
-                                @moveUp="moveUp(item, category)"
-                                @moveDown="moveDown(item, category)"
+                                @dragstart="handleDragStartContract"
+                                @dragend="handleDragEndContract"
                                 @export="exportJson(item)"
                                 @delete="remove(item)"
                             />
+                        </div>
+                        <!-- Drop zone at the end of category -->
+                        <div
+                            v-if="getCategoryContracts(category).length > 0"
+                            class="column is-3-fullhd is-6-desktop is-6-tablet is-12-mobile drop-zone-end"
+                            @dragover.prevent="handleDragOver($event, category, getCategoryContracts(category).length)"
+                            @dragleave="handleDragLeave"
+                            @drop="handleDrop($event, category, getCategoryContracts(category).length)"
+                            :class="{ 'drop-target': dropTarget && dropTarget.category === category && dropTarget.index === getCategoryContracts(category).length }"
+                        >
+                            <div class="drop-indicator" v-if="dropTarget && dropTarget.category === category && dropTarget.index === getCategoryContracts(category).length"></div>
                         </div>
                     </div>
                 </div>
@@ -133,6 +147,8 @@ export default class Contracts extends Vue {
     private isImport: boolean = false
     private searchQuery: string = ''
     private categoryOrder: { [key: string]: number } = {}
+    private draggedContract: Entities.Contract | null = null
+    private dropTarget: { category: string; index: number } | null = null
 
     get filteredContracts(): Entities.Contract[] {
         if (!this.searchQuery.trim()) {
@@ -333,32 +349,78 @@ export default class Contracts extends Vue {
         this.open()
     }
 
-    // Move up/down handlers
-    async moveUp(item: Entities.Contract, category: string) {
-        const categoryContracts = this.getCategoryContracts(category)
-        const currentIndex = categoryContracts.findIndex(c => c.id === item.id)
-        
-        if (currentIndex > 0) {
-            const prevItem = categoryContracts[currentIndex - 1]
-            const tempOrder = item.order || currentIndex
-            
-            await DB.contracts.where('id').equals(item.id!).modify({ order: prevItem.order || (currentIndex - 1) })
-            await DB.contracts.where('id').equals(prevItem.id!).modify({ order: tempOrder })
-            await this.list()
+    // Drag and drop handlers
+    handleDragStartContract(contract: Entities.Contract) {
+        this.draggedContract = contract
+    }
+
+    handleDragEndContract() {
+        this.draggedContract = null
+        this.dropTarget = null
+    }
+
+    handleDragOver(e: DragEvent, category: string, index: number) {
+        e.preventDefault()
+        if (this.draggedContract) {
+            this.dropTarget = { category, index }
         }
     }
 
-    async moveDown(item: Entities.Contract, category: string) {
-        const categoryContracts = this.getCategoryContracts(category)
-        const currentIndex = categoryContracts.findIndex(c => c.id === item.id)
+    handleDragLeave(e: DragEvent) {
+        // Only clear if we're leaving the drop zone entirely
+        const relatedTarget = e.relatedTarget as HTMLElement
+        if (!relatedTarget || !relatedTarget.closest('.column')) {
+            this.dropTarget = null
+        }
+    }
+
+    async handleDrop(e: DragEvent, targetCategory: string, targetIndex: number) {
+        e.preventDefault()
         
-        if (currentIndex < categoryContracts.length - 1) {
-            const nextItem = categoryContracts[currentIndex + 1]
-            const tempOrder = item.order || currentIndex
-            
-            await DB.contracts.where('id').equals(item.id!).modify({ order: nextItem.order || (currentIndex + 1) })
-            await DB.contracts.where('id').equals(nextItem.id!).modify({ order: tempOrder })
-            await this.list()
+        if (!this.draggedContract) {
+            return
+        }
+
+        const draggedContract = this.draggedContract
+        const sourceCategory = draggedContract.category || ''
+        const categoryContracts = this.getCategoryContracts(sourceCategory)
+        const sourceIndex = categoryContracts.findIndex(c => c.id === draggedContract.id)
+
+        // If dropping in the same position, do nothing
+        if (sourceCategory === targetCategory && sourceIndex === targetIndex) {
+            this.dropTarget = null
+            return
+        }
+
+        // Update category if changed
+        if (sourceCategory !== targetCategory) {
+            await DB.contracts.where('id').equals(draggedContract.id!).modify({ 
+                category: targetCategory || undefined 
+            })
+        }
+
+        // Reorder contracts in the target category
+        await this.reorderAfterDrop(targetCategory, draggedContract, targetIndex)
+        
+        this.dropTarget = null
+        await this.list()
+    }
+
+    async reorderAfterDrop(category: string, draggedContract: Entities.Contract, targetIndex: number) {
+        const categoryContracts = this.getCategoryContracts(category)
+        const draggedIndex = categoryContracts.findIndex(c => c.id === draggedContract.id)
+        
+        // Remove dragged item from current position
+        if (draggedIndex !== -1) {
+            categoryContracts.splice(draggedIndex, 1)
+        }
+        
+        // Insert at new position
+        categoryContracts.splice(targetIndex, 0, draggedContract)
+        
+        // Update order for all contracts in category
+        for (let i = 0; i < categoryContracts.length; i++) {
+            await DB.contracts.where('id').equals(categoryContracts[i].id!).modify({ order: i })
         }
     }
 
@@ -481,5 +543,46 @@ export default class Contracts extends Vue {
 .category-actions {
     display: flex;
     gap: 0.25rem;
+}
+
+/* Drag and drop styles */
+.column.drop-target {
+    position: relative;
+}
+
+.drop-indicator {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #3273dc;
+    border-radius: 2px;
+    z-index: 100;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 8px rgba(50, 115, 220, 0.6);
+    }
+    50% {
+        opacity: 0.6;
+        box-shadow: 0 0 16px rgba(50, 115, 220, 0.8);
+    }
+}
+
+.drop-zone-end {
+    min-height: 100px;
+    position: relative;
+}
+
+.drop-zone-end .drop-indicator {
+    width: 100%;
+    height: 4px;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
 }
 </style>
