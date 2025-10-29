@@ -84,7 +84,7 @@
                         </div>
                         <!-- Drop zone at the end of category -->
                         <div
-                            v-if="getCategoryContracts(category).length > 0"
+                            v-if="getCategoryContracts(category).length > 0 && draggedContract"
                             class="column is-3-fullhd is-6-desktop is-6-tablet is-12-mobile drop-zone-end"
                             @dragover.prevent="handleDragOver($event, category, getCategoryContracts(category).length)"
                             @dragleave="handleDragLeave"
@@ -584,8 +584,13 @@ export default class Contracts extends Vue {
 }
 
 .drop-zone-end {
-    min-height: 100px;
+    min-height: 0;
     position: relative;
+    transition: min-height 0.2s ease;
+}
+
+.drop-zone-end.drop-target {
+    min-height: 100px;
 }
 
 .drop-zone-end .drop-indicator {
