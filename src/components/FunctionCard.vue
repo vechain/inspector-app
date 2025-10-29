@@ -29,19 +29,41 @@
                             False
                         </b-radio>
                     </div>
-                    <b-input
-                        v-else
-                        ref="input"
-                        custom-class="is-family-monospace has-text-weight-semibold"
-                        required
-                        :name="v.name"
-                        :readonly="(prototype && v.name === '_self')"
-                        v-model="params[index]"
-                        :placeholder="v.type"
-                    ></b-input>
+                    <b-field v-else grouped>
+                        <b-input
+                            ref="input"
+                            custom-class="is-family-monospace has-text-weight-semibold"
+                            required
+                            :name="v.name"
+                            :readonly="(prototype && v.name === '_self')"
+                            v-model="params[index]"
+                            :placeholder="v.type"
+                            expanded
+                        ></b-input>
+                        <p class="control" v-if="isUintType(v.type)">
+                            <button
+                                type="button"
+                                @click="convertValue(index)"
+                                class="button"
+                            >
+                                {{ getConversionLabel(params[index]) }}
+                            </button>
+                        </p>
+                    </b-field>
                 </b-field>
                 <b-field v-if="payable" class="item-content" horizontal label="value">
-                    <b-input custom-class="is-family-monospace has-text-weight-semibold" type="text" placeholder="number(vet)" v-model.trim="value"></b-input>
+                    <b-field grouped>
+                        <b-input custom-class="is-family-monospace has-text-weight-semibold" type="text" placeholder="number(vet)" v-model.trim="value" expanded></b-input>
+                        <p class="control">
+                            <button
+                                type="button"
+                                @click="convertPayableValue"
+                                class="button"
+                            >
+                                {{ getConversionLabel(value) }}
+                            </button>
+                        </p>
+                    </b-field>
                 </b-field>
                 <b-field class="item-content" horizontal>
                     <div class="buttons has-addons">
@@ -147,6 +169,85 @@ export default class FunctionCard extends Mixins(AccountCall) {
             message: 'Added success!',
             type: 'is-success'
         })
+    }
+
+    private isUintType(type: string): boolean {
+        return type.startsWith('uint')
+    }
+
+    private getConversionLabel(value: string): string {
+        if (!value || value.trim() === '') {
+            return 'to wei'
+        }
+        
+        try {
+            const numValue = parseFloat(value)
+            if (isNaN(numValue)) {
+                return 'to wei'
+            }
+            // If value is large, it's likely Wei, so show "to ether"
+            // Otherwise, show "to wei"
+            return numValue > 1e15 ? 'to ether' : 'to wei'
+        } catch (error) {
+            return 'to wei'
+        }
+    }
+
+    private convertValue(index: number) {
+        const value = this.params[index]
+        if (!value || value.trim() === '') {
+            return
+        }
+
+        try {
+            const numValue = parseFloat(value)
+            if (isNaN(numValue)) {
+                return
+            }
+
+            // Auto-detect: if value is very large (> 1e15), it's likely Wei, convert to VET
+            // Otherwise, convert VET to Wei
+            if (numValue > 1e15) {
+                // Convert Wei to VET
+                const weiBigInt = BigInt(value.split('.')[0])
+                const etherValue = Number(weiBigInt) / 1e18
+                this.$set(this.params, index, etherValue.toString())
+            } else {
+                // Convert VET to Wei
+                const weiValue = BigInt(Math.floor(numValue * 1e18))
+                this.$set(this.params, index, weiValue.toString())
+            }
+        } catch (error) {
+            // Silently fail
+        }
+    }
+
+    private convertPayableValue() {
+        if (!this.value || this.value.trim() === '') {
+            return
+        }
+
+        try {
+            const numValue = parseFloat(this.value)
+            if (isNaN(numValue)) {
+                return
+            }
+
+            // Auto-detect: if value is very large (> 1e15), it's likely Wei, convert to VET
+            // Otherwise, convert VET to Wei
+            if (numValue > 1e15) {
+                // Convert Wei to VET
+                const weiBigInt = BigInt(this.value.split('.')[0])
+                const etherValue = Number(weiBigInt) / 1e18
+                this.value = etherValue.toString()
+            } else {
+                // Convert VET to Wei
+                const weiValue = BigInt(Math.floor(numValue * 1e18))
+                this.value = weiValue.toString()
+            }
+        } catch (error) {
+            // Silently fail
+        }
     }
 }
 </script>
