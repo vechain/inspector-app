@@ -55,6 +55,18 @@
             type="textarea"
           ></b-input>
         </b-field>
+        <b-field>
+          <button 
+            class="button is-info is-light is-fullwidth" 
+            type="button" 
+            @click="fetchABIFromSourcify"
+            :disabled="!form.address || fetchingABI"
+            :class="{ 'is-loading': fetchingABI }"
+          >
+            <b-icon v-if="!fetchingABI" icon="download" size="is-small"></b-icon>
+            <span>{{ fetchingABI ? fetchStatus : 'Fetch Latest ABI from Sourcify' }}</span>
+          </button>
+        </b-field>
         <b-field label="Category (optional)">
           <b-autocomplete
             v-model="form.category"
@@ -148,6 +160,8 @@
     private allContracts: Array<{name: string, address: string}> = []
     private categories: string[] = []
     private filteredCategories: string[] = []
+    private fetchingABI: boolean = false
+    private fetchStatus: string = ''
 
     async created() {
       await this.loadCategories()
@@ -172,7 +186,7 @@
       this.nameInput = option.name
       this.form.address = option.address
       
-      // Load ABI for the selected contract
+      // Load ABI for the selected contract from built-in configs only
       const genesisId = this.$connex.thor.genesis.id
       const contracts = ContractConfig[genesisId] || {}
       const contractConfig = contracts[option.address]
@@ -187,17 +201,12 @@
           if (abiResponse.ok) {
             const abiJson = await abiResponse.json()
             this.form.abi = JSON.stringify(abiJson, null, 2)
-          } else {
-            // If failed to fetch from URL, try loading from Sourcify
-            await this.loadABI(option.address)
           }
         } catch (error) {
           console.error("Failed to load ABI from URL", error)
-          await this.loadABI(option.address)
         }
-      } else {
-        await this.loadABI(option.address)
       }
+      // Don't auto-fetch from Sourcify - user can use the manual button
     }
 
     close() {
@@ -251,14 +260,6 @@
     private onNameInputChange(value: string) {
       this.form.name = value
     }
-    
-    @Watch('form.address')
-    private async onAddressChange(newAddress: string) {
-      const addrRegexp = /^0x[0-9a-fA-F]{40}$/
-      if (addrRegexp.test(newAddress)) {
-        await this.loadABI(newAddress)
-      }
-    }
 
     @Watch('form.abi')
     private async onAbiChange(abi: string) {
@@ -305,9 +306,6 @@
           position: 'is-bottom'
         })
         return
-      }
-      if (!this.form.abi && this.form.address) {
-        await this.loadABI(this.form.address)
       }
 
       if (!this.checkform()) {
@@ -356,21 +354,204 @@
       }
     }
 
-    private async loadABI(address: string) {
-      let chainID;
-      if (this.$connex.thor.genesis.id === '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a') {
-        chainID = '100009'
-      } else if (this.$connex.thor.genesis.id === '0x000000000b2bce3c70bc649a02749e8687721b09ed2e15997f466536b20bb127'){
-        chainID = '100010'
+    /**
+     * Manually fetch ABI from Sourcify with proxy detection
+     */
+    async fetchABIFromSourcify() {
+      if (!this.form.address) {
+        return
       }
+
+      // Check if we have a valid chain ID for Sourcify
+      const chainID = this.getSourcifyChainID()
+      if (!chainID) {
+        this.$buefy.toast.open({
+          message: 'Sourcify is not supported for this network (Solo/Local)',
+          type: 'is-warning',
+          duration: 3000,
+          position: 'is-bottom'
+        })
+        return
+      }
+
+      this.fetchingABI = true
+      this.fetchStatus = 'Checking for proxy...'
+      
+      try {
+        const addressToFetch = this.form.address.toLowerCase()
         
-      if (chainID) {
+        // First, try to detect if this is a proxy contract
+        let implementationAddress: string | null = null
+        try {
+          implementationAddress = await this.getImplementationAddress(addressToFetch)
+        } catch (proxyError) {
+          console.warn('Proxy detection failed, continuing with original address:', proxyError)
+          // Continue anyway - not a critical error
+        }
+        
+        if (implementationAddress) {
+          this.fetchStatus = `Proxy detected! Fetching implementation ABI...`
+          console.log(`Proxy detected! Implementation address: ${implementationAddress}`)
+          
+          // Try to fetch the implementation ABI
+          const success = await this.loadABI(implementationAddress)
+          if (success) {
+            this.$buefy.toast.open({
+              message: 'ABI loaded successfully!',
+              type: 'is-success',
+              duration: 2500,
+              position: 'is-bottom'
+            })
+            return
+          } else {
+            this.fetchStatus = 'Implementation not found, trying proxy address...'
+          }
+        }
+        
+        // If not a proxy or implementation fetch failed, fetch the original address
+        this.fetchStatus = 'Fetching ABI from Sourcify...'
+        const success = await this.loadABI(addressToFetch)
+        
+        if (success) {
+          this.$buefy.toast.open({
+            message: 'ABI loaded successfully!',
+            type: 'is-success',
+            duration: 2500,
+            position: 'is-bottom'
+          })
+        } else {
+          this.$buefy.toast.open({
+            message: 'Could not find ABI on Sourcify for this contract',
+            type: 'is-warning',
+            duration: 3000,
+            position: 'is-bottom'
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching ABI:', error)
+        this.$buefy.toast.open({
+          message: `Error fetching ABI: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          type: 'is-danger',
+          duration: 3000,
+          position: 'is-bottom'
+        })
+      } finally {
+        this.fetchingABI = false
+        this.fetchStatus = ''
+      }
+    }
+
+    /**
+     * Detect if the contract is a proxy and return the implementation address
+     * Supports EIP-1967, EIP-1822, and OpenZeppelin proxies
+     */
+    private async getImplementationAddress(address: string): Promise<string | null> {
+      try {
+        // EIP-1967 implementation slot: keccak256("eip1967.proxy.implementation") - 1
+        const eip1967Slot = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc'
+        
+        // EIP-1822 proxiable slot: keccak256("PROXIABLE")
+        const eip1822Slot = '0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7'
+        
+        // Try EIP-1967 first
+        try {
+          const storage = await this.$connex.thor.account(address).getStorage(eip1967Slot)
+          if (storage && storage.value && storage.value !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+            // Extract address from storage (last 20 bytes)
+            const implAddress = '0x' + storage.value.slice(-40)
+            if (implAddress !== '0x0000000000000000000000000000000000000000') {
+              return implAddress
+            }
+          }
+        } catch (e) {
+          console.warn('EIP-1967 check failed:', e)
+        }
+        
+        // Try EIP-1822
+        try {
+          const storage = await this.$connex.thor.account(address).getStorage(eip1822Slot)
+          if (storage && storage.value && storage.value !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+            const implAddress = '0x' + storage.value.slice(-40)
+            if (implAddress !== '0x0000000000000000000000000000000000000000') {
+              return implAddress
+            }
+          }
+        } catch (e) {
+          console.warn('EIP-1822 check failed:', e)
+        }
+        
+        // Try calling implementation() method (common in OpenZeppelin proxies)
+        try {
+          const implMethodABI = {
+            "constant": true,
+            "inputs": [],
+            "name": "implementation",
+            "outputs": [{"name": "", "type": "address"}],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+          }
+          
+          const result = await this.$connex.thor.account(address).method(implMethodABI).call()
+          if (result && !result.reverted && result.decoded && result.decoded[0]) {
+            const implAddress = result.decoded[0].toLowerCase()
+            if (implAddress !== '0x0000000000000000000000000000000000000000') {
+              return implAddress
+            }
+          }
+        } catch (e) {
+          console.warn('implementation() method check failed:', e)
+        }
+        
+        return null
+      } catch (error) {
+        console.error('Error detecting proxy:', error)
+        return null
+      }
+    }
+
+    /**
+     * Get the Sourcify chain ID for the current network
+     * Returns null if Sourcify is not supported for this network
+     */
+    private getSourcifyChainID(): string | null {
+      const genesisId = this.$connex.thor.genesis.id
+      
+      // VeChain Mainnet
+      if (genesisId === '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a') {
+        return '100009'
+      }
+      // VeChain Testnet
+      if (genesisId === '0x000000000b2bce3c70bc649a02749e8687721b09ed2e15997f466536b20bb127') {
+        return '100010'
+      }
+      
+      // Solo/Local network - not supported
+      return null
+    }
+
+    /**
+     * Load ABI from Sourcify for a given address
+     * Returns true if successful, false otherwise
+     */
+    private async loadABI(address: string): Promise<boolean> {
+      const chainID = this.getSourcifyChainID()
+        
+      if (!chainID) {
+        return false
+      }
+
+      try {
         const res = await fetch(`https://sourcify.dev/server/repository/contracts/full_match/${chainID}/${address}/metadata.json`)
         if (res.status === 200) {
           const data = await res.json()
           this.form.abi = JSON.stringify(data.output.abi, null, 2)
+          return true
         }
+      } catch (error) {
+        console.error('Error loading ABI from Sourcify:', error)
       }
+      return false
     }
 
     private checkform() {
