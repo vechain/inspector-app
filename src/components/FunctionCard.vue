@@ -29,18 +29,19 @@
                             False
                         </b-radio>
                     </div>
-                    <b-field v-else grouped>
-                        <b-input
-                            ref="input"
-                            custom-class="is-family-monospace has-text-weight-semibold"
-                            required
-                            :name="v.name"
-                            :readonly="(prototype && v.name === '_self')"
-                            v-model="params[index]"
-                            :placeholder="v.type"
-                            expanded
-                        ></b-input>
-                        <p class="control" v-if="isUintType(v.type)">
+                    <div v-else class="field has-addons" style="width: 100%;">
+                        <div class="control is-expanded">
+                            <b-input
+                                ref="input"
+                                custom-class="is-family-monospace has-text-weight-semibold"
+                                required
+                                :name="v.name"
+                                :readonly="(prototype && v.name === '_self')"
+                                v-model="params[index]"
+                                :placeholder="v.type"
+                            ></b-input>
+                        </div>
+                        <div class="control" v-if="isUintType(v.type)">
                             <button
                                 type="button"
                                 @click="convertValue(index)"
@@ -48,13 +49,15 @@
                             >
                                 {{ getConversionLabel(params[index]) }}
                             </button>
-                        </p>
-                    </b-field>
+                        </div>
+                    </div>
                 </b-field>
                 <b-field v-if="payable" class="item-content" horizontal label="value">
-                    <b-field grouped>
-                        <b-input custom-class="is-family-monospace has-text-weight-semibold" type="text" placeholder="number(vet)" v-model.trim="value" expanded></b-input>
-                        <p class="control">
+                    <div class="field has-addons" style="width: 100%;">
+                        <div class="control is-expanded">
+                            <b-input custom-class="is-family-monospace has-text-weight-semibold" type="text" placeholder="number(vet)" v-model.trim="value"></b-input>
+                        </div>
+                        <div class="control">
                             <button
                                 type="button"
                                 @click="convertPayableValue"
@@ -62,8 +65,8 @@
                             >
                                 {{ getConversionLabel(value) }}
                             </button>
-                        </p>
-                    </b-field>
+                        </div>
+                    </div>
                 </b-field>
                 <b-field class="item-content" horizontal>
                     <div class="buttons has-addons">
