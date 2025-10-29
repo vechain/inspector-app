@@ -440,14 +440,33 @@ export default class Contracts extends Vue {
         localStorage.setItem('categoryOrder', JSON.stringify(this.categoryOrder))
     }
 
+    ensureAllCategoriesHaveOrder() {
+        // Initialize orders for all categories if any are missing
+        const categories = this.sortedCategories
+        let needsSave = false
+        
+        categories.forEach((category, index) => {
+            if (this.categoryOrder[category] === undefined) {
+                this.$set(this.categoryOrder, category, index)
+                needsSave = true
+            }
+        })
+        
+        if (needsSave) {
+            this.saveCategoryOrder()
+        }
+    }
+
     moveCategoryUp(category: string) {
+        this.ensureAllCategoriesHaveOrder()
+        
         const categories = this.sortedCategories
         const currentIndex = categories.indexOf(category)
         
         if (currentIndex > 0) {
             const prevCategory = categories[currentIndex - 1]
-            const currentOrder = this.categoryOrder[category] ?? currentIndex
-            const prevOrder = this.categoryOrder[prevCategory] ?? (currentIndex - 1)
+            const currentOrder = this.categoryOrder[category]
+            const prevOrder = this.categoryOrder[prevCategory]
             
             this.$set(this.categoryOrder, category, prevOrder)
             this.$set(this.categoryOrder, prevCategory, currentOrder)
@@ -456,13 +475,15 @@ export default class Contracts extends Vue {
     }
 
     moveCategoryDown(category: string) {
+        this.ensureAllCategoriesHaveOrder()
+        
         const categories = this.sortedCategories
         const currentIndex = categories.indexOf(category)
         
         if (currentIndex < categories.length - 1) {
             const nextCategory = categories[currentIndex + 1]
-            const currentOrder = this.categoryOrder[category] ?? currentIndex
-            const nextOrder = this.categoryOrder[nextCategory] ?? (currentIndex + 1)
+            const currentOrder = this.categoryOrder[category]
+            const nextOrder = this.categoryOrder[nextCategory]
             
             this.$set(this.categoryOrder, category, nextOrder)
             this.$set(this.categoryOrder, nextCategory, currentOrder)
