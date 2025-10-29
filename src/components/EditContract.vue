@@ -312,20 +312,27 @@
         return
       }
 
-      // Calculate order for new contracts
+      // Calculate order for new contracts or when category changes
       let order: number | undefined
-      if (!this.isEdit) {
+      const categoryChanged = this.isEdit && (this.item?.category || '') !== (this.form.category || '')
+      
+      if (!this.isEdit || categoryChanged) {
+        // New contract or category changed - calculate new order in target category
         const network = this.$connex.thor.genesis.id
         const categoryContracts = await DB.contracts
           .filter((item) => 
             ((item.network === network) || (item.network === undefined)) &&
-            ((item.category || '') === (this.form.category || ''))
+            ((item.category || '') === (this.form.category || '')) &&
+            (categoryChanged ? item.id !== this.item?.id : true) // Exclude current item when moving categories
           )
           .toArray()
         
         const maxOrder = categoryContracts.reduce((max, c) => 
           Math.max(max, c.order || 0), -1)
         order = maxOrder + 1
+      } else {
+        // Editing without category change - preserve existing order
+        order = this.item?.order
       }
 
       const obj: Entities.Contract = {
