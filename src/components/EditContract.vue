@@ -398,19 +398,19 @@
         
         if (implementationAddress) {
           this.fetchStatus = `Proxy detected! Fetching implementation ABI...`
-          console.log(`Proxy detected! Implementation address: ${implementationAddress}`)
           
           // Try to fetch the implementation ABI
-          const success = await this.loadABI(implementationAddress)
-          if (success) {
+          const implSuccess = await this.loadABI(implementationAddress)
+          if (implSuccess) {
             this.$buefy.toast.open({
-              message: 'ABI loaded successfully!',
+              message: `Implementation ABI loaded! (${implementationAddress.slice(0, 10)}...)`,
               type: 'is-success',
-              duration: 2500,
+              duration: 3000,
               position: 'is-bottom'
             })
             return
           } else {
+            // Implementation not verified, try proxy
             this.fetchStatus = 'Implementation not found, trying proxy address...'
           }
         }
@@ -420,12 +420,22 @@
         const success = await this.loadABI(addressToFetch)
         
         if (success) {
-          this.$buefy.toast.open({
-            message: 'ABI loaded successfully!',
-            type: 'is-success',
-            duration: 2500,
-            position: 'is-bottom'
-          })
+          // If we had an implementation that wasn't verified, show a warning
+          if (implementationAddress) {
+            this.$buefy.toast.open({
+              message: `⚠️ Loaded Proxy ABI (implementation ${implementationAddress.slice(0, 10)}... not verified)`,
+              type: 'is-warning',
+              duration: 4000,
+              position: 'is-bottom'
+            })
+          } else {
+            this.$buefy.toast.open({
+              message: 'ABI loaded successfully!',
+              type: 'is-success',
+              duration: 2500,
+              position: 'is-bottom'
+            })
+          }
         } else {
           this.$buefy.toast.open({
             message: 'Could not find ABI on Sourcify for this contract',
@@ -449,8 +459,51 @@
     }
 
     /**
+     * Get implementation address from Sourcify metadata if it's a proxy
+     */
+    private async getImplementationFromSourcify(proxyAddress: string): Promise<string | null> {
+      const chainID = this.getSourcifyChainID()
+      if (!chainID) {
+        return null
+      }
+
+      try {
+        // Check Sourcify for proxy information
+        const res = await fetch(`https://sourcify.dev/server/check-by-addresses?addresses=${proxyAddress}&chainIds=${chainID}`)
+        if (res.ok) {
+          const data = await res.json()
+          
+          // If contract is found, fetch its metadata
+          if (data && data[0] && data[0].status === 'perfect') {
+            const metadataRes = await fetch(`https://sourcify.dev/server/repository/contracts/full_match/${chainID}/${proxyAddress}/metadata.json`)
+            if (metadataRes.ok) {
+              const metadata = await metadataRes.json()
+              
+              // Check if metadata contains proxy information
+              if (metadata.settings?.compilationTarget) {
+                const contractName = Object.values(metadata.settings.compilationTarget)[0]
+                
+                // Check if this is a known proxy pattern in the contract name or source
+                if (typeof contractName === 'string' && (
+                  contractName.toLowerCase().includes('proxy') || 
+                  contractName.toLowerCase().includes('upgradeable')
+                )) {
+                  // Detected proxy pattern
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Sourcify metadata check failed:', e)
+      }
+      
+      return null
+    }
+
+    /**
      * Detect if the contract is a proxy and return the implementation address
-     * Supports EIP-1967, EIP-1822, and OpenZeppelin proxies
+     * Supports EIP-1967, EIP-1822, OpenZeppelin proxies, and various other patterns
      */
     private async getImplementationAddress(address: string): Promise<string | null> {
       try {
@@ -460,7 +513,10 @@
         // EIP-1822 proxiable slot: keccak256("PROXIABLE")
         const eip1822Slot = '0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7'
         
-        // Try EIP-1967 first
+        // OpenZeppelin old proxy slot (before EIP-1967)
+        const ozOldSlot = '0x7050c9e0f4ca769c69bd3a8ef740bc37934f8e2c036e5a723fd8ee048ed3f8c3'
+        
+        // Try EIP-1967 first (most common)
         try {
           const storage = await this.$connex.thor.account(address).getStorage(eip1967Slot)
           if (storage && storage.value && storage.value !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
@@ -487,6 +543,19 @@
           console.warn('EIP-1822 check failed:', e)
         }
         
+        // Try OpenZeppelin old slot
+        try {
+          const storage = await this.$connex.thor.account(address).getStorage(ozOldSlot)
+          if (storage && storage.value && storage.value !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+            const implAddress = '0x' + storage.value.slice(-40)
+            if (implAddress !== '0x0000000000000000000000000000000000000000') {
+              return implAddress
+            }
+          }
+        } catch (e) {
+          console.warn('OZ old slot check failed:', e)
+        }
+        
         // Try calling implementation() method (common in OpenZeppelin proxies)
         try {
           const implMethodABI = {
@@ -508,6 +577,29 @@
           }
         } catch (e) {
           console.warn('implementation() method check failed:', e)
+        }
+        
+        // Try getImplementation() method (some proxies use this)
+        try {
+          const getImplMethodABI = {
+            "constant": true,
+            "inputs": [],
+            "name": "getImplementation",
+            "outputs": [{"name": "", "type": "address"}],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+          }
+          
+          const result = await this.$connex.thor.account(address).method(getImplMethodABI).call()
+          if (result && !result.reverted && result.decoded && result.decoded[0]) {
+            const implAddress = result.decoded[0].toLowerCase()
+            if (implAddress !== '0x0000000000000000000000000000000000000000') {
+              return implAddress
+            }
+          }
+        } catch (e) {
+          console.warn('getImplementation() method check failed:', e)
         }
         
         return null
@@ -540,6 +632,7 @@
     /**
      * Load ABI from Sourcify for a given address
      * Returns true if successful, false otherwise
+     * Tries full match first, then partial match
      */
     private async loadABI(address: string): Promise<boolean> {
       const chainID = this.getSourcifyChainID()
@@ -549,7 +642,16 @@
       }
 
       try {
-        const res = await fetch(`https://sourcify.dev/server/repository/contracts/full_match/${chainID}/${address}/metadata.json`)
+        // Try full match first
+        let res = await fetch(`https://sourcify.dev/server/repository/contracts/full_match/${chainID}/${address}/metadata.json`)
+        if (res.status === 200) {
+          const data = await res.json()
+          this.form.abi = JSON.stringify(data.output.abi, null, 2)
+          return true
+        }
+        
+        // Try partial match if full match not found
+        res = await fetch(`https://sourcify.dev/server/repository/contracts/partial_match/${chainID}/${address}/metadata.json`)
         if (res.status === 200) {
           const data = await res.json()
           this.form.abi = JSON.stringify(data.output.abi, null, 2)
