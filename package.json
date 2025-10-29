@@ -24,7 +24,7 @@
     "node-polyfill-webpack-plugin": "^3.0.0",
     "thor-devkit": "^2.0.5",
     "vee-validate": "2.1.5",
-    "vue": "2.7.14",
+    "vue": "3.0.0",
     "vue-analytics": "5.16.2",
     "vue-class-component": "^6.0.0",
     "vue-property-decorator": "^7.3.0",
