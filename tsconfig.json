@@ -21,7 +21,7 @@
       "@/*": [
         "src/*"
       ],
-      "vue-analytics": ["src/vue-analytics"],
+      "vue-analytics": ["src/vue-analytics"]
     },
     "lib": [
       "esnext",
