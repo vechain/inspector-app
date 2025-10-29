@@ -67,3 +67,7 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 # CMD ["nginx", "-g", "daemon off;"]
 
+RUN apk add --no-cache shadow && \
+    useradd -U -u 1000 appuser && \
+    chown -R 1000:1000 /usr/share/nginx/html /entrypoint.sh
+USER 1000
