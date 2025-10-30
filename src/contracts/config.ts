@@ -21,6 +21,11 @@ const executor: ContractConfig = {
     abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/executor.json"
 }
 
+const staker: ContractConfig = {
+    name: "Staker (Built-in)",
+    abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/staker.json"
+}
+
 const extension: ContractConfig = {
     name: "Extension (Built-in)",
     abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/extension.json"
@@ -116,6 +121,7 @@ const common = {
     "0x0000000000000000000000457874656e73696f6e": extension,
     "0x0000000000000000000000000000506172616d73": params,
     "0x000000000000000000000050726f746f74797065": prototype,
+    "0x00000000000000000000000000005374616b6572": staker,
 }
 
 // genesis ID -> contract address -> ContractConfig
