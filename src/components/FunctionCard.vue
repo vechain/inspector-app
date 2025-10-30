@@ -182,15 +182,14 @@ export default class FunctionCard extends Mixins(AccountCall) {
         if (!value || value.trim() === '') {
             return 'to wei'
         }
-        
+
         try {
-            const numValue = parseFloat(value)
-            if (isNaN(numValue)) {
-                return 'to wei'
-            }
+            // Split on decimal to handle only the integer part
+            const integerPart = value.split('.')[0]
+            const numValue = BigInt(integerPart)
             // If value is large, it's likely Wei, so show "to ether"
             // Otherwise, show "to wei"
-            return numValue > 1e15 ? 'to ether' : 'to wei'
+            return numValue > (BigInt(10) ** BigInt(15)) ? 'to ether' : 'to wei'
         } catch (error) {
             return 'to wei'
         }
@@ -202,22 +201,20 @@ export default class FunctionCard extends Mixins(AccountCall) {
             return
         }
 
-        try {
-            const numValue = parseFloat(value)
-            if (isNaN(numValue)) {
-                return
-            }
+        const vet = BigInt(10) ** BigInt(18)
 
+        try {
+            const numValue = BigInt(value)
             // Auto-detect: if value is very large (> 1e15), it's likely Wei, convert to VET
             // Otherwise, convert VET to Wei
-            if (numValue > 1e15) {
+            if (numValue > (BigInt(10) ** BigInt(15))) {
                 // Convert Wei to VET
                 const weiBigInt = BigInt(value.split('.')[0])
-                const etherValue = Number(weiBigInt) / 1e18
+                const etherValue = weiBigInt / vet
                 this.$set(this.params, index, etherValue.toString())
             } else {
                 // Convert VET to Wei
-                const weiValue = BigInt(Math.floor(numValue * 1e18))
+                const weiValue = numValue * vet
                 this.$set(this.params, index, weiValue.toString())
             }
         } catch (error) {
@@ -230,22 +227,20 @@ export default class FunctionCard extends Mixins(AccountCall) {
             return
         }
 
-        try {
-            const numValue = parseFloat(this.value)
-            if (isNaN(numValue)) {
-                return
-            }
+        const vet = BigInt(10) ** BigInt(18)
 
+        try {
+            const numValue = BigInt(this.value)
             // Auto-detect: if value is very large (> 1e15), it's likely Wei, convert to VET
             // Otherwise, convert VET to Wei
-            if (numValue > 1e15) {
+            if (numValue > (BigInt(10) ** BigInt(15))) {
                 // Convert Wei to VET
                 const weiBigInt = BigInt(this.value.split('.')[0])
-                const etherValue = Number(weiBigInt) / 1e18
+                const etherValue = weiBigInt / vet
                 this.value = etherValue.toString()
             } else {
                 // Convert VET to Wei
-                const weiValue = BigInt(Math.floor(numValue * 1e18))
+                const weiValue = numValue * vet
                 this.value = weiValue.toString()
             }
         } catch (error) {
