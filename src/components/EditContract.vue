@@ -707,9 +707,9 @@
 
     private checkName() {
       if (this.form.name) {
-        if (this.form.name.length < 1 || this.form.name.length > 20) {
+        if (this.form.name.length < 1 || this.form.name.length > 40) {
           this.formMessage.name.isError = true
-          this.formMessage.name.message = 'Requires between 1 - 20 characters'
+          this.formMessage.name.message = 'Requires between 1 - 40 characters'
         } else {
           this.formMessage.name.isError = false
           this.formMessage.name.message = ''
