@@ -196,24 +196,30 @@ export default class FunctionCard extends Mixins(AccountCall) {
     }
 
     private convertValue(index: number) {
-        const value = this.params[index]
-        if (!value || value.trim() === '') {
+        const raw = this.params[index]
+        if (!raw || String(raw).trim() === '') {
             return
         }
 
+        const s = String(raw).trim().replace(',', '.')
         const vet = BigInt(10) ** BigInt(18)
 
         try {
-            const numValue = BigInt(value)
-            // Auto-detect: if value is very large (> 1e15), it's likely Wei, convert to VET
-            // Otherwise, convert VET to Wei
+            // If contains decimal point, treat as VET (decimal) and convert to wei
+            if (s.includes('.')) {
+                const weiBigInt = this.decimalStringToWei(s)
+                this.$set(this.params, index, weiBigInt.toString())
+                return
+            }
+
+            // Integer input: decide by magnitude
+            const numValue = BigInt(s)
             if (numValue > (BigInt(10) ** BigInt(15))) {
-                // Convert Wei to VET
-                const weiBigInt = BigInt(value.split('.')[0])
-                const etherValue = weiBigInt / vet
-                this.$set(this.params, index, etherValue.toString())
+                // Likely already wei -> convert to VET (decimal string)
+                const etherStr = this.weiToDecimalString(numValue)
+                this.$set(this.params, index, etherStr)
             } else {
-                // Convert VET to Wei
+                // Likely VET integer -> convert to wei
                 const weiValue = numValue * vet
                 this.$set(this.params, index, weiValue.toString())
             }
@@ -223,29 +229,56 @@ export default class FunctionCard extends Mixins(AccountCall) {
     }
 
     private convertPayableValue() {
-        if (!this.value || this.value.trim() === '') {
+        if (!this.value || String(this.value).trim() === '') {
             return
         }
 
+        const s = String(this.value).trim().replace(',', '.')
         const vet = BigInt(10) ** BigInt(18)
 
         try {
-            const numValue = BigInt(this.value)
-            // Auto-detect: if value is very large (> 1e15), it's likely Wei, convert to VET
-            // Otherwise, convert VET to Wei
+            if (s.includes('.')) {
+                // Treat as VET decimal -> convert to wei
+                const weiBigInt = this.decimalStringToWei(s)
+                this.value = weiBigInt.toString()
+                return
+            }
+
+            const numValue = BigInt(s)
             if (numValue > (BigInt(10) ** BigInt(15))) {
-                // Convert Wei to VET
-                const weiBigInt = BigInt(this.value.split('.')[0])
-                const etherValue = weiBigInt / vet
-                this.value = etherValue.toString()
+                // Likely wei -> convert to VET decimal string
+                this.value = this.weiToDecimalString(numValue)
             } else {
-                // Convert VET to Wei
+                // VET integer -> convert to wei
                 const weiValue = numValue * vet
                 this.value = weiValue.toString()
             }
         } catch (error) {
             // Silently fail
         }
+    }
+
+    // Convert a decimal string like "1.234" to a wei BigInt (handles up to 18 fractional digits).
+    private decimalStringToWei(input: string): bigint {
+        const normalized = String(input).trim().replace(',', '.')
+        const vet = BigInt(10) ** BigInt(18)
+        const parts = normalized.split('.')
+        const intPart = parts[0] === '' ? '0' : parts[0]
+        const fracPart = parts[1] || ''
+        const frac18 = (fracPart + '0'.repeat(18)).slice(0, 18) // pad or truncate to 18
+        const intBig = BigInt(intPart)
+        const fracBig = frac18 === '' ? 0n : BigInt(frac18)
+        return intBig * vet + fracBig
+    }
+
+    // Convert wei BigInt to a decimal string with up to 18 fractional digits, trimming trailing zeros.
+    private weiToDecimalString(wei: bigint): string {
+        const vet = BigInt(10) ** BigInt(18)
+        const intPart = wei / vet
+        let fracPart = (wei % vet).toString().padStart(18, '0')
+        // remove trailing zeros in fractional part
+        fracPart = fracPart.replace(/0+$/, '')
+        return fracPart ? `${intPart.toString()}.${fracPart}` : intPart.toString()
     }
 }
 </script>
