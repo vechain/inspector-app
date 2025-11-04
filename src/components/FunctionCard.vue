@@ -29,44 +29,19 @@
                             False
                         </b-radio>
                     </div>
-                    <div v-else class="field has-addons" style="width: 100%;">
-                        <div class="control is-expanded">
-                            <b-input
-                                ref="input"
-                                custom-class="is-family-monospace has-text-weight-semibold"
-                                required
-                                :name="v.name"
-                                :readonly="(prototype && v.name === '_self')"
-                                v-model="params[index]"
-                                :placeholder="v.type"
-                            ></b-input>
-                        </div>
-                        <div class="control" v-if="isUintType(v.type)">
-                            <button
-                                type="button"
-                                @click="convertValue(index)"
-                                class="button"
-                            >
-                                {{ getConversionLabel(params[index]) }}
-                            </button>
-                        </div>
-                    </div>
+                    <b-input
+                        v-else
+                        ref="input"
+                        custom-class="is-family-monospace has-text-weight-semibold"
+                        required
+                        :name="v.name"
+                        :readonly="(prototype && v.name === '_self')"
+                        v-model="params[index]"
+                        :placeholder="v.type"
+                    ></b-input>
                 </b-field>
                 <b-field v-if="payable" class="item-content" horizontal label="value">
-                    <div class="field has-addons" style="width: 100%;">
-                        <div class="control is-expanded">
-                            <b-input custom-class="is-family-monospace has-text-weight-semibold" type="text" placeholder="number(vet)" v-model.trim="value"></b-input>
-                        </div>
-                        <div class="control">
-                            <button
-                                type="button"
-                                @click="convertPayableValue"
-                                class="button"
-                            >
-                                {{ getConversionLabel(value) }}
-                            </button>
-                        </div>
-                    </div>
+                    <b-input custom-class="is-family-monospace has-text-weight-semibold" type="text" placeholder="number(vet)" v-model.trim="value"></b-input>
                 </b-field>
                 <b-field class="item-content" horizontal>
                     <div class="buttons has-addons">
@@ -174,112 +149,6 @@ export default class FunctionCard extends Mixins(AccountCall) {
         })
     }
 
-    private isUintType(type: string): boolean {
-        return type.startsWith('uint')
-    }
-
-    private getConversionLabel(value: string): string {
-        if (!value || value.trim() === '') {
-            return 'to wei'
-        }
-
-        try {
-            // Split on decimal to handle only the integer part
-            const integerPart = value.split('.')[0]
-            const numValue = BigInt(integerPart)
-            // If value is large, it's likely Wei, so show "to ether"
-            // Otherwise, show "to wei"
-            return numValue > (BigInt(10) ** BigInt(15)) ? 'to ether' : 'to wei'
-        } catch (error) {
-            return 'to wei'
-        }
-    }
-
-    private convertValue(index: number) {
-        const raw = this.params[index]
-        if (!raw || String(raw).trim() === '') {
-            return
-        }
-
-        const s = String(raw).trim().replace(',', '.')
-        const vet = BigInt(10) ** BigInt(18)
-
-        try {
-            // If contains decimal point, treat as VET (decimal) and convert to wei
-            if (s.includes('.')) {
-                const weiBigInt = this.decimalStringToWei(s)
-                this.$set(this.params, index, weiBigInt.toString())
-                return
-            }
-
-            // Integer input: decide by magnitude
-            const numValue = BigInt(s)
-            if (numValue > (BigInt(10) ** BigInt(15))) {
-                // Likely already wei -> convert to VET (decimal string)
-                const etherStr = this.weiToDecimalString(numValue)
-                this.$set(this.params, index, etherStr)
-            } else {
-                // Likely VET integer -> convert to wei
-                const weiValue = numValue * vet
-                this.$set(this.params, index, weiValue.toString())
-            }
-        } catch (error) {
-            // Silently fail
-        }
-    }
-
-    private convertPayableValue() {
-        if (!this.value || String(this.value).trim() === '') {
-            return
-        }
-
-        const s = String(this.value).trim().replace(',', '.')
-        const vet = BigInt(10) ** BigInt(18)
-
-        try {
-            if (s.includes('.')) {
-                // Treat as VET decimal -> convert to wei
-                const weiBigInt = this.decimalStringToWei(s)
-                this.value = weiBigInt.toString()
-                return
-            }
-
-            const numValue = BigInt(s)
-            if (numValue > (BigInt(10) ** BigInt(15))) {
-                // Likely wei -> convert to VET decimal string
-                this.value = this.weiToDecimalString(numValue)
-            } else {
-                // VET integer -> convert to wei
-                const weiValue = numValue * vet
-                this.value = weiValue.toString()
-            }
-        } catch (error) {
-            // Silently fail
-        }
-    }
-
-    // Convert a decimal string like "1.234" to a wei BigInt (handles up to 18 fractional digits).
-    private decimalStringToWei(input: string): bigint {
-        const normalized = String(input).trim().replace(',', '.')
-        const vet = BigInt(10) ** BigInt(18)
-        const parts = normalized.split('.')
-        const intPart = parts[0] === '' ? '0' : parts[0]
-        const fracPart = parts[1] || ''
-        const frac18 = (fracPart + '0'.repeat(18)).slice(0, 18) // pad or truncate to 18
-        const intBig = BigInt(intPart)
-        const fracBig = frac18 === '' ? 0n : BigInt(frac18)
-        return intBig * vet + fracBig
-    }
-
-    // Convert wei BigInt to a decimal string with up to 18 fractional digits, trimming trailing zeros.
-    private weiToDecimalString(wei: bigint): string {
-        const vet = BigInt(10) ** BigInt(18)
-        const intPart = wei / vet
-        let fracPart = (wei % vet).toString().padStart(18, '0')
-        // remove trailing zeros in fractional part
-        fracPart = fracPart.replace(/0+$/, '')
-        return fracPart ? `${intPart.toString()}.${fracPart}` : intPart.toString()
-    }
 }
 </script>
 <style lang="scss" scoped>
