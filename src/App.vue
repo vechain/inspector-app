@@ -29,12 +29,20 @@ export default class App extends Vue {
 <style>
 html {
     height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 body {
-    height: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0 !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 .router-view {
-    height: 100%;
+    flex: 1;
     overflow: hidden;
 }
 </style>

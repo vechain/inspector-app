@@ -219,5 +219,41 @@ export default class TabBar extends Vue {
     height: 100%;
     min-width: 48px;
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .tab-item {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .tab-name {
+        max-width: 100px;
+        font-size: 0.8rem;
+    }
+
+    .tab-count {
+        min-width: 40px;
+        padding: 0 0.5rem;
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .tab-item {
+        padding: 0.4rem 0.6rem;
+    }
+
+    .tab-name {
+        max-width: 80px;
+        font-size: 0.75rem;
+    }
+
+    .tab-pin,
+    .tab-close {
+        width: 18px;
+        height: 18px;
+    }
+}
 </style>
 

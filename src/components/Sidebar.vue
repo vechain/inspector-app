@@ -506,5 +506,30 @@ export default class Sidebar extends Vue {
     flex-shrink: 0;
     text-align: center;
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 280px;
+    }
+
+    .sidebar-header {
+        padding: 0.75rem;
+    }
+
+    .sidebar-search {
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        width: 260px;
+    }
+
+    .sidebar-title h2 {
+        font-size: 1rem;
+    }
+}
 </style>
 

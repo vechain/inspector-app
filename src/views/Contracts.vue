@@ -1,20 +1,38 @@
 <template>
     <section class="contracts-layout">
+        <!-- Mobile Sidebar Toggle -->
+        <button 
+            class="mobile-sidebar-toggle"
+            @click="toggleSidebar"
+            v-if="isMobileView"
+        >
+            <b-icon :icon="isSidebarOpen ? 'times' : 'bars'"></b-icon>
+        </button>
+
         <!-- Sidebar -->
-        <Sidebar 
-            :contracts="contracts"
-            :categoryOrder="categoryOrder"
-            @open-contract="openContract"
-            @add-contract="addItem"
-            @edit-contract="edit"
-            @export-contract="exportJson"
-            @delete-contract="remove"
-            @import-contract="handleImport"
-            @drop-contract="handleDropContract"
-            @move-category-up="moveCategoryUp"
-            @move-category-down="moveCategoryDown"
-            @rename-category="renameCategory"
-        />
+        <div class="sidebar-wrapper" :class="{ 'is-open': isSidebarOpen }">
+            <Sidebar 
+                :contracts="contracts"
+                :categoryOrder="categoryOrder"
+                @open-contract="handleOpenContract"
+                @add-contract="addItem"
+                @edit-contract="edit"
+                @export-contract="exportJson"
+                @delete-contract="remove"
+                @import-contract="handleImport"
+                @drop-contract="handleDropContract"
+                @move-category-up="moveCategoryUp"
+                @move-category-down="moveCategoryDown"
+                @rename-category="renameCategory"
+            />
+        </div>
+
+        <!-- Mobile Overlay -->
+        <div 
+            v-if="isMobileView && isSidebarOpen"
+            class="sidebar-overlay"
+            @click="closeSidebar"
+        ></div>
 
         <!-- Main Content Area -->
         <div class="main-content">
@@ -108,6 +126,10 @@ export default class Contracts extends Vue {
     private openContracts: OpenContract[] = []
     private activeContractId: number | null = null
     private pinnedTabs: Set<number> = new Set()
+    
+    // Mobile state
+    private isMobileView: boolean = false
+    private isSidebarOpen: boolean = false
 
     get activeContract(): Entities.Contract | null {
         if (this.activeContractId === null) {
@@ -118,6 +140,30 @@ export default class Contracts extends Vue {
 
     getContractById(id: number): Entities.Contract | null {
         return this.contracts.find(c => c.id === id) || null
+    }
+
+    handleOpenContract(contract: Entities.Contract) {
+        this.openContract(contract)
+        // Close sidebar on mobile after opening contract
+        if (this.isMobileView) {
+            this.closeSidebar()
+        }
+    }
+
+    toggleSidebar() {
+        this.isSidebarOpen = !this.isSidebarOpen
+    }
+
+    closeSidebar() {
+        this.isSidebarOpen = false
+    }
+
+    checkMobileView() {
+        this.isMobileView = window.innerWidth < 768
+        // Close sidebar on resize if not mobile anymore
+        if (!this.isMobileView) {
+            this.isSidebarOpen = false
+        }
     }
 
     openContract(contract: Entities.Contract) {
@@ -285,6 +331,15 @@ export default class Contracts extends Vue {
         DB.subscribe('contracts', () => {
             this.list()
         })
+    }
+
+    mounted() {
+        this.checkMobileView()
+        window.addEventListener('resize', this.checkMobileView)
+    }
+
+    beforeDestroy() {
+        window.removeEventListener('resize', this.checkMobileView)
     }
 
     async prepare() {
@@ -587,6 +642,12 @@ export default class Contracts extends Vue {
     display: flex;
     height: 100%;
     overflow: hidden;
+    position: relative;
+}
+
+.sidebar-wrapper {
+    transition: transform 0.3s ease;
+    z-index: 30;
 }
 
 .main-content {
@@ -602,6 +663,75 @@ export default class Contracts extends Vue {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+/* Mobile Sidebar Toggle Button */
+.mobile-sidebar-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 40;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #3273dc;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mobile-sidebar-toggle:hover {
+    background: #2366d1;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-sidebar-toggle:active {
+    transform: scale(0.95);
+}
+
+.sidebar-overlay {
+    display: none;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .mobile-sidebar-toggle {
+        display: flex;
+    }
+
+    .sidebar-wrapper {
+        position: fixed;
+        top: 52px;
+        left: 0;
+        height: calc(100vh - 52px);
+        transform: translateX(-100%);
+        z-index: 35;
+    }
+
+    .sidebar-wrapper.is-open {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        top: 52px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 25;
+    }
+
+    .main-content {
+        width: 100%;
+    }
 }
 
 .empty-state-container {
@@ -674,5 +804,47 @@ export default class Contracts extends Vue {
     left: 0;
     color: #3273dc;
     font-weight: bold;
+}
+
+/* Additional Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .empty-state-content {
+        max-width: 90%;
+        padding: 1rem;
+    }
+
+    .empty-title {
+        font-size: 1.25rem;
+    }
+
+    .empty-description {
+        font-size: 0.9rem;
+    }
+
+    .hint-card {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .empty-state-container {
+        padding: 1rem;
+    }
+
+    .empty-title {
+        font-size: 1.1rem;
+    }
+
+    .empty-description {
+        font-size: 0.85rem;
+    }
+
+    .hint-card {
+        padding: 0.75rem;
+    }
+
+    .hint-list li {
+        font-size: 0.8rem;
+    }
 }
 </style>

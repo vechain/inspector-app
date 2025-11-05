@@ -342,5 +342,18 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
     margin: auto;
     padding: 1.5rem 1rem;
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0.75rem 0.5rem;
+    }
+}
 </style>
 

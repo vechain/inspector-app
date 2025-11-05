@@ -159,6 +159,9 @@ export default class Navbar extends Vue {
 
 .navbar {
   height: 3.25rem;
+  position: relative;
+  margin: 0;
+  padding: 0;
 }
 
 .navbar-content {
@@ -232,5 +235,74 @@ export default class Navbar extends Vue {
   color: rgba(255, 255, 255, 0.7);
   margin: 0;
   line-height: 1;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .navbar-content {
+    padding: 0 0.75rem;
+  }
+
+  .navbar-content .navbar-brand {
+    width: 100%;
+  }
+
+  .logo-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .logo-title {
+    font-size: 1.1rem;
+  }
+
+  .logo-subtitle {
+    display: none;
+  }
+
+  .navbar-item {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .navbar-menu {
+    background-color: #363636;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+  }
+
+  .navbar-menu.is-active {
+    display: block;
+  }
+
+  .navbar-burger {
+    color: white;
+  }
+  
+  .navbar-burger:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-content {
+    padding: 0 0.5rem;
+  }
+
+  .brand-logo {
+    gap: 0.5rem;
+  }
+
+  .logo-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .logo-title {
+    font-size: 1rem;
+  }
 }
 </style> 
