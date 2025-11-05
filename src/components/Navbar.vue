@@ -4,7 +4,7 @@
         <div class="navbar-brand is-marginless">
             <div class="brand-logo">
                 <div class="logo-icon">
-                    <b-icon icon="bolt" size="is-small"></b-icon>
+                    <b-icon icon="search" size="is-small"></b-icon>
                 </div>
                 <div class="logo-text">
                     <h1 class="logo-title">Inspector</h1>
