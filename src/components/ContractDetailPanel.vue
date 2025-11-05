@@ -10,14 +10,14 @@
                 @submitABI="submitABI"
             />
             <section style="margin-top: 20px;">
-                <b-field grouped>
-                    <b-field expanded>
-                        <b-field class="is-pulled-right">
+                <b-field grouped >
+                    <b-field expanded >
+                        <b-field style="width: 100%;" class="is-pulled-right">
                             <b-autocomplete
                                 rounded
                                 v-model="name"
                                 :data="filterList"
-                                placeholder="Func/Event Name"
+                                placeholder="Search for functions or events"
                                 @select="onSearchSelect"
                             >
                                 <template slot-scope="props">
