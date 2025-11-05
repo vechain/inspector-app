@@ -35,7 +35,7 @@ body {
 }
 .router-view {
     height: 100%;
-    overflow: auto;
+    overflow: hidden;
 }
 </style>
 
