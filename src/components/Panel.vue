@@ -11,7 +11,6 @@
         <div class="level-right">
           <div class="level-item">
             <b-icon
-              type="is-primary"
               size="is-small"
               :icon="props.open ? 'caret-up' : 'caret-down'"
             ></b-icon>
@@ -19,7 +18,7 @@
         </div>
       </div>
     </div>
-    <p v-if="tabs.length > 1" class="panel-tabs" style="justify-content: left">
+    <p v-if="tabs.length > 1" class="panel-tabs custom-tabs" style="justify-content: left">
       <a
         v-for="(item, index) in tabs"
         :key="index"
@@ -67,3 +66,13 @@ export default class Panel extends Vue {
   }
 }
 </script>
+<style scoped>
+.custom-tabs a {
+  color: #4a4a4a;
+}
+
+.custom-tabs a.is-active {
+  color: #3273dc;
+  border-bottom-color: #3273dc;
+}
+</style>

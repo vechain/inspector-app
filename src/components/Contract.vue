@@ -276,8 +276,8 @@ export default class Contract extends Vue {
     position: relative;
     overflow: visible;
     border: 1px solid #dbdbdb;
-    border-radius: 12px;
-    padding: 1.25rem;
+    border-radius: 8px;
+    padding: 0.75rem;
     background: white;
     transition: all 0.2s ease;
     cursor: grab;
@@ -285,7 +285,7 @@ export default class Contract extends Vue {
 }
 
 .contract-card:hover {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
     border-color: #3273dc;
 }
 
@@ -299,20 +299,20 @@ export default class Contract extends Vue {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 .contract-info {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     flex: 1;
 }
 
 .contract-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
     overflow: hidden;
     flex-shrink: 0;
 }
@@ -329,15 +329,15 @@ export default class Contract extends Vue {
 }
 
 .contract-name {
-    font-size: 1rem;
+    font-size: 0.875rem;
     font-weight: 600;
     color: #363636;
     margin: 0;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.125rem;
 }
 
 .contract-address {
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
     color: #7a7a7a;
     margin: 0;
     overflow: hidden;

@@ -27,9 +27,9 @@ export namespace Entities {
 }
 
 class Database extends Dexie {
-  public readonly contracts!: Dexie.Table<Entities.Contract, string>;
-  public readonly filters!: Dexie.Table<Entities.Filter, string>;
-  public readonly shortCuts!: Dexie.Table<Entities.ShortCuts, string>;
+  public readonly contracts!: Dexie.Table<Entities.Contract, number>;
+  public readonly filters!: Dexie.Table<Entities.Filter, number>;
+  public readonly shortCuts!: Dexie.Table<Entities.ShortCuts, number>;
 
   constructor() {
     super("inspect");

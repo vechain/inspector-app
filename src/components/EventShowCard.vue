@@ -35,11 +35,10 @@
                 </div>
             </div>
             <b-tabs
-                class="my-content"
+                class="my-content event-tabs"
                 :animated="false"
                 v-model="tabIndex"
                 size="is-small"
-                type="is-toggle"
             >
                 <b-tab-item label="Decoded">
                     <b-table :data="data">
@@ -47,12 +46,13 @@
                             <b-table-column width="20" label="#" field="id">{{props.row.id}}</b-table-column>
                             <b-table-column width="170" label="Name" field="name">{{props.row.name}}</b-table-column>
                             <b-table-column width="220" label="Type" field="type">
-                                {{props.row.type}}
-                                <sup
-                                    style="padding: 2px 5px; border-radius: 3px; font-size: 11px"
-                                    class="has-background-primary has-text-light"
-                                    v-if="props.row.indexed"
-                                >indexed</sup>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>{{props.row.type}}</span>
+                                    <span
+                                        v-if="props.row.indexed"
+                                        class="indexed-badge"
+                                    >indexed</span>
+                                </div>
                             </b-table-column>
                             <b-table-column
                                 label="Data"
@@ -170,5 +170,26 @@ export default class EventShowCard extends Vue {
 }
 .my-content .tab-content {
     padding: 20px 0;
+}
+
+/* Indexed badge styling */
+.indexed-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    background-color: #e0e0e0;
+    color: #666;
+}
+
+/* Event tabs styling - only active tab is blue */
+.event-tabs >>> .tabs li.is-active a {
+    color: #3273dc;
+    border-bottom-color: #3273dc;
+}
+
+.event-tabs >>> .tabs li:not(.is-active) a {
+    color: #4a4a4a;
 }
 </style>
