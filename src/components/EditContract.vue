@@ -384,7 +384,7 @@
         // tslint:disable-next-line:no-console
         console.error(error)
       } finally {
-        this.$emit('finished')
+        this.$emit('finished', this.form.category || '')
       }
     }
 

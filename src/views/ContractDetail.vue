@@ -119,7 +119,7 @@
                 </div>
             </section>
         </div>
-        <b-modal :width="640" :canCancel="['outside']" :active.sync="isModalActive">
+        <b-modal :width="640" :canCancel="[]" :active.sync="isModalActive">
             <EditContract @cancel="onCancelEdit" @finished="onFinishEdit" :item="contract" :isImport="false" />
         </b-modal>
     </section>
@@ -233,7 +233,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
         this.isModalActive = false
     }
 
-    async onFinishEdit() {
+    async onFinishEdit(category: string) {
         this.isModalActive = false
         // Reload the contract data
         const idOrAddress: string = this.$route.query.id || this.$route.query.address
