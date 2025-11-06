@@ -377,19 +377,24 @@
         order: order
       }
       try {
+        let contractId: number
         if (!this.isEdit) {
-          await DB.contracts.add(obj)
+          contractId = await DB.contracts.add(obj)
         } else {
+          contractId = this.form.id
           await DB.contracts
             .where('id')
             .equals(this.form.id)
             .modify(obj)
         }
+        this.$emit('finished', {
+          category: this.form.category || '',
+          contractId: contractId,
+          isNewContract: !this.isEdit
+        })
       } catch (error) {
         // tslint:disable-next-line:no-console
         console.error(error)
-      } finally {
-        this.$emit('finished')
       }
     }
 

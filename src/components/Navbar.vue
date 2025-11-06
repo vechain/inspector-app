@@ -70,23 +70,36 @@
                         <b-icon :icon="isDarkMode ? 'sun' : 'moon'" size="is-small"></b-icon>
                     </button>
                 </div>
-                <b-tag v-if="networks.length === 1" size="is-medium" type="is-warning" style="margin: auto 0px;"  >{{networks[0].label}}</b-tag>
+                <b-tag v-if="networks.length === 1" size="is-medium" type="is-warning" style="margin: auto 0px;">
+                    <b-icon icon="globe" size="is-small" style="margin-right: 0.5rem;"></b-icon>
+                    {{networks[0].label}}
+                </b-tag>
                 <b-dropdown
-                v-if="networks.length > 1"
+                v-if="networks.length > 1 || customNetworks.length > 0"
                 size="sm"
                 :text="network"
                 toggle-class="py-0 px-1"
+                position="is-bottom-left"
                 style="vertical-align:top"
                 >
                 <template slot="trigger">
-                        <b-button class="navbar-item" type="is-dark" :label="network" icon-right="caret-down"/>
+                        <b-button class="navbar-item" type="is-dark" :label="network" icon-left="globe" icon-right="caret-down"/>
                     </template>
                         <b-dropdown-item
-                            v-for="(n, i) in switchableNetworks"
+                            v-for="(n, i) in networks"
                             :key="i"
                             :value="n.name"
                             @click="onChange(n.name)"
-                        >{{n.label}}</b-dropdown-item>
+                            :class="{ 'is-active-network': isCurrentNetwork(n.name) }"
+                        >
+                            <span>{{n.label}}</span>
+                            <b-icon v-if="isCurrentNetwork(n.name)" icon="check" size="is-small" class="network-check-icon"></b-icon>
+                        </b-dropdown-item>
+                        <hr class="dropdown-divider">
+                        <b-dropdown-item @click="openManageNetworksModal">
+                            <b-icon icon="cog" size="is-small"></b-icon>
+                            <span>Manage Networks</span>
+                        </b-dropdown-item>
                     </b-dropdown>
             </div>
         </div>
@@ -99,8 +112,16 @@ import { Vue, Component } from 'vue-property-decorator'
 import DB, { Entities } from '../database'
 import { isSoloNode } from '@/create-connex'
 import { networkToGenesisId, genesisIdToNetwork } from '@/utils'
+import AddNetworkModal from './AddNetworkModal.vue'
+import ManageNetworksModal from './ManageNetworksModal.vue'
+import { getCustomNetworks, getNetworkById } from '../services/network-service'
 
-@Component
+@Component({
+    components: {
+        AddNetworkModal,
+        ManageNetworksModal
+    }
+})
 export default class Navbar extends Vue {
     private routes = [
         { name: 'contracts', text: 'Contracts' },
@@ -114,6 +135,7 @@ export default class Navbar extends Vue {
     private node = localStorage.getItem('custom-node')
     private genesis = localStorage.getItem('custom-network')
     private isDarkMode: boolean = false
+    private customNetworks: Entities.Network[] = []
 
     get hasConnex() {
         return !!window.connex
@@ -125,32 +147,89 @@ export default class Navbar extends Vue {
 
 
     get network() {
-            switch (genesisIdToNetwork(this.$connex.thor.genesis.id)) {
+            const netType = genesisIdToNetwork(this.$connex.thor.genesis.id)
+            switch (netType) {
                 case 'main': return 'Mainnet'
                 case 'test': return 'Testnet'
                 case 'solo': return 'Solonet'
-                default: return 'Custom'
+                default: {
+                    const customNet = this.customNetworks.find(n => n.genesisId === this.$connex.thor.genesis.id)
+                    return customNet ? customNet.name : 'Custom'
+                }
             }
         }
 
     get networks(): Array<{ name: string, label: string }> {
-            if(isSoloNode) return [ {
-                name: 'solo',
-                label: 'SoloNet',
-                }]
-            return [
-                { name: 'main',label: 'Mainnet',  },
-                { name: 'test',label: 'Testnet', },
-                ...(isSoloNode ? [{ name:'solo',label: 'Solonet', }] : []),
+            const baseNetworks = isSoloNode ? [
+                { name: 'solo', label: 'SoloNet' }
+            ] : [
+                { name: 'main', label: 'Mainnet' },
+                { name: 'test', label: 'Testnet' },
+                ...(isSoloNode ? [{ name: 'solo', label: 'Solonet' }] : [])
             ]
+            
+            const customNets = this.customNetworks.map(net => ({
+                name: `custom-${net.id}`,
+                label: net.name
+            }))
+            
+            return [...baseNetworks, ...customNets]
         }
-    get switchableNetworks(): Array<{ name: string, label: string }> {
-        return this.networks.filter(i =>  this.$connex.thor.genesis.id !== networkToGenesisId(i.name))
+
+    private isCurrentNetwork(networkName: string): boolean {
+        const currentGenesisId = this.$connex.thor.genesis.id
+        
+        // Check if it's a custom network
+        if (networkName.startsWith('custom-')) {
+            const customNet = this.customNetworks.find(n => `custom-${n.id}` === networkName)
+            return customNet ? customNet.genesisId === currentGenesisId : false
+        }
+        
+        // Check built-in networks
+        return networkToGenesisId(networkName) === currentGenesisId
     }
         
-    onChange(type: 'main' | 'test' | 'solo' | 'custom') {
+    private onChange(type: string) {
+        // Don't reload if already on this network
+        if (this.isCurrentNetwork(type)) {
+            return
+        }
         localStorage.setItem('last-net', type)
         window.location.href = window.location.origin
+    }
+
+    private openAddNetworkModal() {
+        this.$buefy.modal.open({
+            parent: this,
+            component: AddNetworkModal,
+            hasModalCard: true,
+            trapFocus: true
+        })
+    }
+
+    private openManageNetworksModal() {
+        this.$buefy.modal.open({
+            parent: this,
+            component: ManageNetworksModal,
+            hasModalCard: true,
+            trapFocus: true,
+            events: {
+                close: () => {
+                    this.loadCustomNetworks()
+                },
+                'network-deleted': () => {
+                    this.loadCustomNetworks()
+                }
+            }
+        })
+    }
+
+    private async loadCustomNetworks() {
+        try {
+            this.customNetworks = await getCustomNetworks()
+        } catch (error) {
+            console.error('Failed to load custom networks:', error)
+        }
     }
     private async getList() {
         this.views = await DB.filters
@@ -186,6 +265,7 @@ export default class Navbar extends Vue {
         this.initTheme()
         this.getList()
         this.countShortCuts()
+        this.loadCustomNetworks()
     }
 
 }
@@ -389,5 +469,43 @@ color: white;
   .logo-title {
     font-size: 1rem;
   }
+}
+
+/* Network dropdown positioning fix */
+.navbar-end ::v-deep .dropdown-menu {
+  right: 0;
+  left: auto;
+  min-width: 200px;
+}
+
+.navbar-end ::v-deep .dropdown-content {
+  padding: 0.5rem 0;
+}
+
+.navbar-end ::v-deep .dropdown-item {
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.navbar-end ::v-deep .dropdown-item.is-active-network {
+  font-weight: 600;
+  color: var(--primary-color, #485fc7);
+}
+
+.navbar-end ::v-deep .network-check-icon {
+  color: var(--primary-color, #485fc7);
+  margin-left: auto;
+}
+
+/* Dark mode for dropdown items */
+[data-theme="dark"] .navbar-end ::v-deep .dropdown-item.is-active-network {
+  color: #6bb6ff;
+}
+
+[data-theme="dark"] .navbar-end ::v-deep .network-check-icon {
+  color: #6bb6ff;
 }
 </style> 

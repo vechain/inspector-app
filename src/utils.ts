@@ -23,4 +23,16 @@ export function genesisIdToNetwork(id: string) {
         return "";
     }
   }
+
+  export function isCustomNetwork(net: string): boolean {
+    return net.startsWith('custom-')
+  }
+
+  export function getCustomNetworkId(net: string): number | null {
+    if (!isCustomNetwork(net)) {
+      return null
+    }
+    const id = parseInt(net.replace('custom-', ''), 10)
+    return isNaN(id) ? null : id
+  }
   

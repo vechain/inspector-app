@@ -194,6 +194,7 @@ export default class Sidebar extends Vue {
             if (!b) return -1
             return a.localeCompare(b)
         })
+        
         return sorted
     }
 
@@ -205,6 +206,10 @@ export default class Sidebar extends Vue {
 
     toggleCategory(category: string) {
         this.$set(this.expandedCategories, category, !this.expandedCategories[category])
+    }
+
+    expandCategory(category: string) {
+        this.$set(this.expandedCategories, category, true)
     }
 
     clearSearch() {
@@ -315,9 +320,12 @@ export default class Sidebar extends Vue {
         setupFileInput('filesMultiple')
 
         // Initialize all categories as expanded
-        this.sortedCategories.forEach(category => {
-            this.$set(this.expandedCategories, category, true)
-        })
+        this.initializeCategoryExpansion()
+    }
+
+    initializeCategoryExpansion() {
+        // Initialize Uncategorized as expanded by default
+        this.$set(this.expandedCategories, '', true)
     }
 }
 </script>
