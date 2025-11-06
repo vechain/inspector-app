@@ -296,6 +296,12 @@ export default class ManageNetworksModal extends Vue {
     gap: 0.5rem;
 }
 
+.network-actions ::v-deep .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .add-network-section {
     padding: 1rem 1.5rem;
     border-top: 1px solid var(--border-color, #dbdbdb);
