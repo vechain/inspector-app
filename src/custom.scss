@@ -28,3 +28,395 @@ $link-focus-border: $primary;
 
 @import '../node_modules/bulma/';
 @import '../node_modules/buefy/src/scss/buefy';
+
+// Theme System - CSS Custom Properties
+:root {
+  // Light Theme (Default)
+  --body-background: #ffffff;
+  --body-background-alt: #f5f5f5;
+  --text-color: #4a4a4a;
+  --text-color-light: #7a7a7a;
+  --text-color-strong: #363636;
+  
+  // Borders
+  --border-color: #dbdbdb;
+  --border-color-light: #ededed;
+  
+  // Inputs
+  --input-background: #ffffff;
+  --input-border: #dbdbdb;
+  --input-text: #363636;
+  --input-placeholder: #b5b5b5;
+  
+  // Buttons
+  --button-background: #ffffff;
+  --button-border: #dbdbdb;
+  --button-text: #363636;
+  
+  // Cards & Panels
+  --card-background: #ffffff;
+  --card-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.1), 0 0px 0 1px rgba(10, 10, 10, 0.02);
+  --panel-heading-background: #f5f5f5;
+  --panel-block-background: #ffffff;
+  
+  // Modals
+  --modal-background: #ffffff;
+  --modal-card-head-background: #ffffff;
+  --modal-card-foot-background: #ffffff;
+  
+  // Navbar
+  --navbar-dark-background: #363636;
+  --navbar-dark-item-color: #f5f5f5;
+  --navbar-dark-item-hover: rgba(255, 255, 255, 0.1);
+  
+  // Primary colors
+  --primary-color: #3273dc;
+  --primary-invert: #ffffff;
+  --info-color: #3298dc;
+  --success-color: #48c774;
+  --warning-color: #ffdd57;
+  --danger-color: #f44336;
+  
+  // Sidebar
+  --sidebar-background: #ffffff;
+  --sidebar-border: #dbdbdb;
+  
+  // Animations
+  --anim-highlight-bg-from: rgba(0, 209, 178, 0.8);
+  --anim-highlight-text-from: #fff;
+  --anim-highlight-text-mid: rgba(0, 0, 0, 0.6);
+  --anim-highlight-bg-mid: rgba(0, 209, 178, 0.3);
+  --anim-highlight-text-end: #000;
+}
+
+[data-theme="dark"] {
+  // Dark Theme
+  --body-background: #1a1a1a;
+  --body-background-alt: #2a2a2a;
+  --text-color: #e0e0e0;
+  --text-color-light: #b0b0b0;
+  --text-color-strong: #f5f5f5;
+  
+  // Borders
+  --border-color: #404040;
+  --border-color-light: #353535;
+  
+  // Inputs
+  --input-background: #2a2a2a;
+  --input-border: #404040;
+  --input-text: #e0e0e0;
+  --input-placeholder: #808080;
+  
+  // Buttons
+  --button-background: #2a2a2a;
+  --button-border: #404040;
+  --button-text: #e0e0e0;
+  
+  // Cards & Panels
+  --card-background: #252525;
+  --card-shadow: 0 0.5em 1em -0.125em rgba(0, 0, 0, 0.4), 0 0px 0 1px rgba(255, 255, 255, 0.05);
+  --panel-heading-background: #2a2a2a;
+  --panel-block-background: #252525;
+  
+  // Modals
+  --modal-background: #252525;
+  --modal-card-head-background: #2a2a2a;
+  --modal-card-foot-background: #2a2a2a;
+  
+  // Navbar
+  --navbar-dark-background: #1f1f1f;
+  --navbar-dark-item-color: #e0e0e0;
+  --navbar-dark-item-hover: rgba(255, 255, 255, 0.15);
+  
+  // Primary colors (slightly adjusted for dark mode)
+  --primary-color: #4a9eff;
+  --primary-invert: #ffffff;
+  --info-color: #4aa3e3;
+  --success-color: #5ad67d;
+  --warning-color: #ffea7f;
+  --danger-color: #ff5252;
+  
+  // Sidebar
+  --sidebar-background: #1f1f1f;
+  --sidebar-border: #404040;
+  
+  // Animations
+  --anim-highlight-bg-from: rgba(0, 209, 178, 0.6);
+  --anim-highlight-text-from: #fff;
+  --anim-highlight-text-mid: rgba(255, 255, 255, 0.8);
+  --anim-highlight-bg-mid: rgba(0, 209, 178, 0.2);
+  --anim-highlight-text-end: #e0e0e0;
+}
+
+// Apply theme variables to Bulma components
+body {
+  background-color: var(--body-background);
+  color: var(--text-color);
+}
+
+.box, .panel, .panel-block {
+  background-color: var(--card-background);
+  box-shadow: var(--card-shadow);
+}
+
+.panel-heading {
+  background-color: var(--panel-heading-background);
+  color: var(--text-color-strong);
+}
+
+.input, .textarea, .select select {
+  background-color: var(--input-background);
+  border-color: var(--input-border);
+  color: var(--input-text);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  
+  &::placeholder {
+    color: var(--input-placeholder);
+  }
+  
+  &:hover:not(:focus) {
+    border-color: var(--text-color-light);
+  }
+  
+  &:focus {
+    border-color: var(--primary-color);
+  }
+}
+
+.button {
+  background-color: var(--button-background);
+  border-color: var(--button-border);
+  color: var(--button-text);
+}
+
+.modal-card, .modal-content {
+  background-color: var(--modal-background);
+}
+
+.card {
+  background-color: var(--card-background);
+  box-shadow: var(--card-shadow);
+  color: var(--text-color);
+}
+
+.title, .subtitle {
+  color: var(--text-color-strong);
+}
+
+.label {
+  color: var(--text-color);
+}
+
+.help {
+  color: var(--text-color-light);
+}
+
+// Ensure dropdown menus work in dark mode
+.dropdown-content, .dropdown-menu {
+  background-color: var(--card-background);
+  box-shadow: var(--card-shadow);
+}
+
+.dropdown-item {
+  color: var(--text-color);
+  
+  &:hover {
+    background-color: var(--body-background-alt);
+  }
+}
+
+// Table styles for dark mode
+.table {
+  background-color: var(--card-background);
+  color: var(--text-color);
+  
+  th, td {
+    border-color: var(--border-color);
+    color: var(--text-color);
+  }
+  
+  thead th {
+    color: var(--text-color-strong);
+  }
+}
+
+// Message components
+.message {
+  background-color: var(--card-background);
+  
+  .message-body {
+    border-color: var(--border-color);
+    color: var(--text-color);
+  }
+}
+
+// Tag styles
+.tag:not(.is-primary):not(.is-info):not(.is-success):not(.is-warning):not(.is-danger) {
+  background-color: var(--body-background-alt);
+  color: var(--text-color);
+}
+
+// Modal theming
+.modal {
+  .modal-background {
+    background-color: rgba(10, 10, 10, 0.86);
+  }
+  
+  .modal-card {
+    background-color: var(--modal-background);
+    
+    .modal-card-head {
+      background-color: var(--modal-card-head-background);
+      border-bottom: 1px solid var(--border-color);
+      
+      .modal-card-title {
+        color: var(--text-color-strong);
+      }
+      
+      .delete {
+        &:hover, &:focus {
+          background-color: rgba(10, 10, 10, 0.3);
+        }
+      }
+    }
+    
+    .modal-card-body {
+      background-color: var(--modal-background);
+      color: var(--text-color);
+      
+      .field label {
+        color: var(--text-color);
+      }
+      
+      .help {
+        color: var(--text-color-light);
+      }
+    }
+    
+    .modal-card-foot {
+      background-color: var(--modal-card-foot-background);
+      border-top: 1px solid var(--border-color);
+    }
+  }
+  
+  .modal-content {
+    background-color: var(--modal-background);
+  }
+}
+
+// Dialog (Buefy confirm/alert dialogs)
+.dialog {
+  .modal-card {
+    background-color: var(--modal-background);
+  }
+  
+  .modal-card-body {
+    color: var(--text-color);
+  }
+  
+  .modal-card-title {
+    color: var(--text-color-strong);
+  }
+}
+
+// Notification/Toast
+.notification {
+  background-color: var(--card-background);
+  color: var(--text-color);
+}
+
+// Loading component
+.loading-overlay {
+  .loading-background {
+    background-color: rgba(10, 10, 10, 0.5);
+  }
+}
+
+// Autocomplete dropdown
+.autocomplete {
+  .dropdown-content {
+    background-color: var(--card-background);
+  }
+  
+  .dropdown-item {
+    color: var(--text-color);
+    
+    &.is-hovered {
+      background-color: var(--body-background-alt);
+      color: var(--text-color-strong);
+      
+      // Ensure nested elements also change color on hover
+      .media-content {
+        p {
+          color: var(--text-color-strong) !important;
+        }
+        
+        .has-text-grey-light {
+          color: var(--text-color) !important;
+        }
+      }
+    }
+  }
+  
+  .media-content {
+    p {
+      color: var(--text-color);
+    }
+    
+    .has-text-grey {
+      color: var(--text-color-light) !important;
+    }
+    
+    .has-text-grey-light {
+      color: var(--text-color-light) !important;
+    }
+  }
+}
+
+// Button improvements
+.button:not(.is-primary):not(.is-info):not(.is-success):not(.is-warning):not(.is-danger) {
+  &:hover:not(:disabled) {
+    background-color: var(--body-background-alt);
+    border-color: var(--text-color-light);
+    color: var(--text-color-strong);
+  }
+}
+
+// Modal buttons specific styling
+.modal-card-foot {
+  .button:not(.is-primary):not(.is-info):not(.is-success):not(.is-warning):not(.is-danger) {
+    &:hover:not(:disabled) {
+      background-color: var(--body-background-alt);
+      border-color: var(--text-color-light);
+      color: var(--text-color-strong);
+    }
+  }
+}
+
+// Dark mode specific overrides
+[data-theme="dark"] {
+  .modal {
+    .modal-background {
+      background-color: rgba(0, 0, 0, 0.9);
+    }
+  }
+  
+  .loading-overlay {
+    .loading-background {
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+  }
+  
+  // Override Bulma's text helper classes for dark mode
+  .has-text-grey {
+    color: #b0b0b0 !important;
+  }
+  
+  .has-text-grey-light {
+    color: #909090 !important;
+  }
+  
+  .has-text-dark {
+    color: #f5f5f5 !important;
+  }
+}

@@ -329,7 +329,63 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    background: #fafafa;
+    background: var(--body-background-alt);
+}
+
+/* Remove borders from Panel components in contract detail */
+.contract-detail-panel >>> .panel {
+    border: none !important;
+}
+
+.contract-detail-panel >>> .panel-heading {
+    border: none !important;
+}
+
+.contract-detail-panel >>> .panel-block {
+    border: none !important;
+}
+
+.contract-detail-panel >>> .panel-tabs {
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Improve text visibility in dark mode */
+.contract-detail-panel >>> .panel-heading strong {
+    color: var(--text-color-strong);
+}
+
+.contract-detail-panel >>> .media-content strong {
+    color: var(--text-color-strong);
+}
+
+.contract-detail-panel >>> .media-content p {
+    color: var(--text-color);
+}
+
+.contract-detail-panel >>> .custom-tabs a {
+    color: var(--text-color-strong);
+}
+
+.contract-detail-panel >>> .custom-tabs a:hover {
+    border-bottom-color: #6bb6ff;
+}
+
+.contract-detail-panel >>> .custom-tabs a.is-active {
+    color: var(--primary-color);
+}
+
+/* Buefy tabs styling */
+.contract-detail-panel >>> .b-tabs .tabs a {
+    color: var(--text-color-strong);
+}
+
+.contract-detail-panel >>> .b-tabs .tabs a:hover {
+    color: var(--text-color-strong);
+    border-bottom-color: #6bb6ff;
+}
+
+.contract-detail-panel >>> .b-tabs .tabs li.is-active a {
+    color: var(--primary-color);
 }
 
 .code-pre pre {

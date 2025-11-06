@@ -655,7 +655,7 @@ export default class Contracts extends Vue {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: #fafafa;
+    background: var(--body-background-alt);
 }
 
 .content-area {
@@ -674,7 +674,7 @@ export default class Contracts extends Vue {
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: #3273dc;
+    background: var(--primary-color);
     color: white;
     border: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
@@ -686,9 +686,10 @@ export default class Contracts extends Vue {
 }
 
 .mobile-sidebar-toggle:hover {
-    background: #2366d1;
+    background: var(--primary-color);
     transform: scale(1.1);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    opacity: 0.9;
 }
 
 .mobile-sidebar-toggle:active {
@@ -754,13 +755,13 @@ export default class Contracts extends Vue {
 .empty-title {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #363636;
+    color: var(--text-color-strong);
     margin-bottom: 0.75rem;
 }
 
 .empty-description {
     font-size: 1rem;
-    color: #7a7a7a;
+    color: var(--text-color-light);
     margin-bottom: 2rem;
     line-height: 1.5;
 }
@@ -770,8 +771,8 @@ export default class Contracts extends Vue {
 }
 
 .hint-card {
-    background: white;
-    border: 1px solid #dbdbdb;
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 1.5rem;
     text-align: left;
@@ -780,7 +781,7 @@ export default class Contracts extends Vue {
 .hint-title {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #363636;
+    color: var(--text-color-strong);
     margin-bottom: 0.75rem;
 }
 
@@ -792,7 +793,7 @@ export default class Contracts extends Vue {
 
 .hint-list li {
     font-size: 0.875rem;
-    color: #7a7a7a;
+    color: var(--text-color-light);
     padding: 0.25rem 0;
     padding-left: 1.25rem;
     position: relative;
@@ -802,7 +803,7 @@ export default class Contracts extends Vue {
     content: "•";
     position: absolute;
     left: 0;
-    color: #3273dc;
+    color: var(--primary-color);
     font-weight: bold;
 }
 

@@ -32,6 +32,7 @@ html {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    background-color: var(--body-background);
 }
 body {
     height: 100vh;
@@ -40,10 +41,14 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    background-color: var(--body-background);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 .router-view {
     flex: 1;
     overflow: hidden;
+    background-color: var(--body-background);
 }
 </style>
 

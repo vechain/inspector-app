@@ -275,10 +275,10 @@ export default class Contract extends Vue {
 .contract-card {
     position: relative;
     overflow: visible;
-    border: 1px solid #dbdbdb;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 0.75rem;
-    background: white;
+    background: var(--card-background);
     transition: all 0.2s ease;
     cursor: grab;
     margin: auto;
@@ -286,7 +286,7 @@ export default class Contract extends Vue {
 
 .contract-card:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-    border-color: #3273dc;
+    border-color: var(--primary-color);
 }
 
 .contract-card.is-dragging {
@@ -331,14 +331,14 @@ export default class Contract extends Vue {
 .contract-name {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #363636;
+    color: var(--text-color-strong);
     margin: 0;
     margin-bottom: 0.125rem;
 }
 
 .contract-address {
     font-size: 0.6875rem;
-    color: #7a7a7a;
+    color: var(--text-color-light);
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -365,7 +365,7 @@ export default class Contract extends Vue {
 }
 
 .more-button:hover {
-    background: #f5f5f5;
+    background: var(--body-background-alt);
     border-radius: 4px;
 }
 
@@ -384,7 +384,7 @@ export default class Contract extends Vue {
 }
 
 .dropdown-content {
-    background-color: white;
+    background-color: var(--card-background);
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     padding: 0.5rem 0;
@@ -397,15 +397,17 @@ export default class Contract extends Vue {
     padding: 0.5rem 1rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    color: var(--text-color);
 }
 
 .dropdown-item:hover {
-    background-color: #f5f5f5;
+    background-color: var(--body-background-alt);
+    color: var(--text-color-strong);
 }
 
 .dropdown-divider {
     margin: 0.5rem 0;
-    border-top: 1px solid #ededed;
+    border-top: 1px solid var(--border-color-light);
 }
 
 /* Actions */
@@ -424,8 +426,8 @@ export default class Contract extends Vue {
 }
 
 .contract-actions .button:not(:disabled):hover {
-    border-color: #3273dc;
-    color: #3273dc;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 /* Detail View (old UI) styles */
@@ -466,7 +468,7 @@ export default class Contract extends Vue {
 }
 
 .detail-more-menu .dropdown-content {
-    background-color: white;
+    background-color: var(--card-background);
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     padding: 0.5rem 0;
@@ -479,15 +481,17 @@ export default class Contract extends Vue {
     padding: 0.5rem 1rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    color: var(--text-color);
 }
 
 .detail-more-menu .dropdown-item:hover {
-    background-color: #f5f5f5;
+    background-color: var(--body-background-alt);
+    color: var(--text-color-strong);
 }
 
 .detail-more-menu .dropdown-divider {
     margin: 0.5rem 0;
-    border-top: 1px solid #ededed;
+    border-top: 1px solid var(--border-color-light);
 }
 </style>
 
