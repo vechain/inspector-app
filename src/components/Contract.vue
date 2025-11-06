@@ -57,12 +57,7 @@
         </div>
 
         <!-- Actions -->
-        <div class="contract-actions">
-            <button class="button is-small is-outlined action-edit" @click.stop="handleView">
-                <b-icon icon="eye" size="is-small"></b-icon>
-                <span>View</span>
-            </button>
-        </div>
+        <!-- View button removed for cleaner design - click card to view -->
     </div>
 
     <!-- Detail View (old UI with 3-dots menu) -->
@@ -280,13 +275,17 @@ export default class Contract extends Vue {
     padding: 0.75rem;
     background: var(--card-background);
     transition: all 0.2s ease;
-    cursor: grab;
+    cursor: pointer;
     margin: auto;
 }
 
 .contract-card:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
     border-color: var(--primary-color);
+}
+
+.contract-card:active:not(.is-dragging) {
+    transform: scale(0.98);
 }
 
 .contract-card.is-dragging {
@@ -299,7 +298,6 @@ export default class Contract extends Vue {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 0.5rem;
 }
 
 .contract-info {
