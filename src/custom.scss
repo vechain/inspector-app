@@ -154,6 +154,36 @@ body {
   color: var(--text-color);
 }
 
+// Custom scrollbar styling
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-color-light) var(--body-background-alt);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--body-background-alt);
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--text-color-light);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--text-color);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--body-background-alt);
+}
+
 .box, .panel, .panel-block {
   background-color: var(--card-background);
   box-shadow: var(--card-shadow);
