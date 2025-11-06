@@ -12,6 +12,7 @@
         <!-- Sidebar -->
         <div class="sidebar-wrapper" :class="{ 'is-open': isSidebarOpen }">
             <Sidebar 
+                ref="sidebar"
                 :contracts="contracts"
                 :categoryOrder="categoryOrder"
                 @open-contract="handleOpenContract"
@@ -19,7 +20,8 @@
                 @edit-contract="edit"
                 @export-contract="exportJson"
                 @delete-contract="remove"
-                @import-contract="handleImport"
+                @show-import-instructions="handleShowImportInstructions"
+                @files-selected="handleFilesSelected"
                 @drop-contract="handleDropContract"
                 @move-category-up="moveCategoryUp"
                 @move-category-down="moveCategoryDown"
@@ -89,6 +91,42 @@
         <b-modal :width="640" :canCancel="['outside']" :active.sync="isModalActive">
             <EditContract @cancel="onCancel" @finished="reload" :item="currentItem" :isImport="isImport" />
         </b-modal>
+
+        <!-- Import Instructions Modal -->
+        <b-modal :active.sync="showInstructionsModal" :canCancel="['escape']">
+            <ImportInstructionsModal 
+                @cancel="showInstructionsModal = false"
+                @proceed="handleInstructionsProceed"
+            />
+        </b-modal>
+
+        <!-- Import Preview Modal -->
+        <b-modal :active.sync="showPreviewModal" :canCancel="['escape']">
+            <ImportPreviewModal 
+                :parsedContracts="parsedContracts"
+                :existingCategories="existingCategories"
+                @cancel="showPreviewModal = false"
+                @import-selected="handleImportSelected"
+                @show-errors="handleShowErrors"
+            />
+        </b-modal>
+
+        <!-- Import Error Modal -->
+        <b-modal :active.sync="showErrorModal" :canCancel="['escape']">
+            <ImportErrorModal 
+                :errorContracts="errorContracts"
+                @close="showErrorModal = false"
+            />
+        </b-modal>
+
+        <!-- Address Collection Modal -->
+        <b-modal :active.sync="showAddressCollectionModal" :canCancel="['escape']">
+            <ImportAddressCollectionModal 
+                :contracts="contractsNeedingAddresses"
+                @cancel="showAddressCollectionModal = false"
+                @continue="handleAddressesProvided"
+            />
+        </b-modal>
     </section>
 </template>
 
@@ -98,7 +136,12 @@ import Sidebar from '../components/Sidebar.vue'
 import TabBar from '../components/TabBar.vue'
 import ContractDetailPanel from '../components/ContractDetailPanel.vue'
 import EditContract from '../components/EditContract.vue'
+import ImportInstructionsModal from '../components/ImportInstructionsModal.vue'
+import ImportPreviewModal from '../components/ImportPreviewModal.vue'
+import ImportErrorModal from '../components/ImportErrorModal.vue'
+import ImportAddressCollectionModal from '../components/ImportAddressCollectionModal.vue'
 import DB, { Entities } from '../database'
+import { parseMultipleFiles, ParseResult } from '../utils/import-utils'
 
 interface OpenContract {
     id: number
@@ -111,7 +154,11 @@ interface OpenContract {
         Sidebar,
         TabBar,
         ContractDetailPanel,
-        EditContract
+        EditContract,
+        ImportInstructionsModal,
+        ImportPreviewModal,
+        ImportErrorModal,
+        ImportAddressCollectionModal
     }
 })
 export default class Contracts extends Vue {
@@ -131,11 +178,30 @@ export default class Contracts extends Vue {
     private isMobileView: boolean = false
     private isSidebarOpen: boolean = false
 
+    // Import state
+    private showInstructionsModal: boolean = false
+    private showPreviewModal: boolean = false
+    private showErrorModal: boolean = false
+    private showAddressCollectionModal: boolean = false
+    private parsedContracts: ParseResult[] = []
+    private errorContracts: ParseResult[] = []
+    private contractsNeedingAddresses: Entities.Contract[] = []
+
     get activeContract(): Entities.Contract | null {
         if (this.activeContractId === null) {
             return null
         }
         return this.contracts.find(c => c.id === this.activeContractId) || null
+    }
+
+    get existingCategories(): string[] {
+        const categories = new Set<string>()
+        this.contracts.forEach(contract => {
+            if (contract.category && contract.category.trim() !== '') {
+                categories.add(contract.category)
+            }
+        })
+        return Array.from(categories).sort()
     }
 
     getContractById(id: number): Entities.Contract | null {
@@ -442,22 +508,142 @@ export default class Contracts extends Vue {
         this.open()
     }
 
-    private handleImport(json: Entities.Contract) {
-        this.currentItem = {
-            abi: json.abi,
-            address: json.address,
-            name: json.name
+    private handleShowImportInstructions() {
+        const hideInstructions = localStorage.getItem('hideImportInstructions')
+        if (hideInstructions === 'true') {
+            this.showFilePickerDialog()
+        } else {
+            this.showInstructionsModal = true
         }
-        const temp = this.contracts.find(
-            (contract) =>
-                contract.address.toLowerCase() ===
-                json.address.toLowerCase()
+    }
+
+    private handleInstructionsProceed() {
+        this.showInstructionsModal = false
+        this.showFilePickerDialog()
+    }
+
+    private showFilePickerDialog() {
+        this.$buefy.dialog.confirm({
+            title: 'Choose Import Type',
+            message: 'How would you like to import your contracts?',
+            confirmText: 'Select Files',
+            cancelText: 'Select Folder',
+            type: 'is-info',
+            hasIcon: true,
+            onConfirm: () => {
+                const sidebar = this.$refs.sidebar as any
+                if (sidebar && sidebar.triggerFileUpload) {
+                    sidebar.triggerFileUpload('files')
+                }
+            },
+            onCancel: () => {
+                const sidebar = this.$refs.sidebar as any
+                if (sidebar && sidebar.triggerFileUpload) {
+                    sidebar.triggerFileUpload('folder')
+                }
+            }
+        })
+    }
+
+    private async handleFilesSelected(files: File[]) {
+        if (files.length === 0) {
+            return
+        }
+
+        const loadingComponent = this.$buefy.loading.open({
+            container: null
+        })
+        
+        try {
+            const results = await parseMultipleFiles(files)
+            this.parsedContracts = results
+            this.errorContracts = results.filter(r => !r.success && !r.skipped)
+            
+            if (results.length === 0) {
+                this.$buefy.toast.open({
+                    message: 'No valid contract files found',
+                    type: 'is-warning'
+                })
+                return
+            }
+
+            this.showPreviewModal = true
+        } catch (error) {
+            this.$buefy.toast.open({
+                message: `Error processing files: ${(error as Error).message}`,
+                type: 'is-danger'
+            })
+        } finally {
+            loadingComponent.close()
+        }
+    }
+
+    private async handleImportSelected(contracts: Entities.Contract[]) {
+        this.showPreviewModal = false
+        
+        if (contracts.length === 0) {
+            return
+        }
+
+        // All contracts should have addresses at this point (filled in the preview modal)
+        await this.importContracts(contracts)
+    }
+
+    private async handleAddressesProvided(contractsWithAddresses: Entities.Contract[]) {
+        this.showAddressCollectionModal = false
+        
+        // Import the contracts that had addresses filled in
+        await this.importContracts(contractsWithAddresses)
+    }
+
+    private async importContracts(contracts: Entities.Contract[]) {
+        // Import contracts one by one
+        for (const contract of contracts) {
+            await this.importSingleContract(contract)
+        }
+
+        this.$buefy.toast.open({
+            message: `Successfully imported ${contracts.length} contract(s)`,
+            type: 'is-success'
+        })
+
+        await this.reload()
+    }
+
+    private async importSingleContract(contract: Entities.Contract) {
+        // At this point, all contracts should have addresses
+        if (!contract.address) {
+            console.error('Contract missing address:', contract)
+            return
+        }
+
+        // Check if contract already exists
+        const existing = this.contracts.find(
+            c => c.address && contract.address && 
+            c.address.toLowerCase() === contract.address.toLowerCase()
         )
-        if (temp) {
-            this.currentItem.id = temp.id
+
+        if (existing) {
+            // Update existing contract
+            await DB.contracts.update(existing.id!, {
+                name: contract.name,
+                abi: contract.abi,
+                category: contract.category,
+                network: contract.network
+            })
+        } else {
+            // Add new contract
+            await DB.contracts.add({
+                ...contract,
+                createdTime: Date.now()
+            })
         }
-        this.isImport = true
-        this.open()
+    }
+
+    private handleShowErrors(errorContracts: ParseResult[]) {
+        this.errorContracts = errorContracts
+        this.showPreviewModal = false
+        this.showErrorModal = true
     }
 
     // Drag and drop handlers
