@@ -553,24 +553,61 @@ export default class Contracts extends Vue {
     private showFilePickerDialog() {
         this.$buefy.dialog.confirm({
             title: 'Choose Import Type',
-            message: 'How would you like to import your contracts?',
-            confirmText: 'Select Files',
-            cancelText: 'Select Folder',
+            message: `
+                <div style="margin-bottom: 0.5rem;">
+                    <p style="margin-bottom: 1rem;">How would you like to import your contracts?</p>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button class="button is-primary is-fullwidth" onclick="window.dispatchEvent(new CustomEvent('import-files'))">
+                            <span class="icon"><i class="mdi mdi-file-multiple"></i></span>
+                            <span>Select Files</span>
+                        </button>
+                        <button class="button is-primary is-outlined is-fullwidth" onclick="window.dispatchEvent(new CustomEvent('import-folder'))">
+                            <span class="icon"><i class="mdi mdi-folder-open"></i></span>
+                            <span>Select Folder</span>
+                        </button>
+                    </div>
+                </div>
+            `,
+            confirmText: 'Cancel',
+            cancelText: 'Cancel',
             type: 'is-info',
             hasIcon: true,
+            canCancel: ['escape', 'x', 'outside'],
             onConfirm: () => {
-                const sidebar = this.$refs.sidebar as any
-                if (sidebar && sidebar.triggerFileUpload) {
-                    sidebar.triggerFileUpload('files')
-                }
+                // Not used since confirmText is empty
             },
             onCancel: () => {
-                const sidebar = this.$refs.sidebar as any
-                if (sidebar && sidebar.triggerFileUpload) {
-                    sidebar.triggerFileUpload('folder')
-                }
+                // Just close
             }
         })
+        
+        // Add event listeners for custom buttons
+        const handleFiles = () => {
+            const sidebar = this.$refs.sidebar as any
+            if (sidebar && sidebar.triggerFileUpload) {
+                sidebar.triggerFileUpload('files')
+            }
+            // Close the dialog
+            const closeBtn = document.querySelector('.dialog .modal-close') as HTMLElement
+            if (closeBtn) {
+                closeBtn.click()
+            }
+        }
+        
+        const handleFolder = () => {
+            const sidebar = this.$refs.sidebar as any
+            if (sidebar && sidebar.triggerFileUpload) {
+                sidebar.triggerFileUpload('folder')
+            }
+            // Close the dialog
+            const closeBtn = document.querySelector('.dialog .modal-close') as HTMLElement
+            if (closeBtn) {
+                closeBtn.click()
+            }
+        }
+        
+        window.addEventListener('import-files', handleFiles, { once: true })
+        window.addEventListener('import-folder', handleFolder, { once: true })
     }
 
     private async handleFilesSelected(files: File[]) {
