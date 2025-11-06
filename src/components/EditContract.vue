@@ -23,7 +23,7 @@
             <template #default="{ option }">
               <div class="media">
                 <div class="media-content">
-                  <p>{{ option.name }}</p>
+                  <p class="has-text-weight-semibold">{{ option.name }}</p>
                   <p class="is-size-7 has-text-grey-light">{{ option.address }}</p>
                 </div>
               </div>
@@ -721,4 +721,10 @@
     }
   }
 </script>
+
+<style scoped>
+[data-theme="dark"] .media-content:hover .has-text-weight-semibold {
+  color: rgba(0, 0, 0, 0.8);
+}
+</style>
 
