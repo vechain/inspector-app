@@ -25,6 +25,7 @@
                     exact
                     :to="{name: item.name}"
                     class="navbar-item"
+                    active-class="is-active-tab"
                 >{{item.text}}</router-link>
                 <div v-if="views.length" class="navbar-item has-dropdown is-hoverable">
                     <a class="navbar-link">Views</a>
@@ -55,7 +56,9 @@
                     active-class="has-background-grey-dark"
                     :to="{name: 'short_cuts'}"
                 >Shortcuts</router-link>
-                <a class="navbar-item" href="https://github.com/vechain/inspector-app" target="_blank">GitHub</a>
+                <a class="navbar-item" href="https://github.com/vechain/inspector-app" target="_blank">
+                    GitHub
+                </a>
             </div>
             <div class="navbar-end">
                 <div class="navbar-item">
@@ -273,19 +276,50 @@ export default class Navbar extends Vue {
   line-height: 1;
 }
 
+/* Active tab styling */
+.navbar-item.is-active-tab {
+background-color: #292929;
+color: white;
+}
+
 /* Theme Toggle Button */
 .theme-toggle {
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
   transition: all 0.2s ease;
+  border: none;
 }
 
 .theme-toggle:hover {
-  transform: scale(1.05);
+  background-color: var(--navbar-dark-item-hover) !important;
+  border: none;
+  color: white !important;
+}
+
+.theme-toggle:focus {
+  box-shadow: none;
+  border: none;
 }
 
 .theme-toggle:active {
   transform: scale(0.95);
+}
+
+/* Network dropdown button alignment */
+.navbar-end .button.is-dark {
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.navbar-end .button.is-dark:hover {
+  background-color: var(--navbar-dark-item-hover) !important;
+  border: none;
+  color: white !important;
+}
+
+.navbar-end .button.is-dark:focus {
+  box-shadow: none;
+  border: none;
 }
 
 /* Mobile Responsive Styles */
