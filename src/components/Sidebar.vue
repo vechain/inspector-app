@@ -3,14 +3,16 @@
         <!-- Header with Search and Actions -->
         <div class="sidebar-header">
             <div class="sidebar-title">
-                <b-icon icon="network-wired" size="is-small"></b-icon>
-                <h2>Contracts</h2>
+                <b-icon icon="file-contract" size="is-small"></b-icon>
+                <h2>Your contracts</h2>
             </div>
             <div class="sidebar-actions">
                 <button @click="onImport" class="button is-small is-primary is-outlined" title="Import Contract">
+                    <p>Upload</p>
                     <b-icon icon="upload" size="is-small"></b-icon>
                 </button>
                 <button @click="addItem" class="button is-small is-primary is-outlined" title="Add Contract">
+                    <p>New</p>
                     <b-icon icon="plus" size="is-small"></b-icon>
                 </button>
             </div>
@@ -350,6 +352,19 @@ export default class Sidebar extends Vue {
 
 .sidebar-actions .button {
     flex: 1;
+}
+
+.sidebar-actions .button.is-outlined {
+    border-width: 1.5px;
+    font-weight: 500;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.sidebar-actions .button.is-outlined:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
 }
 
 .sidebar-search {
