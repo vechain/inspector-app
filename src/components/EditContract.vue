@@ -128,7 +128,7 @@
   export default class EditContract extends Vue {
     get context() {
       const result = {
-        title: 'Add or Import a Contract',
+        title: 'Add Contract',
         btn: 'Add'
       }
 

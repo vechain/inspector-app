@@ -8,7 +8,7 @@
             </div>
             <div class="sidebar-actions">
                 <button @click="onImport" class="button is-small is-primary is-outlined" title="Import Contract">
-                    <p>Upload</p>
+                    <p>Import</p>
                     <b-icon icon="upload" size="is-small"></b-icon>
                 </button>
                 <button @click="addItem" class="button is-small is-primary is-outlined" title="Add Contract">
