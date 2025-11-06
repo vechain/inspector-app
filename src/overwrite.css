@@ -7,26 +7,26 @@
 }
 
 .modal-card-head, .modal-card-foot {
-  background-color: #fff;
+  background-color: var(--modal-card-head-background);
 }
 .display-6 {
   font-size: 14px;
 }
 @-webkit-keyframes textChange {
   from {
-    background: rgba(0, 209, 178, 0.8);
-    color: #fff;
+    background: var(--anim-highlight-bg-from);
+    color: var(--anim-highlight-text-from);
   }
   30% {
-    background: rgba(0, 209, 178, 0.8);
-    color: rgba(0, 0, 0, 0.6);
+    background: var(--anim-highlight-bg-from);
+    color: var(--anim-highlight-text-mid);
   }
   70% {
-    background: rgba(0, 209, 178, 0.3);
-    color: rgba(0, 0, 0, 0.3);
+    background: var(--anim-highlight-bg-mid);
+    color: var(--anim-highlight-text-mid);
   }
   to {
-    color: #000;
+    color: var(--anim-highlight-text-end);
     background: transparent;
   }
 }
@@ -34,19 +34,19 @@
 
 @keyframes textChange {
   from {
-    background: rgba(0, 209, 178, 0.8);
-    color: #fff;
+    background: var(--anim-highlight-bg-from);
+    color: var(--anim-highlight-text-from);
   }
   30% {
-    background: rgba(0, 209, 178, 0.8);
-    color: rgba(0, 0, 0, 0.6);
+    background: var(--anim-highlight-bg-from);
+    color: var(--anim-highlight-text-mid);
   }
   70% {
-    background: rgba(0, 209, 178, 0.3);
-    color: rgba(0, 0, 0, 0.3);
+    background: var(--anim-highlight-bg-mid);
+    color: var(--anim-highlight-text-mid);
   }
   to {
-    color: #000;
+    color: var(--anim-highlight-text-end);
     background: transparent;
   }
 }

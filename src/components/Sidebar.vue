@@ -3,14 +3,16 @@
         <!-- Header with Search and Actions -->
         <div class="sidebar-header">
             <div class="sidebar-title">
-                <b-icon icon="network-wired" size="is-small"></b-icon>
-                <h2>Contracts</h2>
+                <b-icon icon="file-contract" size="is-small"></b-icon>
+                <h2>Your contracts</h2>
             </div>
             <div class="sidebar-actions">
                 <button @click="onImport" class="button is-small is-primary is-outlined" title="Import Contract">
+                    <p>Upload</p>
                     <b-icon icon="upload" size="is-small"></b-icon>
                 </button>
                 <button @click="addItem" class="button is-small is-primary is-outlined" title="Add Contract">
+                    <p>New</p>
                     <b-icon icon="plus" size="is-small"></b-icon>
                 </button>
             </div>
@@ -318,15 +320,15 @@ export default class Sidebar extends Vue {
     height: 100%;
     display: flex;
     flex-direction: column;
-    background: white;
-    border-right: 1px solid #dbdbdb;
+    background: var(--sidebar-background);
+    border-right: 1px solid var(--sidebar-border);
     overflow: hidden;
     flex-shrink: 0;
 }
 
 .sidebar-header {
     padding: 1rem;
-    border-bottom: 1px solid #dbdbdb;
+    border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
 }
 
@@ -352,9 +354,22 @@ export default class Sidebar extends Vue {
     flex: 1;
 }
 
+.sidebar-actions .button.is-outlined {
+    border-width: 1.5px;
+    font-weight: 500;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.sidebar-actions .button.is-outlined:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
 .sidebar-search {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid #dbdbdb;
+    border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
 }
 
@@ -385,7 +400,7 @@ export default class Sidebar extends Vue {
 }
 
 .category-header:hover {
-    background: #f5f5f5;
+    background: var(--body-background-alt);
 }
 
 .category-info {
@@ -395,18 +410,22 @@ export default class Sidebar extends Vue {
     flex: 1;
 }
 
+.category-info .icon {
+    color: var(--text-color);
+}
+
 .category-name {
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    color: #7a7a7a;
+    color: var(--text-color-light);
     letter-spacing: 0.05em;
 }
 
 .category-count {
     font-size: 0.75rem;
-    color: #b5b5b5;
-    background: #f5f5f5;
+    color: var(--text-color-light);
+    background: var(--body-background-alt);
     padding: 0.125rem 0.5rem;
     border-radius: 12px;
 }
@@ -446,7 +465,7 @@ export default class Sidebar extends Vue {
     top: 0;
     bottom: 0;
     width: 4px;
-    background: #3273dc;
+    background: var(--primary-color);
     border-radius: 2px;
     z-index: 100;
     animation: pulse 1s ease-in-out infinite;
@@ -501,8 +520,8 @@ export default class Sidebar extends Vue {
 
 .sidebar-footer {
     padding: 0.75rem 1rem;
-    border-top: 1px solid #dbdbdb;
-    background: #fafafa;
+    border-top: 1px solid var(--border-color);
+    background: var(--body-background-alt);
     flex-shrink: 0;
     text-align: center;
 }

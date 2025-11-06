@@ -97,8 +97,8 @@ export default class TabBar extends Vue {
 .tab-bar {
     display: flex;
     align-items: center;
-    background: white;
-    border-bottom: 1px solid #dbdbdb;
+    background: var(--card-background);
+    border-bottom: 1px solid var(--border-color);
     height: 48px;
     flex-shrink: 0;
 }
@@ -116,12 +116,12 @@ export default class TabBar extends Vue {
 }
 
 .tabs-container::-webkit-scrollbar-thumb {
-    background: #dbdbdb;
+    background: var(--border-color);
     border-radius: 2px;
 }
 
 .tabs-container::-webkit-scrollbar-thumb:hover {
-    background: #b5b5b5;
+    background: var(--text-color-light);
 }
 
 .tab-item {
@@ -129,7 +129,7 @@ export default class TabBar extends Vue {
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1rem;
-    border-right: 1px solid #dbdbdb;
+    border-right: 1px solid var(--border-color);
     cursor: pointer;
     white-space: nowrap;
     transition: background-color 0.2s;
@@ -138,29 +138,29 @@ export default class TabBar extends Vue {
 }
 
 .tab-item:hover {
-    background: #f5f5f5;
+    background: var(--body-background-alt);
 }
 
 .tab-item.is-active {
-    background: #f5f5f5;
-    border-bottom: 2px solid #3273dc;
+    background: var(--body-background-alt);
+    border-bottom: 2px solid var(--primary-color);
 }
 
 .tab-item.is-pinned {
-    background: #f9fafb;
+    background: var(--body-background-alt);
 }
 
 .tab-name {
     font-size: 0.875rem;
     font-weight: 500;
-    color: #4a4a4a;
+    color: var(--text-color);
     max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .tab-item.is-active .tab-name {
-    color: #3273dc;
+    color: var(--primary-color);
     font-weight: 600;
 }
 
@@ -189,20 +189,21 @@ export default class TabBar extends Vue {
     cursor: pointer;
     transition: all 0.2s;
     padding: 0;
+    color: var(--text-color-light);
 }
 
 .tab-pin.pinned {
     opacity: 1;
-    color: #3273dc;
+    color: var(--primary-color);
 }
 
 .tab-pin:hover {
-    background: #3273dc;
+    background: var(--primary-color);
     color: white;
 }
 
 .tab-close:hover {
-    background: #f14668;
+    background: var(--danger-color);
     color: white;
 }
 
@@ -213,9 +214,9 @@ export default class TabBar extends Vue {
     padding: 0 1rem;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #7a7a7a;
-    background: #fafafa;
-    border-left: 1px solid #dbdbdb;
+    color: var(--text-color-light);
+    background: var(--body-background-alt);
+    border-left: 1px solid var(--border-color);
     height: 100%;
     min-width: 48px;
 }

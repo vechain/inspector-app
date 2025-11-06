@@ -68,11 +68,11 @@ export default class Panel extends Vue {
 </script>
 <style scoped>
 .custom-tabs a {
-  color: #4a4a4a;
+  color: var(--text-color);
 }
 
 .custom-tabs a.is-active {
-  color: #3273dc;
-  border-bottom-color: #3273dc;
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
 }
 </style>

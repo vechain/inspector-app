@@ -158,4 +158,20 @@ export default class FunctionCard extends Mixins(AccountCall) {
 .item-content .buttons {
     justify-content: flex-end;
 }
+
+/* Remove top, right, and left borders from panel-tabs */
+::v-deep .panel-tabs {
+    border-top: none !important;
+    border-right: none !important;
+    border-left: none !important;
+}
+
+/* Dark mode styling for function results (Request/Response) */
+[data-theme="dark"] pre {
+    background-color: #101010;
+    color: #e8e8e8;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #404040;
+}
 </style>

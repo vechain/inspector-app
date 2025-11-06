@@ -57,12 +57,7 @@
         </div>
 
         <!-- Actions -->
-        <div class="contract-actions">
-            <button class="button is-small is-outlined action-edit" @click.stop="handleView">
-                <b-icon icon="eye" size="is-small"></b-icon>
-                <span>View</span>
-            </button>
-        </div>
+        <!-- View button removed for cleaner design - click card to view -->
     </div>
 
     <!-- Detail View (old UI with 3-dots menu) -->
@@ -237,7 +232,11 @@ export default class Contract extends Vue {
     }
 
     toggleMenu() {
-        this.isMenuOpen = !this.isMenuOpen
+        const wasOpen = this.isMenuOpen
+        // Emit event to close all other menus
+        BUS.$emit('close-all-contract-menus')
+        // Toggle this menu
+        this.isMenuOpen = !wasOpen
     }
 
     handleDragStart(e: DragEvent) {
@@ -260,10 +259,13 @@ export default class Contract extends Vue {
     mounted() {
         // Close dropdown when clicking outside
         document.addEventListener('click', this.closeMenu)
+        // Listen for event to close all menus
+        BUS.$on('close-all-contract-menus', this.closeMenu)
     }
 
     beforeDestroy() {
         document.removeEventListener('click', this.closeMenu)
+        BUS.$off('close-all-contract-menus', this.closeMenu)
     }
 
     closeMenu() {
@@ -275,18 +277,27 @@ export default class Contract extends Vue {
 .contract-card {
     position: relative;
     overflow: visible;
-    border: 1px solid #dbdbdb;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 0.75rem;
-    background: white;
+    background: var(--card-background);
     transition: all 0.2s ease;
-    cursor: grab;
+    cursor: pointer;
     margin: auto;
+    z-index: 1;
+}
+
+.contract-card:has(.more-menu.is-active) {
+    z-index: 100;
 }
 
 .contract-card:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-    border-color: #3273dc;
+    border-color: var(--primary-color);
+}
+
+.contract-card:active:not(.is-dragging) {
+    transform: scale(0.98);
 }
 
 .contract-card.is-dragging {
@@ -299,7 +310,6 @@ export default class Contract extends Vue {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 0.5rem;
 }
 
 .contract-info {
@@ -331,14 +341,14 @@ export default class Contract extends Vue {
 .contract-name {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #363636;
+    color: var(--text-color-strong);
     margin: 0;
     margin-bottom: 0.125rem;
 }
 
 .contract-address {
     font-size: 0.6875rem;
-    color: #7a7a7a;
+    color: var(--text-color-light);
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -350,7 +360,6 @@ export default class Contract extends Vue {
     opacity: 1;
     transition: opacity 0.2s ease;
     position: relative;
-    z-index: 10;
 }
 
 .contract-card:hover .more-menu,
@@ -365,7 +374,7 @@ export default class Contract extends Vue {
 }
 
 .more-button:hover {
-    background: #f5f5f5;
+    background: var(--body-background-alt);
     border-radius: 4px;
 }
 
@@ -373,7 +382,6 @@ export default class Contract extends Vue {
     position: absolute;
     top: 100%;
     right: 0;
-    z-index: 20;
     min-width: 160px;
     padding-top: 4px;
     display: none;
@@ -384,7 +392,7 @@ export default class Contract extends Vue {
 }
 
 .dropdown-content {
-    background-color: white;
+    background-color: var(--card-background);
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     padding: 0.5rem 0;
@@ -397,15 +405,17 @@ export default class Contract extends Vue {
     padding: 0.5rem 1rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    color: var(--text-color);
 }
 
 .dropdown-item:hover {
-    background-color: #f5f5f5;
+    background-color: var(--body-background-alt);
+    color: var(--text-color-strong);
 }
 
 .dropdown-divider {
     margin: 0.5rem 0;
-    border-top: 1px solid #ededed;
+    border-top: 1px solid var(--border-color-light);
 }
 
 /* Actions */
@@ -424,8 +434,8 @@ export default class Contract extends Vue {
 }
 
 .contract-actions .button:not(:disabled):hover {
-    border-color: #3273dc;
-    color: #3273dc;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 /* Detail View (old UI) styles */
@@ -444,6 +454,16 @@ export default class Contract extends Vue {
 
 .img-hover:hover .could-hover {
     filter: brightness(1.2);
+}
+
+/* Contract address link hover - smooth and subtle */
+.detail-box .media-content a {
+    transition: opacity 0.2s ease;
+}
+
+.detail-box .media-content a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
 }
 
 .detail-more-menu {
@@ -466,7 +486,7 @@ export default class Contract extends Vue {
 }
 
 .detail-more-menu .dropdown-content {
-    background-color: white;
+    background-color: var(--card-background);
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     padding: 0.5rem 0;
@@ -479,15 +499,17 @@ export default class Contract extends Vue {
     padding: 0.5rem 1rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    color: var(--text-color);
 }
 
 .detail-more-menu .dropdown-item:hover {
-    background-color: #f5f5f5;
+    background-color: var(--body-background-alt);
+    color: var(--text-color-strong);
 }
 
 .detail-more-menu .dropdown-divider {
     margin: 0.5rem 0;
-    border-top: 1px solid #ededed;
+    border-top: 1px solid var(--border-color-light);
 }
 </style>
 

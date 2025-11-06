@@ -2,18 +2,18 @@
     <div class="box">
         <div>
             <div
-                class="level has-background-light"
+                class="level event-header"
                 style="margin-bottom: 10px; padding: 5px 10px; border-radius: 5px;"
             >
                 <div class="level-left">
                     <span
-                        class="is-family-secondary display-6 has-text-black-ter has-text-weight-semibold"
+                        class="is-family-secondary display-6 has-text-weight-semibold event-text"
                     >
                         <slot name="title"></slot>
                     </span>
                     <span
                         style="margin-left: 20px"
-                        class="is-family-secondary display-6 has-text-black-ter has-text-weight-semibold"
+                        class="is-family-secondary display-6 has-text-weight-semibold event-text"
                     >
                         #Block
                         <a
@@ -23,7 +23,7 @@
                     </span>
                     <span
                         style="margin-left: 20px"
-                        class="is-family-secondary display-6"
+                        class="is-family-secondary display-6 event-text"
                     >{{item.meta.blockTimestamp * 1000 | datetime}}</span>
                 </div>
                 <div class="level-right">
@@ -67,7 +67,7 @@
                                 >{{ props.row.value | toChecksumAddress}}</a>
                                 <span
                                     v-else
-                                    class="has-text-weight-semibold is-family-monospace display-6 has-text-grey"
+                                    class="has-text-weight-semibold is-family-monospace display-6 event-data-text"
                                 >{{props.row.value}}</span>
                             </b-table-column>
                         </template>
@@ -83,7 +83,7 @@
                         >
                             <ul>
                                 <li
-                                    class="is-family-monospace display-6 has-text-grey has-text-weight-semibold"
+                                    class="is-family-monospace display-6 has-text-weight-semibold event-data-text"
                                     v-for="(topic, i) in item.topics"
                                     :key="item.meta.blockID + i"
                                 >
@@ -100,7 +100,7 @@
                         >
                             <p
                                 style="word-break: break-all;"
-                                class="has-text-weight-semibold has-text-grey display-6 is-family-monospace"
+                                class="has-text-weight-semibold display-6 is-family-monospace event-data-text"
                             >{{item.data}}</p>
                         </b-field>
                     </div>
@@ -167,9 +167,24 @@ export default class EventShowCard extends Vue {
     width: 50px;
     flex-grow: unset;
     font-size: 14px;
+    color: var(--text-color);
 }
 .my-content .tab-content {
     padding: 20px 0;
+}
+
+/* Event header styling */
+.event-header {
+    background-color: var(--body-background-alt);
+    color: var(--text-color);
+}
+
+.event-text {
+    color: var(--text-color-strong);
+}
+
+.event-data-text {
+    color: var(--text-color-light);
 }
 
 /* Indexed badge styling */
@@ -179,17 +194,42 @@ export default class EventShowCard extends Vue {
     border-radius: 3px;
     font-size: 10px;
     font-weight: 600;
-    background-color: #e0e0e0;
-    color: #666;
+    background-color: var(--body-background-alt);
+    color: var(--text-color-light);
+    border: 1px solid var(--border-color);
 }
 
 /* Event tabs styling - only active tab is blue */
 .event-tabs >>> .tabs li.is-active a {
-    color: #3273dc;
-    border-bottom-color: #3273dc;
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
 }
 
 .event-tabs >>> .tabs li:not(.is-active) a {
-    color: #4a4a4a;
+    color: var(--text-color);
+}
+
+.event-tabs >>> .tabs li a:hover {
+    border-bottom-color: #6bb6ff;
+}
+
+/* Smooth hover for event data links */
+.event-header a {
+    transition: color 0.2s ease;
+}
+
+.event-header a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* Smooth hover for address links in table */
+.box a.is-family-monospace {
+    transition: color 0.2s ease;
+}
+
+.box a.is-family-monospace:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
 }
 </style>

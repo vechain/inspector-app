@@ -25,6 +25,7 @@
                     exact
                     :to="{name: item.name}"
                     class="navbar-item"
+                    active-class="is-active-tab"
                 >{{item.text}}</router-link>
                 <div v-if="views.length" class="navbar-item has-dropdown is-hoverable">
                     <a class="navbar-link">Views</a>
@@ -55,9 +56,20 @@
                     active-class="has-background-grey-dark"
                     :to="{name: 'short_cuts'}"
                 >Shortcuts</router-link>
-                <a class="navbar-item" href="https://github.com/vechain/inspector-app" target="_blank">GitHub</a>
+                <a class="navbar-item" href="https://github.com/vechain/inspector-app" target="_blank">
+                    GitHub
+                </a>
             </div>
             <div class="navbar-end">
+                <div class="navbar-item">
+                    <button 
+                        class="button is-dark theme-toggle"
+                        @click="toggleTheme"
+                        :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+                    >
+                        <b-icon :icon="isDarkMode ? 'sun' : 'moon'" size="is-small"></b-icon>
+                    </button>
+                </div>
                 <b-tag v-if="networks.length === 1" size="is-medium" type="is-warning" style="margin: auto 0px;"  >{{networks[0].label}}</b-tag>
                 <b-dropdown
                 v-if="networks.length > 1"
@@ -101,6 +113,7 @@ export default class Navbar extends Vue {
     private shortCuts: number = 0
     private node = localStorage.getItem('custom-node')
     private genesis = localStorage.getItem('custom-network')
+    private isDarkMode: boolean = false
 
     get hasConnex() {
         return !!window.connex
@@ -147,6 +160,32 @@ export default class Navbar extends Vue {
     private async countShortCuts() {
         this.shortCuts = await DB.shortCuts
             .filter((item) => (item.network === this.network) || (item.network === undefined)).count()
+    }
+
+    private initTheme() {
+        const savedTheme = localStorage.getItem('theme-preference')
+        this.isDarkMode = savedTheme === 'dark'
+        this.applyTheme()
+    }
+
+    private applyTheme() {
+        if (this.isDarkMode) {
+            document.documentElement.setAttribute('data-theme', 'dark')
+        } else {
+            document.documentElement.removeAttribute('data-theme')
+        }
+    }
+
+    private toggleTheme() {
+        this.isDarkMode = !this.isDarkMode
+        localStorage.setItem('theme-preference', this.isDarkMode ? 'dark' : 'light')
+        this.applyTheme()
+    }
+
+    created() {
+        this.initTheme()
+        this.getList()
+        this.countShortCuts()
     }
 
 }
@@ -208,7 +247,7 @@ export default class Navbar extends Vue {
   width: 2rem;
   height: 2rem;
   border-radius: 0.5rem;
-  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, #357abd 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -235,6 +274,52 @@ export default class Navbar extends Vue {
   color: rgba(255, 255, 255, 0.7);
   margin: 0;
   line-height: 1;
+}
+
+/* Active tab styling */
+.navbar-item.is-active-tab {
+background-color: #292929;
+color: white;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.theme-toggle:hover {
+  background-color: var(--navbar-dark-item-hover) !important;
+  border: none;
+  color: white !important;
+}
+
+.theme-toggle:focus {
+  box-shadow: none;
+  border: none;
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Network dropdown button alignment */
+.navbar-end .button.is-dark {
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.navbar-end .button.is-dark:hover {
+  background-color: var(--navbar-dark-item-hover) !important;
+  border: none;
+  color: white !important;
+}
+
+.navbar-end .button.is-dark:focus {
+  box-shadow: none;
+  border: none;
 }
 
 /* Mobile Responsive Styles */
@@ -266,7 +351,7 @@ export default class Navbar extends Vue {
   }
 
   .navbar-menu {
-    background-color: #363636;
+    background-color: var(--navbar-dark-background);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     position: absolute;
     top: 100%;
