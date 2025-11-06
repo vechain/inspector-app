@@ -165,4 +165,13 @@ export default class FunctionCard extends Mixins(AccountCall) {
     border-right: none !important;
     border-left: none !important;
 }
+
+/* Dark mode styling for function results (Request/Response) */
+[data-theme="dark"] pre {
+    background-color: #101010;
+    color: #e8e8e8;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #404040;
+}
 </style>
