@@ -8,8 +8,18 @@
         <b-field
           :type="formMessage.name.isError ? 'is-danger' : ''"
           :message="formMessage.name.message"
-          label="name"
         >
+          <template #label>
+            <span>Name</span>
+            <b-tooltip 
+              label="💡 Tip: Start typing to import a built-in contract, or just enter your own contract name" 
+              type="is-info"
+              position="is-right"
+              multilined
+            >
+              <b-icon icon="info-circle" size="is-small" class="" style="margin-left: 0.25rem;"></b-icon>
+            </b-tooltip>
+          </template>
           <b-autocomplete
             @blur="checkName"
             @select="onSelectContract"
@@ -19,6 +29,7 @@
             @typing="filterContractsByName"
             :clearable="true"
             open-on-focus
+            placeholder="Type to search built-in contracts or enter custom name"
           >
             <template #default="{ option }">
               <div class="media">
@@ -26,6 +37,17 @@
                   <p class="has-text-weight-semibold">{{ option.name }}</p>
                   <p class="is-size-7 has-text-grey-light">{{ option.address }}</p>
                 </div>
+              </div>
+            </template>
+            <template #empty>
+              <div v-if="!nameInputDirty" class="has-text-centered py-3 px-2">
+                <p class="has-text-grey">
+                  <b-icon icon="information-outline" size="is-small"></b-icon>
+                  No built-in contracts match your search
+                </p>
+                <p class="is-size-7 has-text-grey-light mt-1">
+                  That's okay! Just keep typing your custom contract name
+                </p>
               </div>
             </template>
           </b-autocomplete>
@@ -162,6 +184,7 @@
     private filteredCategories: string[] = []
     private fetchingABI: boolean = false
     private fetchStatus: string = ''
+    private nameInputDirty: boolean = false
 
     async created() {
       await this.loadCategories()
@@ -237,6 +260,8 @@
 
     initForm() {
       const val = this.item
+      this.nameInputDirty = false
+      
       if (val && val.address) {
         this.form.name = val.name || ''
         this.nameInput = val.name || ''
@@ -285,6 +310,8 @@
     }
     
     filterContractsByName(text: string) {
+      this.nameInputDirty = true
+      
       if (!text) {
         this.filteredContracts = []
         return
