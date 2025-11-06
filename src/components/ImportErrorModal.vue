@@ -1,10 +1,10 @@
 <template>
-    <div class="modal-card" style="width: 800px; max-width: 95vw;">
+    <div class="modal-card" style="width: 100%;">
         <header class="modal-card-head">
             <p class="modal-card-title">Import Errors</p>
-            <p class="subtitle is-6 has-text-grey ml-3">{{ errorContracts.length }} file(s) with errors</p>
+            <p class="subtitle is-6 has-text-grey" style="margin-left: 0.75rem;">{{ errorContracts.length }} file(s) with errors</p>
         </header>
-        <section class="modal-card-body">
+        <section class="modal-card-body" style="padding: 1.25rem 1.5rem;">
             <div class="errors-container">
                 <div 
                     v-for="(result, index) in errorContracts" 
@@ -83,7 +83,7 @@
                 </div>
             </div>
         </section>
-        <footer class="modal-card-foot" style="justify-content: flex-end;">
+        <footer class="modal-card-foot" style="justify-content: flex-end; padding: 1rem 1.5rem;">
             <button class="button is-primary" type="button" @click="$emit('close')">Close</button>
         </footer>
     </div>
@@ -150,11 +150,11 @@ export default class ImportErrorModal extends Vue {
 }
 
 .error-section {
-    padding: 1.5rem;
+    padding: 1.25rem;
     background: var(--body-background-alt);
     border-radius: 8px;
     border: 1px solid var(--border-color);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
     
     &:last-child {
         margin-bottom: 0;
@@ -166,7 +166,7 @@ export default class ImportErrorModal extends Vue {
     align-items: flex-start;
     gap: 1rem;
     margin-bottom: 1rem;
-    padding-bottom: 1rem;
+    padding-bottom: 0.875rem;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -181,9 +181,9 @@ export default class ImportErrorModal extends Vue {
 }
 
 .error-filename {
-    font-size: 1.1rem;
+    font-size: 1.0625rem;
     font-weight: 600;
-    color: var(--text-color);
+    color: var(--text-color-strong);
     word-break: break-all;
 }
 
@@ -194,7 +194,7 @@ export default class ImportErrorModal extends Vue {
 }
 
 .error-details {
-    margin-top: 1rem;
+    margin-top: 0.875rem;
 }
 
 .error-count-badge {
@@ -203,22 +203,26 @@ export default class ImportErrorModal extends Vue {
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
     background: rgba(255, 56, 96, 0.1);
-    border-radius: 4px;
+    border-radius: 6px;
     color: var(--danger-color);
     font-weight: 600;
     font-size: 0.875rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.875rem;
+}
+
+[data-theme="dark"] .error-count-badge {
+    background: rgba(255, 82, 82, 0.15);
 }
 
 .error-items {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.875rem;
 }
 
 .error-item {
-    padding: 1rem;
-    background: var(--body-background);
+    padding: 0.875rem;
+    background: var(--card-background);
     border-radius: 6px;
     border-left: 3px solid var(--danger-color);
 }
@@ -244,6 +248,10 @@ export default class ImportErrorModal extends Vue {
         color: var(--danger-color);
         font-weight: 600;
     }
+}
+
+[data-theme="dark"] .error-field code {
+    background: rgba(255, 82, 82, 0.15);
 }
 
 .error-item-body {
@@ -279,6 +287,10 @@ export default class ImportErrorModal extends Vue {
     strong {
         color: var(--info-color);
     }
+}
+
+[data-theme="dark"] .error-fix {
+    background: rgba(74, 163, 227, 0.1);
 }
 
 .help-section {

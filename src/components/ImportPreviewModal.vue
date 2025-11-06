@@ -1,24 +1,33 @@
 <template>
-    <div class="modal-card" style="width: 900px; max-width: 95vw;">
-        <header class="modal-card-head">
-            <p class="modal-card-title">Import Preview</p>
-            <p class="subtitle is-6 has-text-grey ml-3">{{ parsedContracts.length }} file(s) detected</p>
+    <div class="modal-card modern-import-modal" style="width: 100%;">
+        <header class="modal-card-head modern-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1 class="modal-title">Import Preview</h1>
+                    <p class="modal-subtitle">Review and configure contracts before import</p>
+                </div>
+                <div class="header-right">
+                    <div class="files-count">{{ parsedContracts.length }}</div>
+                    <div class="files-label">files detected</div>
+                </div>
+            </div>
         </header>
-        <section class="modal-card-body">
-            <!-- Summary -->
-            <div v-if="skippedCount > 0 || validCount > 0 || errorCount > 0" class="import-summary mb-4">
-                <div class="summary-stats">
-                    <div class="summary-stat" v-if="validCount > 0">
-                        <b-icon icon="check-circle" type="is-success" size="is-small"></b-icon>
-                        <span><strong>{{ validCount }}</strong> contract(s) ready to import</span>
-                    </div>
-                    <div class="summary-stat" v-if="skippedCount > 0">
-                        <b-icon icon="minus-circle" type="is-info" size="is-small"></b-icon>
-                        <span><strong>{{ skippedCount }}</strong> file(s) skipped ({{ skippedReasons }})</span>
-                    </div>
-                    <div class="summary-stat" v-if="errorCount > 0">
-                        <b-icon icon="exclamation-circle" type="is-danger" size="is-small"></b-icon>
-                        <span><strong>{{ errorCount }}</strong> file(s) with errors</span>
+        <section class="modal-card-body modern-body">
+            <!-- Summary Cards -->
+            <div v-if="validCount > 0 || contractsNeedingAddress > 0 || skippedCount > 0" class="summary-cards">
+                <div v-if="validCount > 0" class="summary-card success-card">
+                    <b-icon icon="check-circle" size="is-small"></b-icon>
+                    <span><strong>{{ validCount }}</strong> contract{{ validCount !== 1 ? 's' : '' }} ready to import</span>
+                </div>
+                <div v-if="contractsNeedingAddress > 0" class="summary-card warning-card">
+                    <b-icon icon="exclamation-circle" size="is-small"></b-icon>
+                    <span><strong>{{ contractsNeedingAddress }}</strong> contract{{ contractsNeedingAddress !== 1 ? 's' : '' }} need{{ contractsNeedingAddress === 1 ? 's' : '' }} deployment address</span>
+                </div>
+                <div v-if="skippedCount > 0" class="summary-card info-card">
+                    <b-icon icon="minus-circle" size="is-small"></b-icon>
+                    <div class="summary-details">
+                        <div><strong>{{ skippedCount }}</strong> files skipped</div>
+                        <div class="summary-subtext">{{ skippedReasons }}</div>
                     </div>
                 </div>
             </div>
@@ -32,119 +41,127 @@
             </div>
             
             <div v-else>
-                <div class="import-options mb-4">
-                    <div class="selection-controls">
-                        <div class="buttons">
-                            <button class="button is-small" @click="selectAll">
-                                <b-icon icon="check-square" size="is-small"></b-icon>
-                                <span>Select All</span>
-                            </button>
-                            <button class="button is-small" @click="deselectAll">
-                                <b-icon icon="square" size="is-small"></b-icon>
-                                <span>Deselect All</span>
-                            </button>
-                        </div>
-                        <div class="summary">
-                            <span class="tag is-info">{{ selectedCount }} selected</span>
-                            <span v-if="errorCount > 0" class="tag is-danger ml-2">{{ errorCount }} with errors</span>
-                        </div>
-                    </div>
-
-                    <div class="category-field mt-3">
-                        <b-field label="Category for all contracts (optional)">
-                            <b-autocomplete
-                                v-model="categoryForAll"
-                                :data="filteredCategories"
-                                placeholder="Leave empty to keep individual categories"
-                                @typing="filterCategories"
-                                clearable
-                                size="is-small"
-                            >
-                                <template slot="empty">Type to create new category</template>
-                            </b-autocomplete>
-                        </b-field>
+                <!-- Selection Controls -->
+                <div class="selection-control-bar">
+                    <label class="select-all-control">
+                        <b-checkbox v-model="isAllSelected" @input="toggleSelectAll"></b-checkbox>
+                        <span class="select-all-label">Select All</span>
+                    </label>
+                    <div class="selected-badge">
+                        {{ selectedCount }} selected
                     </div>
                 </div>
 
-                <div class="contracts-list">
+                <!-- Category Input -->
+                <div class="category-input-section">
+                    <label class="category-label">
+                        Set a category for the contracts
+                        <span class="optional-label">(optional)</span>
+                    </label>
+                    <b-autocomplete
+                        v-model="categoryForAll"
+                        :data="filteredCategories"
+                        placeholder="Leave empty to keep individual categories"
+                        @typing="filterCategories"
+                        clearable
+                        size="is-small"
+                    >
+                        <template slot="empty">Type to create new category</template>
+                    </b-autocomplete>
+                </div>
+
+                <!-- Contract Cards -->
+                <div class="contract-cards-list">
                     <div 
                         v-for="(result, index) in displayedContracts" 
                         :key="index"
-                        class="contract-item"
-                        :class="{ 'has-errors': !result.success, 'is-selected': selectedContracts[result.filename] }"
+                        class="contract-card"
+                        :class="{ 
+                            'is-selected': selectedContracts[result.filename],
+                            'has-errors': !result.success
+                        }"
                     >
-                        <div class="contract-item-main">
-                            <b-checkbox 
-                                v-model="selectedContracts[result.filename]"
-                                :disabled="!result.success"
-                            ></b-checkbox>
+                        <!-- Card Header (always visible) -->
+                        <div class="card-header" @click="toggleExpand(result.filename)">
+                            <div class="card-checkbox" @click.stop>
+                                <b-checkbox 
+                                    v-model="selectedContracts[result.filename]"
+                                    :disabled="!result.success"
+                                ></b-checkbox>
+                            </div>
                             
-                            <div class="contract-status">
-                                <b-icon 
-                                    v-if="result.success" 
-                                    icon="check-circle" 
-                                    type="is-success"
-                                    size="is-small"
-                                ></b-icon>
-                                <b-icon 
-                                    v-else 
-                                    icon="exclamation-triangle" 
-                                    type="is-danger"
-                                    size="is-small"
-                                ></b-icon>
+                            <div class="card-content">
+                                <div class="card-title-row">
+                                    <h3 class="card-title">{{ result.contract?.name || 'Unknown' }}</h3>
+                                    <span v-if="result.isHardhatArtifact" class="badge badge-network">
+                                        Hardhat
+                                    </span>
+                                    <span v-if="result.contract?.address" class="badge badge-success">
+                                        <b-icon icon="check-circle" size="is-small"></b-icon>
+                                        Ready
+                                    </span>
+                                    <span v-else-if="result.success" class="badge badge-warning">
+                                        <b-icon icon="exclamation-circle" size="is-small"></b-icon>
+                                        Address Required
+                                    </span>
+                                    <span v-else class="badge badge-error">
+                                        <b-icon icon="exclamation-triangle" size="is-small"></b-icon>
+                                        Error
+                                    </span>
+                                </div>
+                                <div class="card-filename">{{ result.filename }}</div>
                             </div>
 
-                            <div class="contract-details">
-                                <div class="contract-header">
-                                    <span class="contract-name">{{ result.contract?.name || 'Unknown' }}</span>
-                                    <span v-if="result.isHardhatArtifact" class="tag is-info is-light is-small ml-2">
-                                        <b-icon icon="hammer" size="is-small"></b-icon>
-                                        <span>Hardhat</span>
-                                    </span>
-                                </div>
-                                <div class="contract-meta">
-                                    <span class="filename">
-                                        <b-icon icon="file" size="is-small"></b-icon>
-                                        {{ result.filename }}
-                                    </span>
-                                    <span class="address" v-if="result.contract?.address">
-                                        <b-icon icon="map-marker-alt" size="is-small"></b-icon>
-                                        {{ result.contract.address }}
-                                    </span>
-                                    <span v-else class="address-required">
-                                        <b-icon icon="info-circle" size="is-small"></b-icon>
-                                        Address required
-                                    </span>
-                                </div>
+                            <div class="card-expand-icon">
+                                <b-icon 
+                                    icon="chevron-down" 
+                                    size="is-small"
+                                    :class="{ 'is-rotated': expandedCards[result.filename] }"
+                                ></b-icon>
+                            </div>
+                        </div>
 
-                                <!-- Address input for contracts without address -->
-                                <div v-if="!result.contract?.address && result.success" class="address-input-section mt-3">
-                                    <b-field 
-                                        :type="contractAddressErrors[result.filename] ? 'is-danger' : ''"
-                                        :message="contractAddressErrors[result.filename]"
-                                    >
-                                        <b-input
-                                            v-model="contractAddresses[result.filename]"
-                                            placeholder="Enter deployed contract address (0x...)"
-                                            custom-class="is-family-monospace"
-                                            size="is-small"
-                                            @input="validateContractAddress(result.filename)"
-                                            @blur="validateContractAddress(result.filename)"
-                                        ></b-input>
-                                    </b-field>
-                                </div>
+                        <!-- Card Expanded Content -->
+                        <div v-if="expandedCards[result.filename]" class="card-body">
+                            <!-- Address input for contracts without address -->
+                            <div v-if="!result.contract?.address && result.success" class="address-input-container">
+                                <label class="input-label">Deployed contract address</label>
+                                <b-field 
+                                    :type="contractAddressErrors[result.filename] ? 'is-danger' : ''"
+                                    :message="contractAddressErrors[result.filename]"
+                                >
+                                    <b-input
+                                        v-model="contractAddresses[result.filename]"
+                                        placeholder="0x..."
+                                        custom-class="is-family-monospace"
+                                        size="is-small"
+                                        @input="validateContractAddress(result.filename)"
+                                        @blur="validateContractAddress(result.filename)"
+                                    ></b-input>
+                                </b-field>
+                                <p v-if="!contractAddressErrors[result.filename] && contractAddresses[result.filename]" class="success-message">
+                                    <b-icon icon="check-circle" size="is-small"></b-icon>
+                                    Address configured
+                                </p>
+                            </div>
 
-                                <div v-if="!result.success && result.errors.length > 0" class="contract-errors">
-                                    <div class="error-summary">
-                                        <b-icon icon="exclamation-circle" size="is-small"></b-icon>
-                                        <span>{{ result.errors.length }} error(s)</span>
-                                    </div>
-                                    <ul class="error-list">
-                                        <li v-for="(error, errorIndex) in result.errors" :key="errorIndex">
-                                            {{ error }}
-                                        </li>
-                                    </ul>
+                            <!-- Show address if already has one -->
+                            <div v-if="result.contract?.address" class="address-display">
+                                <label class="input-label">Contract address</label>
+                                <div class="address-value">{{ result.contract.address }}</div>
+                            </div>
+
+                            <!-- Error display -->
+                            <div v-if="!result.success && result.errors.length > 0" class="error-container">
+                                <div class="error-header">
+                                    <b-icon icon="exclamation-circle" size="is-small"></b-icon>
+                                    <span>{{ result.errors.length }} error(s)</span>
                                 </div>
+                                <ul class="error-list">
+                                    <li v-for="(error, errorIndex) in result.errors" :key="errorIndex">
+                                        {{ error }}
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -162,8 +179,8 @@
                 </div>
             </div>
         </section>
-        <footer class="modal-card-foot" style="justify-content: space-between;">
-            <button class="button" type="button" @click="$emit('cancel')">Cancel</button>
+        <footer class="modal-card-foot modern-footer">
+            <button class="button is-outlined" type="button" @click="$emit('cancel')">Cancel</button>
             <button 
                 class="button is-primary" 
                 type="button" 
@@ -193,6 +210,8 @@ export default class ImportPreviewModal extends Vue {
     private filteredCategories: string[] = []
     private contractAddresses: { [filename: string]: string } = {}
     private contractAddressErrors: { [filename: string]: string } = {}
+    private expandedCards: { [filename: string]: boolean } = {}
+    private isAllSelected: boolean = false
 
     get validContracts(): ParseResult[] {
         return this.parsedContracts.filter(r => r.success && !r.skipped)
@@ -213,6 +232,10 @@ export default class ImportPreviewModal extends Vue {
 
     get selectedCount(): number {
         return Object.values(this.selectedContracts).filter(s => s).length
+    }
+
+    get contractsNeedingAddress(): number {
+        return this.validContracts.filter(r => !r.contract?.address).length
     }
 
     get canImport(): boolean {
@@ -261,6 +284,7 @@ export default class ImportPreviewModal extends Vue {
         this.validContracts.forEach(r => {
             this.$set(this.selectedContracts, r.filename, true)
         })
+        this.updateSelectAllState()
         
         // Initialize filtered categories
         this.filteredCategories = this.existingCategories
@@ -272,6 +296,23 @@ export default class ImportPreviewModal extends Vue {
                 this.$set(this.contractAddressErrors, r.filename, '')
             }
         })
+    }
+
+    toggleExpand(filename: string) {
+        this.$set(this.expandedCards, filename, !this.expandedCards[filename])
+    }
+
+    updateSelectAllState() {
+        const allValid = this.validContracts.every(r => this.selectedContracts[r.filename])
+        this.isAllSelected = allValid && this.validContracts.length > 0
+    }
+
+    toggleSelectAll() {
+        if (this.isAllSelected) {
+            this.deselectAll()
+        } else {
+            this.selectAll()
+        }
     }
 
     validateContractAddress(filename: string) {
@@ -311,12 +352,14 @@ export default class ImportPreviewModal extends Vue {
         this.validContracts.forEach(r => {
             this.$set(this.selectedContracts, r.filename, true)
         })
+        this.updateSelectAllState()
     }
 
     deselectAll() {
         this.validContracts.forEach(r => {
             this.$set(this.selectedContracts, r.filename, false)
         })
+        this.updateSelectAllState()
     }
 
     handleImport() {
@@ -358,149 +401,418 @@ export default class ImportPreviewModal extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.empty-state {
-    padding: 3rem;
-    text-align: center;
-    
-    .icon {
-        margin-bottom: 1rem;
-    }
+.modern-import-modal {
+    border-radius: 12px;
+    overflow: hidden;
 }
 
-.import-summary {
-    padding: 1rem;
-    background: var(--body-background-alt);
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
+.modern-header {
+    background: var(--modal-card-head-background);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.25rem 1.5rem;
 }
 
-.summary-stats {
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.header-left {
+    flex: 1;
+    min-width: 0;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-color-strong);
+    line-height: 1.2;
+}
+
+.modal-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-color-light);
+    margin-top: 0.25rem;
+}
+
+.header-right {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.files-count {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.files-label {
+    font-size: 0.75rem;
+    color: var(--text-color-light);
+    margin-top: 0.25rem;
+}
+
+.modern-body {
+    padding: 1.25rem 1.5rem;
+    max-height: calc(90vh - 180px);
+    overflow-y: auto;
+}
+
+// Summary Cards
+.summary-cards {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
 }
 
-.summary-stat {
+.summary-card {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
+    gap: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
     
     .icon {
         flex-shrink: 0;
     }
 }
 
-.import-options {
-    padding: 1rem;
-    background: var(--body-background-alt);
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
+.success-card {
+    background: rgba(72, 187, 120, 0.1);
+    border: 1px solid rgba(72, 187, 120, 0.2);
+    color: #38a169;
+    
+    .icon {
+        color: #38a169;
+    }
 }
 
-.selection-controls {
+[data-theme="dark"] .success-card {
+    background: rgba(90, 214, 125, 0.15);
+    border-color: rgba(90, 214, 125, 0.25);
+    color: #5ad67d;
+    
+    .icon {
+        color: #5ad67d;
+    }
+}
+
+.warning-card {
+    background: rgba(237, 137, 54, 0.1);
+    border: 1px solid rgba(237, 137, 54, 0.2);
+    color: #dd6b20;
+    
+    .icon {
+        color: #dd6b20;
+    }
+}
+
+[data-theme="dark"] .warning-card {
+    background: rgba(255, 234, 127, 0.15);
+    border-color: rgba(255, 234, 127, 0.25);
+    color: #ffea7f;
+    
+    .icon {
+        color: #ffea7f;
+    }
+}
+
+.info-card {
+    background: var(--body-background-alt);
+    border: 1px solid var(--border-color);
+    color: var(--text-color-light);
+    
+    .icon {
+        color: var(--text-color-light);
+    }
+}
+
+.summary-details {
+    flex: 1;
+}
+
+.summary-subtext {
+    font-size: 0.75rem;
+    margin-top: 0.125rem;
+    opacity: 0.8;
+}
+
+// Selection Controls
+.selection-control-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 0.875rem 1rem;
+    background: var(--body-background-alt);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
 }
 
-.category-field {
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--border-color);
-}
-
-.summary {
+.select-all-control {
     display: flex;
     align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    flex: 1;
 }
 
-.contracts-list {
-    max-height: 500px;
-    overflow-y: auto;
+.select-all-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color-strong);
+}
+
+.selected-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    background: var(--primary-color);
+    color: var(--primary-invert);
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+// Category Input
+.category-input-section {
+    margin-bottom: 1.25rem;
+}
+
+.category-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color-strong);
+    margin-bottom: 0.5rem;
+}
+
+.optional-label {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-color-light);
+    margin-left: 0.25rem;
+}
+
+// Contract Cards
+.contract-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.contract-card {
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-}
-
-.contract-item {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-    transition: background-color 0.2s;
+    border-radius: 10px;
+    background: var(--card-background);
+    transition: all 0.2s ease;
     
-    &:last-child {
-        border-bottom: none;
+    &:hover {
+        background: var(--body-background-alt);
     }
     
     &.is-selected {
+        border-color: var(--primary-color);
         background: rgba(50, 115, 220, 0.05);
+        box-shadow: 0 0 0 1px var(--primary-color);
     }
     
     &.has-errors {
+        border-color: var(--danger-color);
         background: rgba(255, 56, 96, 0.05);
     }
 }
 
-.contract-item-main {
+[data-theme="dark"] .contract-card {
+    &.is-selected {
+        background: rgba(74, 158, 255, 0.1);
+    }
+    
+    &.has-errors {
+        background: rgba(255, 82, 82, 0.1);
+    }
+}
+
+.card-header {
     display: flex;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.875rem;
+    padding: 0.875rem 1rem;
+    cursor: pointer;
 }
 
-.contract-status {
+.card-checkbox {
     flex-shrink: 0;
-    padding-top: 0.25rem;
+    padding-top: 0.125rem;
 }
 
-.contract-details {
+.card-content {
     flex: 1;
     min-width: 0;
+    padding: 0;
 }
 
-.contract-header {
+.card-title-row {
     display: flex;
     align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.contract-name {
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--text-color);
-}
-
-.contract-meta {
-    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.375rem;
     flex-wrap: wrap;
-    gap: 1rem;
-    font-size: 0.875rem;
-    color: var(--text-color-light);
-    margin-bottom: 0.5rem;
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text-color-strong);
+    margin: 0;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.1875rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 500;
+}
+
+.badge-network {
+    background: rgba(50, 115, 220, 0.15);
+    color: var(--primary-color);
+}
+
+.badge-success {
+    background: rgba(72, 187, 120, 0.15);
+    color: #38a169;
     
-    .filename, .address, .address-required {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-    
-    .address {
-        font-family: monospace;
-        font-size: 0.8rem;
-    }
-    
-    .address-required {
-        color: var(--warning-color);
-        font-style: italic;
+    .icon {
+        color: #38a169;
     }
 }
 
-.contract-errors {
-    margin-top: 0.75rem;
+[data-theme="dark"] .badge-success {
+    background: rgba(90, 214, 125, 0.2);
+    color: #5ad67d;
+    
+    .icon {
+        color: #5ad67d;
+    }
+}
+
+.badge-warning {
+    background: rgba(237, 137, 54, 0.15);
+    color: #dd6b20;
+    
+    .icon {
+        color: #dd6b20;
+    }
+}
+
+[data-theme="dark"] .badge-warning {
+    background: rgba(255, 234, 127, 0.2);
+    color: #ffea7f;
+    
+    .icon {
+        color: #ffea7f;
+    }
+}
+
+.badge-error {
+    background: rgba(255, 56, 96, 0.15);
+    color: #e53e3e;
+    
+    .icon {
+        color: #e53e3e;
+    }
+}
+
+[data-theme="dark"] .badge-error {
+    background: rgba(255, 82, 82, 0.2);
+    color: #ff5252;
+    
+    .icon {
+        color: #ff5252;
+    }
+}
+
+.card-filename {
+    font-size: 0.6875rem;
+    font-family: monospace;
+    color: var(--text-color-light);
+}
+
+.card-expand-icon {
+    flex-shrink: 0;
+    color: var(--text-color-light);
+    
+    .icon {
+        transition: transform 0.2s ease;
+        
+        &.is-rotated {
+            transform: rotate(180deg);
+        }
+    }
+}
+
+.card-body {
+    padding: 0.875rem 1rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--body-background-alt);
+}
+
+.input-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color-strong);
+    margin-bottom: 0.5rem;
+}
+
+.address-display {
+    .address-value {
+        font-family: monospace;
+        font-size: 0.875rem;
+        color: var(--text-color);
+        padding: 0.625rem 0.75rem;
+        background: var(--input-background);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+    }
+}
+
+.success-message {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--success-color);
+    
+    .icon {
+        color: var(--success-color);
+    }
+}
+
+.error-container {
     padding: 0.75rem;
     background: rgba(255, 56, 96, 0.1);
-    border-radius: 4px;
+    border-radius: 6px;
     border-left: 3px solid var(--danger-color);
 }
 
-.error-summary {
+[data-theme="dark"] .error-container {
+    background: rgba(255, 82, 82, 0.15);
+}
+
+.error-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -531,9 +843,13 @@ export default class ImportPreviewModal extends Vue {
     }
 }
 
-.address-input-section {
-    padding-top: 0.75rem;
-    border-top: 1px dashed var(--border-color);
+.modern-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: var(--modal-card-foot-background);
+    border-top: 1px solid var(--border-color);
 }
 </style>
+
 

@@ -1,9 +1,9 @@
 <template>
-    <div class="modal-card" style="width: 700px;">
+    <div class="modal-card" style="width: 100%;">
         <header class="modal-card-head">
             <p class="modal-card-title">Import Contract Files</p>
         </header>
-        <section class="modal-card-body">
+        <section class="modal-card-body" style="padding: 1.25rem 1.5rem;">
             <div class="content">
                 <p class="mb-4">
                     You can import contracts from JSON files. We support two formats:
@@ -91,8 +91,8 @@
                 </b-field>
             </div>
         </section>
-        <footer class="modal-card-foot" style="justify-content: flex-end;">
-            <button class="button" type="button" @click="$emit('cancel')">Cancel</button>
+        <footer class="modal-card-foot" style="justify-content: flex-end; padding: 1rem 1.5rem;">
+            <button class="button is-outlined" type="button" @click="$emit('cancel')">Cancel</button>
             <button class="button is-primary" type="button" @click="handleProceed">Got it</button>
         </footer>
     </div>
@@ -115,8 +115,12 @@ export default class ImportInstructionsModal extends Vue {
 </script>
 
 <style lang="scss" scoped>
+.content {
+    max-width: 100%;
+}
+
 .format-section {
-    padding: 1rem;
+    padding: 0.875rem 1rem;
     background: var(--body-background-alt);
     border-radius: 6px;
     border: 1px solid var(--border-color);
@@ -125,7 +129,7 @@ export default class ImportInstructionsModal extends Vue {
 .code-example {
     background: #282c34;
     border-radius: 4px;
-    padding: 1rem;
+    padding: 0.875rem;
     overflow-x: auto;
     
     pre {
@@ -135,7 +139,8 @@ export default class ImportInstructionsModal extends Vue {
         
         code {
             color: #abb2bf;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            line-height: 1.5;
             font-family: 'Courier New', Courier, monospace;
         }
     }
@@ -149,10 +154,12 @@ export default class ImportInstructionsModal extends Vue {
             margin-bottom: 0.25rem;
             
             code {
-                background: var(--body-background);
+                background: var(--input-background);
+                border: 1px solid var(--border-color);
                 padding: 0.125rem 0.375rem;
                 border-radius: 3px;
                 font-size: 0.85em;
+                color: var(--text-color-strong);
             }
         }
     }
