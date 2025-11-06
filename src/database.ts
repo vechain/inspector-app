@@ -24,12 +24,21 @@ export namespace Entities {
     type: "read" | "write";
     fromPrototype?: boolean;
   }
+
+  export interface Network {
+    id?: number;
+    name: string;
+    genesisId: string;
+    nodeUrl: string;
+    createdTime: number;
+  }
 }
 
 class Database extends Dexie {
   public readonly contracts!: Dexie.Table<Entities.Contract, number>;
   public readonly filters!: Dexie.Table<Entities.Filter, number>;
   public readonly shortCuts!: Dexie.Table<Entities.ShortCuts, number>;
+  public readonly networks!: Dexie.Table<Entities.Network, number>;
 
   constructor() {
     super("inspect");
@@ -52,6 +61,9 @@ class Database extends Dexie {
     });
     this.version(6).stores({
       contracts: "++id, address, name, network, category, order",
+    });
+    this.version(7).stores({
+      networks: "++id, genesisId, name, nodeUrl",
     });
     this.open().catch((err) => {
       // tslint:disable-next-line:no-console

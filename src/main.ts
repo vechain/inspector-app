@@ -15,6 +15,8 @@ import VueAnalytics from 'vue-analytics'
 import Connex from '@vechain/connex'
 import { createConnex, isSoloNode, isVeWorldAvailable } from './create-connex'
 import { prePopulate } from '@/pre-populate'
+import { getNetworkById } from './services/network-service'
+import { isCustomNetwork, getCustomNetworkId } from './utils'
 declare module 'vue/types/vue' {
   interface Vue {
     $connex: Connex
@@ -48,55 +50,107 @@ function setExplorerUrl(path: string) {
   Vue.prototype.$explorerTx = `https://insight.vecha.in/#/${temp}txs/`
 }
 
-if (window.connex) {
-    // sync1
-    console.log("Connex ok", window.connex)
-    Vue.prototype.$connex = new Connex({
-        //@ts-ignore
-      network: window.connex.thor.genesis,
-      node: '',
-      noV1Compat: false,
-      noExtension: !isVeWorldAvailable
-    })
-    setExplorerUrl('')
-} else {
-
-  // Default is main net for sync2
-  const defaultNetwork = isSoloNode ? 'solo' : 'main'
-  const net = localStorage.getItem('last-net') || defaultNetwork
-  console.log("net", net)
-
-  if (['test', 'main', 'solo'].includes(net)) {
-    setExplorerUrl(net)
-    Vue.prototype.$connex = createConnex(net as "test" | "main" | "solo")
-  } else {
-    const node = localStorage.getItem('custom-node')
-    const network = JSON.parse(localStorage.getItem('custom-network') || '') as Connex.Thor.Block // genesis block
-
-    if (node && network) {
-      if (network.id === '0x000000000b2bce3c70bc649a02749e8687721b09ed2e15997f466536b20bb127') {
-        // test
-        setExplorerUrl('test')
-      } else if (network.id === '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a') {
-        // main
-        setExplorerUrl('main')
-      } else {
-        const host = node.endsWith('/') ? node : (node + '/')
-        Vue.prototype.$explorerAccount = `${host}accounts/`
-        Vue.prototype.$explorerBlock = `${host}blocks/`
-        Vue.prototype.$explorerTx = `${host}transactions/`
-      }
+async function initApp() {
+  if (window.connex) {
+      // sync1
+      console.log("Connex ok", window.connex)
       Vue.prototype.$connex = new Connex({
-        network,
-        node
+          //@ts-ignore
+        network: window.connex.thor.genesis,
+        node: '',
+        noV1Compat: false,
+        noExtension: !isVeWorldAvailable
       })
+      setExplorerUrl('')
+  } else {
+
+    // Default is main net for sync2
+    const defaultNetwork = isSoloNode ? 'solo' : 'main'
+    const net = localStorage.getItem('last-net') || defaultNetwork
+    console.log("net", net)
+
+    if (['test', 'main', 'solo'].includes(net)) {
+      setExplorerUrl(net)
+      Vue.prototype.$connex = createConnex(net as "test" | "main" | "solo")
+    } else if (isCustomNetwork(net)) {
+      const networkId = getCustomNetworkId(net)
+      if (networkId) {
+        try {
+          const customNetwork = await getNetworkById(networkId)
+          if (customNetwork) {
+            const genesisBlock = {
+              number: 0,
+              id: customNetwork.genesisId,
+              size: 0,
+              parentID: "0x0000000000000000000000000000000000000000000000000000000000000000",
+              timestamp: 0,
+              gasLimit: 0,
+              beneficiary: "0x0000000000000000000000000000000000000000",
+              gasUsed: 0,
+              totalScore: 0,
+              txsRoot: "0x0000000000000000000000000000000000000000000000000000000000000000",
+              txsFeatures: 0,
+              stateRoot: "0x0000000000000000000000000000000000000000000000000000000000000000",
+              receiptsRoot: "0x0000000000000000000000000000000000000000000000000000000000000000",
+              signer: "0x0000000000000000000000000000000000000000",
+              isTrunk: true,
+              transactions: []
+            }
+
+            const host = customNetwork.nodeUrl.endsWith('/') ? customNetwork.nodeUrl : (customNetwork.nodeUrl + '/')
+            Vue.prototype.$explorerAccount = `${host}accounts/`
+            Vue.prototype.$explorerBlock = `${host}blocks/`
+            Vue.prototype.$explorerTx = `${host}transactions/`
+
+            Vue.prototype.$connex = new Connex({
+              network: genesisBlock,
+              node: customNetwork.nodeUrl,
+              noExtension: !isVeWorldAvailable
+            })
+          } else {
+            console.error('Custom network not found, falling back to mainnet')
+            localStorage.setItem('last-net', 'main')
+            setExplorerUrl('main')
+            Vue.prototype.$connex = createConnex('main')
+          }
+        } catch (error) {
+          console.error('Failed to load custom network:', error)
+          localStorage.setItem('last-net', 'main')
+          setExplorerUrl('main')
+          Vue.prototype.$connex = createConnex('main')
+        }
+      }
+    } else {
+      const node = localStorage.getItem('custom-node')
+      const network = JSON.parse(localStorage.getItem('custom-network') || '') as Connex.Thor.Block // genesis block
+
+      if (node && network) {
+        if (network.id === '0x000000000b2bce3c70bc649a02749e8687721b09ed2e15997f466536b20bb127') {
+          // test
+          setExplorerUrl('test')
+        } else if (network.id === '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a') {
+          // main
+          setExplorerUrl('main')
+        } else {
+          const host = node.endsWith('/') ? node : (node + '/')
+          Vue.prototype.$explorerAccount = `${host}accounts/`
+          Vue.prototype.$explorerBlock = `${host}blocks/`
+          Vue.prototype.$explorerTx = `${host}transactions/`
+        }
+        Vue.prototype.$connex = new Connex({
+          network,
+          node
+        })
+      }
     }
   }
+
+  prePopulate()
+
+  new Vue({
+    router,
+    render: (h) => h(App)
+  }).$mount('#app')
 }
 
-prePopulate()
-
-new Vue({
-  router,
-  render: (h) => h(App)
-}).$mount('#app')
+initApp()
