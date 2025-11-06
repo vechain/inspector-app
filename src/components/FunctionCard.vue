@@ -41,7 +41,35 @@
                     ></b-input>
                 </b-field>
                 <b-field v-if="payable" class="item-content" horizontal label="value">
-                    <b-input custom-class="is-family-monospace has-text-weight-semibold" type="text" placeholder="number(vet)" v-model.trim="value"></b-input>
+                    <b-field grouped>
+                        <b-input
+                            custom-class="is-family-monospace has-text-weight-semibold"
+                            type="text"
+                            :placeholder="valueUnit === 'vet' ? 'number(vet)' : 'number(wei)'"
+                            v-model.trim="displayValue"
+                            expanded
+                        ></b-input>
+                        <p class="control">
+                            <div class="buttons has-addons unit-toggle-group">
+                                <button
+                                    @click="setValueUnit('vet')"
+                                    type="button"
+                                    class="button unit-toggle-btn"
+                                    :class="{ 'is-active': valueUnit === 'vet' }"
+                                >
+                                    VET
+                                </button>
+                                <button
+                                    @click="setValueUnit('wei')"
+                                    type="button"
+                                    class="button unit-toggle-btn"
+                                    :class="{ 'is-active': valueUnit === 'wei' }"
+                                >
+                                    WEI
+                                </button>
+                            </div>
+                        </p>
+                    </b-field>
                 </b-field>
                 <b-field class="item-content" horizontal>
                     <div class="buttons has-addons">
@@ -94,6 +122,69 @@ import DB from '../database'
 export default class FunctionCard extends Mixins(AccountCall) {
     private tabs = ['Inputs', 'Description']
     private activeTab = 'Inputs'
+    private valueUnit: 'vet' | 'wei' = 'vet'
+
+    get displayValue(): string {
+        if (!this.value) return ''
+
+        try {
+            const bn = BN(this.value)
+            if (bn.isNaN() || !bn.isFinite()) {
+                return this.value
+            }
+
+            if (this.valueUnit === 'wei') {
+                // Convert VET to wei for display (multiply by 1e18)
+                return bn.multipliedBy('1000000000000000000').toFixed(0, BN.ROUND_DOWN)
+            } else {
+                // VET mode: ensure no scientific notation
+                // Format with up to 18 decimal places, remove trailing zeros
+                const formatted = bn.toFixed(18, BN.ROUND_DOWN)
+                return formatted.replace(/\.?0+$/, '') || '0'
+            }
+        } catch {
+            return this.value
+        }
+    }
+
+    set displayValue(val: string) {
+        if (!val) {
+            this.value = null
+            return
+        }
+
+        if (this.valueUnit === 'wei') {
+            // Convert wei to VET for storage (divide by 1e18)
+            // Only accept integers in wei mode
+            if (!/^\d+$/.test(val)) {
+                return // Ignore invalid input
+            }
+            try {
+                const bn = BN(val)
+                if (bn.isNaN() || !bn.isFinite()) {
+                    return
+                }
+                // Divide by 1e18 and keep precision, avoid scientific notation
+                // Use toFixed with 18 decimals (max precision for wei/vet conversion)
+                const result = bn.dividedBy('1000000000000000000').toFixed(18, BN.ROUND_DOWN)
+                // Remove trailing zeros and unnecessary decimal point
+                this.value = result.replace(/\.?0+$/, '') || '0'
+            } catch {
+                // Keep old value on error
+            }
+        } else {
+            // VET mode: allow decimals
+            // Validate format: number with optional decimal point
+            if (!/^\d*\.?\d*$/.test(val)) {
+                return // Ignore invalid input
+            }
+            this.value = val
+        }
+    }
+
+    private setValueUnit(unit: 'vet' | 'wei') {
+        this.valueUnit = unit
+    }
 
     created() {
         this.activeTab = this.tabs[0]
@@ -173,5 +264,60 @@ export default class FunctionCard extends Mixins(AccountCall) {
     padding: 1rem;
     border-radius: 4px;
     border: 1px solid #404040;
+}
+
+/* Unit toggle button styling */
+.unit-toggle-group {
+    margin: 0;
+}
+
+.unit-toggle-btn {
+    min-width: 50px;
+    font-weight: 600;
+    height: 2.5em;
+    background-color: #f5f5f5;
+    border-color: #dbdbdb;
+    color: #363636;
+    transition: all 0.2s ease;
+}
+
+.unit-toggle-btn:hover {
+    background-color: #e8e8e8;
+    border-color: #b5b5b5;
+}
+
+.unit-toggle-btn.is-active {
+    background-color: #485fc7;
+    border-color: #485fc7;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.unit-toggle-btn.is-active:hover {
+    background-color: #3e56c4;
+    border-color: #3e56c4;
+}
+
+/* Dark mode styling for toggle */
+[data-theme="dark"] .unit-toggle-btn {
+    background-color: #2a2a2a;
+    border-color: #404040;
+    color: #e8e8e8;
+}
+
+[data-theme="dark"] .unit-toggle-btn:hover {
+    background-color: #353535;
+    border-color: #505050;
+}
+
+[data-theme="dark"] .unit-toggle-btn.is-active {
+    background-color: #4a63d8;
+    border-color: #4a63d8;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .unit-toggle-btn.is-active:hover {
+    background-color: #5570dc;
+    border-color: #5570dc;
 }
 </style>
