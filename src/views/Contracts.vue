@@ -371,12 +371,12 @@ export default class Contracts extends Vue {
         }
     }
 
-    handleContractSaved(category: string) {
-        this.categoryToExpand = category
-        this.reload()
+    handleContractSaved(data: { category: string; contractId: number; isNewContract: boolean }) {
+        this.categoryToExpand = data.category
+        this.reload(data.isNewContract ? data.contractId : null)
     }
 
-    async reload() {
+    async reload(contractIdToOpen: number | null = null) {
         const categoryToExpand = this.categoryToExpand
         this.currentItem = null
         this.categoryToExpand = null
@@ -391,6 +391,16 @@ export default class Contracts extends Vue {
                     sidebar.expandCategory(categoryToExpand)
                 }
             })
+        }
+
+        // Open the contract if it's a newly added one
+        if (contractIdToOpen !== null) {
+            const contract = this.contracts.find(c => c.id === contractIdToOpen)
+            if (contract) {
+                this.$nextTick(() => {
+                    this.openContract(contract)
+                })
+            }
         }
     }
 

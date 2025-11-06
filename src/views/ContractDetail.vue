@@ -233,7 +233,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
         this.isModalActive = false
     }
 
-    async onFinishEdit(category: string) {
+    async onFinishEdit(data: { category: string; contractId: number; isNewContract: boolean }) {
         this.isModalActive = false
         // Reload the contract data
         const idOrAddress: string = this.$route.query.id || this.$route.query.address

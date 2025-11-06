@@ -255,7 +255,7 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
         this.isModalActive = false
     }
 
-    async onFinishEdit(category: string) {
+    async onFinishEdit(data: { category: string; contractId: number; isNewContract: boolean }) {
         this.isModalActive = false
         // Notify parent to reload contract data
         this.$emit('contract-updated', this.contract.id)
