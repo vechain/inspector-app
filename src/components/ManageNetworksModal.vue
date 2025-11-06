@@ -188,6 +188,7 @@ export default class ManageNetworksModal extends Vue {
             })
 
             await this.loadNetworks()
+            this.$emit('network-deleted')
 
             const lastNet = localStorage.getItem('last-net')
             if (lastNet === `custom-${network.id}`) {

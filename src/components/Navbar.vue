@@ -216,6 +216,9 @@ export default class Navbar extends Vue {
             events: {
                 close: () => {
                     this.loadCustomNetworks()
+                },
+                'network-deleted': () => {
+                    this.loadCustomNetworks()
                 }
             }
         })
