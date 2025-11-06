@@ -44,7 +44,7 @@
                 <!-- Selection Controls -->
                 <div class="selection-control-bar">
                     <label class="select-all-control">
-                        <b-checkbox v-model="isAllSelected" @input="toggleSelectAll"></b-checkbox>
+                        <b-checkbox :value="isAllSelected" @input="toggleSelectAll"></b-checkbox>
                         <span class="select-all-label">Select All</span>
                     </label>
                     <div class="selected-badge">
@@ -211,7 +211,11 @@ export default class ImportPreviewModal extends Vue {
     private contractAddresses: { [filename: string]: string } = {}
     private contractAddressErrors: { [filename: string]: string } = {}
     private expandedCards: { [filename: string]: boolean } = {}
-    private isAllSelected: boolean = false
+
+    get isAllSelected(): boolean {
+        return this.validContracts.length > 0 && 
+               this.validContracts.every(r => this.selectedContracts[r.filename])
+    }
 
     get validContracts(): ParseResult[] {
         return this.parsedContracts.filter(r => r.success && !r.skipped)
@@ -284,7 +288,6 @@ export default class ImportPreviewModal extends Vue {
         this.validContracts.forEach(r => {
             this.$set(this.selectedContracts, r.filename, true)
         })
-        this.updateSelectAllState()
         
         // Initialize filtered categories
         this.filteredCategories = this.existingCategories
@@ -300,11 +303,6 @@ export default class ImportPreviewModal extends Vue {
 
     toggleExpand(filename: string) {
         this.$set(this.expandedCards, filename, !this.expandedCards[filename])
-    }
-
-    updateSelectAllState() {
-        const allValid = this.validContracts.every(r => this.selectedContracts[r.filename])
-        this.isAllSelected = allValid && this.validContracts.length > 0
     }
 
     toggleSelectAll() {
@@ -352,14 +350,12 @@ export default class ImportPreviewModal extends Vue {
         this.validContracts.forEach(r => {
             this.$set(this.selectedContracts, r.filename, true)
         })
-        this.updateSelectAllState()
     }
 
     deselectAll() {
         this.validContracts.forEach(r => {
             this.$set(this.selectedContracts, r.filename, false)
         })
-        this.updateSelectAllState()
     }
 
     handleImport() {
