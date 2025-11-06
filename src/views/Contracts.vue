@@ -12,6 +12,7 @@
         <!-- Sidebar -->
         <div class="sidebar-wrapper" :class="{ 'is-open': isSidebarOpen }">
             <Sidebar 
+                ref="sidebar"
                 :contracts="contracts"
                 :categoryOrder="categoryOrder"
                 @open-contract="handleOpenContract"
@@ -74,7 +75,7 @@
                                 <p class="hint-title">Getting Started</p>
                                 <ul class="hint-list">
                                     <li>Search contracts by name or address</li>
-                                    <li>Click "View" to open in a new tab</li>
+                                    <li>Click the contract name to open in a new tab</li>
                                     <li>Organize contracts with categories</li>
                                     <li>Execute read and write functions</li>
                                 </ul>
@@ -86,8 +87,8 @@
         </div>
 
         <!-- Edit/Add Contract Modal -->
-        <b-modal :width="640" :canCancel="['outside']" :active.sync="isModalActive">
-            <EditContract @cancel="onCancel" @finished="reload" :item="currentItem" :isImport="isImport" />
+        <b-modal :width="640" :canCancel="[]" :active.sync="isModalActive">
+            <EditContract @cancel="onCancel" @finished="handleContractSaved" :item="currentItem" :isImport="isImport" />
         </b-modal>
     </section>
 </template>
@@ -121,6 +122,7 @@ export default class Contracts extends Vue {
     private contracts: Entities.Contract[] = []
     private isImport: boolean = false
     private categoryOrder: { [key: string]: number } = {}
+    private categoryToExpand: string | null = null
     
     // Tab management state
     private openContracts: OpenContract[] = []
@@ -369,10 +371,37 @@ export default class Contracts extends Vue {
         }
     }
 
-    reload() {
+    handleContractSaved(data: { category: string; contractId: number; isNewContract: boolean }) {
+        this.categoryToExpand = data.category
+        this.reload(data.isNewContract ? data.contractId : null)
+    }
+
+    async reload(contractIdToOpen: number | null = null) {
+        const categoryToExpand = this.categoryToExpand
         this.currentItem = null
-        this.list()
+        this.categoryToExpand = null
+        await this.list()
         this.isModalActive = false
+        
+        // Expand the category if specified
+        if (categoryToExpand !== null) {
+            this.$nextTick(() => {
+                const sidebar = this.$refs.sidebar as any
+                if (sidebar && sidebar.expandCategory) {
+                    sidebar.expandCategory(categoryToExpand)
+                }
+            })
+        }
+
+        // Open the contract if it's a newly added one
+        if (contractIdToOpen !== null) {
+            const contract = this.contracts.find(c => c.id === contractIdToOpen)
+            if (contract) {
+                this.$nextTick(() => {
+                    this.openContract(contract)
+                })
+            }
+        }
     }
 
     private exportJson(item: Entities.Contract) {
