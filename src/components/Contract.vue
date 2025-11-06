@@ -232,7 +232,11 @@ export default class Contract extends Vue {
     }
 
     toggleMenu() {
-        this.isMenuOpen = !this.isMenuOpen
+        const wasOpen = this.isMenuOpen
+        // Emit event to close all other menus
+        BUS.$emit('close-all-contract-menus')
+        // Toggle this menu
+        this.isMenuOpen = !wasOpen
     }
 
     handleDragStart(e: DragEvent) {
@@ -255,10 +259,13 @@ export default class Contract extends Vue {
     mounted() {
         // Close dropdown when clicking outside
         document.addEventListener('click', this.closeMenu)
+        // Listen for event to close all menus
+        BUS.$on('close-all-contract-menus', this.closeMenu)
     }
 
     beforeDestroy() {
         document.removeEventListener('click', this.closeMenu)
+        BUS.$off('close-all-contract-menus', this.closeMenu)
     }
 
     closeMenu() {
@@ -277,6 +284,11 @@ export default class Contract extends Vue {
     transition: all 0.2s ease;
     cursor: pointer;
     margin: auto;
+    z-index: 1;
+}
+
+.contract-card:has(.more-menu.is-active) {
+    z-index: 100;
 }
 
 .contract-card:hover {
@@ -348,7 +360,6 @@ export default class Contract extends Vue {
     opacity: 1;
     transition: opacity 0.2s ease;
     position: relative;
-    z-index: 10;
 }
 
 .contract-card:hover .more-menu,
@@ -371,7 +382,6 @@ export default class Contract extends Vue {
     position: absolute;
     top: 100%;
     right: 0;
-    z-index: 20;
     min-width: 160px;
     padding-top: 4px;
     display: none;
