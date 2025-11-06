@@ -212,4 +212,24 @@ export default class EventShowCard extends Vue {
 .event-tabs >>> .tabs li a:hover {
     border-bottom-color: #6bb6ff;
 }
+
+/* Smooth hover for event data links */
+.event-header a {
+    transition: color 0.2s ease;
+}
+
+.event-header a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* Smooth hover for address links in table */
+.box a.is-family-monospace {
+    transition: color 0.2s ease;
+}
+
+.box a.is-family-monospace:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
 </style>

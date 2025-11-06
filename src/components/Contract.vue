@@ -448,6 +448,16 @@ export default class Contract extends Vue {
     filter: brightness(1.2);
 }
 
+/* Contract address link hover - smooth and subtle */
+.detail-box .media-content a {
+    transition: opacity 0.2s ease;
+}
+
+.detail-box .media-content a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
 .detail-more-menu {
     position: relative;
     z-index: 10;
