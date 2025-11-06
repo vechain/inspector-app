@@ -397,6 +397,7 @@ export default class Sidebar extends Vue {
     border: none;
     cursor: pointer;
     transition: background-color 0.2s;
+    margin-bottom: 0.5rem;
 }
 
 .category-header:hover {
@@ -420,6 +421,7 @@ export default class Sidebar extends Vue {
     text-transform: uppercase;
     color: var(--text-color-light);
     letter-spacing: 0.05em;
+    text-align: left;
 }
 
 .category-count {
