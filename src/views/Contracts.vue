@@ -610,7 +610,8 @@ export default class Contracts extends Vue {
             return
         }
 
-        const importedCount = await ImportService.importContracts(contracts)
+        const currentNetwork = this.$connex.thor.genesis.id
+        const importedCount = await ImportService.importContracts(contracts, currentNetwork)
 
         this.$buefy.toast.open({
             message: `Successfully imported ${importedCount} contract(s)`,
