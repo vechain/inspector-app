@@ -66,10 +66,6 @@
             placeholder="0x..."
           ></b-input>
         </b-field>
-        <b-message v-if="isImport && !form.address" type="is-info" size="is-small" class="mb-3">
-          <b-icon icon="info-circle" size="is-small"></b-icon>
-          This contract was imported from a Hardhat artifact. Please enter the deployed contract address.
-        </b-message>
         <b-field
           :type="formMessage.abi.isError ? 'is-danger' : ''"
           :message="formMessage.abi.message"
