@@ -545,7 +545,6 @@ export default class Contracts extends Vue {
     }
 
     private async handleFilesDropped(payload: { files: File[], isFromFolder?: boolean }) {
-        console.log('handleFilesDropped called with', payload.files.length, 'files, isFromFolder:', payload.isFromFolder)
         this.showTypeModal = false
         await this.processFiles(payload.files, payload.isFromFolder || false)
     }
