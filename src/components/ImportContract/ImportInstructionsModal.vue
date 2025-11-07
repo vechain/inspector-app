@@ -60,9 +60,6 @@
             <!-- Tabs -->
             <b-tabs v-model="activeTab" class="format-tabs" size="is-small">
                 <b-tab-item label="Standard Format">
-                    <div class="tab-icon-wrapper">
-                        <b-icon icon="file-code" size="is-small"></b-icon>
-                    </div>
                     
                     <div class="format-content">
                         <p class="format-description">
@@ -96,10 +93,7 @@
                 </b-tab-item>
 
                 <b-tab-item label="Hardhat Artifacts">
-                    <div class="tab-icon-wrapper">
-                        <b-icon icon="hammer" size="is-small"></b-icon>
-                    </div>
-                    
+                   
                     <div class="format-content">
                         <p class="format-description">
                             Compilation artifacts from Hardhat. You'll need to provide the deployment address manually.
@@ -342,6 +336,30 @@ export default class ImportInstructionsModal extends Vue {
     margin-top: 1.5rem;
 }
 
+// Fix tab styling for dark mode
+.format-tabs ::v-deep {
+    .tabs {
+        a {
+            color: var(--text-color);
+       
+            
+            &:hover {
+                color: var(--text-color-strong);
+                border-bottom-color: var(--text-color-light);
+            }
+        }
+        
+        li.is-active a {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+    }
+    
+    .tab-content {
+        padding: 1rem 0;
+    }
+}
+
 .tab-icon-wrapper {
     display: inline-flex;
     align-items: center;
@@ -444,6 +462,21 @@ export default class ImportInstructionsModal extends Vue {
 .dont-show-section {
     display: flex;
     align-items: center;
+    
+    ::v-deep .b-checkbox {
+        .check {
+            border-color: var(--border-color);
+            background-color: var(--input-background);
+        }
+        
+        &:hover .check {
+            border-color: var(--primary-color);
+        }
+        
+        .control-label {
+            color: var(--text-color);
+        }
+    }
 }
 </style>
 
