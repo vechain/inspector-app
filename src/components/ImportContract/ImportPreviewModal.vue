@@ -157,23 +157,30 @@
                                     <b-icon icon="exclamation-circle" size="is-small"></b-icon>
                                     <span>{{ result.errors.length }} error(s)</span>
                                 </div>
-                                <ul class="error-list">
-                                    <li v-for="(error, errorIndex) in result.errors" :key="errorIndex">
-                                        {{ error }}
-                                    </li>
-                                </ul>
+                                <div class="error-items">
+                                    <div v-for="(error, errorIndex) in result.errors" :key="errorIndex" class="error-item">
+                                        <div class="error-message">
+                                            <strong>Problem:</strong> {{ error }}
+                                        </div>
+                                        <div v-if="getErrorFix(error)" class="error-fix">
+                                            <b-icon icon="lightbulb" size="is-small"></b-icon>
+                                            <div>
+                                                <strong>How to fix:</strong> {{ getErrorFix(error) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div v-if="errorCount > 0" class="error-help mt-4">
+                <div v-if="errorCount > 0" class="error-help">
                     <b-message type="is-warning">
                         <p>
+                            <b-icon icon="exclamation-triangle" size="is-small"></b-icon>
                             <strong>{{ errorCount }} file(s) have errors</strong> and cannot be imported. 
-                            <a @click="$emit('show-errors', errorContracts)" class="has-text-link">
-                                View detailed errors
-                            </a>
+                            Expand the cards above to see details and fix suggestions.
                         </p>
                     </b-message>
                 </div>
@@ -356,6 +363,25 @@ export default class ImportPreviewModal extends Vue {
         this.validContracts.forEach(r => {
             this.$set(this.selectedContracts, r.filename, false)
         })
+    }
+
+    getErrorFix(error: string): string {
+        if (error.includes('Invalid JSON')) {
+            return 'Use a JSON validator to check your file syntax. Look for missing commas, quotes, or brackets.'
+        }
+        if (error.includes('Unrecognized file format')) {
+            return 'Ensure your file follows either the standard format or Hardhat artifact format as shown in the instructions.'
+        }
+        if (error.includes('Missing') || error.includes('required')) {
+            return 'Add the missing field to your JSON file. Check the import instructions for the required format.'
+        }
+        if (error.includes('Invalid') && error.includes('address')) {
+            return 'The address must be a valid hexadecimal string starting with "0x" and 42 characters long.'
+        }
+        if (error.includes('Invalid') && error.includes('ABI')) {
+            return 'Ensure the ABI is properly formatted as a JSON array of function/event definitions.'
+        }
+        return ''
     }
 
     handleImport() {
@@ -798,14 +824,15 @@ export default class ImportPreviewModal extends Vue {
 }
 
 .error-container {
-    padding: 0.75rem;
-    background: rgba(255, 56, 96, 0.1);
-    border-radius: 6px;
-    border-left: 3px solid var(--danger-color);
+    padding: 0.875rem;
+    background: rgba(255, 56, 96, 0.08);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 56, 96, 0.2);
 }
 
 [data-theme="dark"] .error-container {
-    background: rgba(255, 82, 82, 0.15);
+    background: rgba(255, 82, 82, 0.12);
+    border-color: rgba(255, 82, 82, 0.25);
 }
 
 .error-header {
@@ -814,29 +841,57 @@ export default class ImportPreviewModal extends Vue {
     gap: 0.5rem;
     color: var(--danger-color);
     font-weight: 600;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.875rem;
     font-size: 0.875rem;
 }
 
-.error-list {
-    margin-left: 1.5rem;
+.error-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.error-item {
+    // Individual error item styling
+}
+
+.error-message {
     font-size: 0.875rem;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
     
-    li {
-        margin-bottom: 0.25rem;
-        color: var(--text-color);
+    strong {
+        color: var(--danger-color);
     }
+}
+
+.error-fix {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.625rem;
+    background: rgba(50, 115, 220, 0.08);
+    border-radius: 4px;
+    border-left: 3px solid var(--info-color);
+    font-size: 0.8125rem;
+    
+    .icon {
+        flex-shrink: 0;
+        color: var(--info-color);
+        margin-top: 0.125rem;
+    }
+    
+    strong {
+        color: var(--info-color);
+    }
+}
+
+[data-theme="dark"] .error-fix {
+    background: rgba(74, 163, 227, 0.12);
 }
 
 .error-help {
-    a {
-        cursor: pointer;
-        text-decoration: underline;
-        
-        &:hover {
-            text-decoration: none;
-        }
-    }
+    margin-top: 1rem;
 }
 
 .modern-footer {

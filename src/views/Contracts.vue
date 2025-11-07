@@ -117,15 +117,6 @@
                 :existingCategories="existingCategories"
                 @cancel="showPreviewModal = false"
                 @import-selected="handleImportSelected"
-                @show-errors="handleShowErrors"
-            />
-        </b-modal>
-
-        <!-- Import Error Modal -->
-        <b-modal :active.sync="showErrorModal" :canCancel="['escape']">
-            <ImportErrorModal 
-                :errorContracts="errorContracts"
-                @close="showErrorModal = false"
             />
         </b-modal>
     </section>
@@ -140,7 +131,6 @@ import EditContract from '../components/EditContract.vue'
 import ImportInstructionsModal from '../components/ImportContract/ImportInstructionsModal.vue'
 import ImportTypeModal from '../components/ImportContract/ImportTypeModal.vue'
 import ImportPreviewModal from '../components/ImportContract/ImportPreviewModal.vue'
-import ImportErrorModal from '../components/ImportContract/ImportErrorModal.vue'
 import DB, { Entities } from '../database'
 import { ParseResult } from '../utils/import-utils'
 import { ImportService } from '../services/import-service'
@@ -159,8 +149,7 @@ interface OpenContract {
         EditContract,
         ImportInstructionsModal,
         ImportTypeModal,
-        ImportPreviewModal,
-        ImportErrorModal
+        ImportPreviewModal
     }
 })
 export default class Contracts extends Vue {
@@ -185,9 +174,7 @@ export default class Contracts extends Vue {
     private showInstructionsModal: boolean = false
     private showTypeModal: boolean = false
     private showPreviewModal: boolean = false
-    private showErrorModal: boolean = false
     private parsedContracts: ParseResult[] = []
-    private errorContracts: ParseResult[] = []
 
     get activeContract(): Entities.Contract | null {
         if (this.activeContractId === null) {
@@ -582,7 +569,6 @@ export default class Contracts extends Vue {
         try {
             const results = await ImportService.processFiles(files, isFromFolder)
             this.parsedContracts = results
-            this.errorContracts = results.filter(r => !r.success && !r.skipped)
             
             if (results.length === 0) {
                 this.$buefy.toast.open({
@@ -619,12 +605,6 @@ export default class Contracts extends Vue {
         })
 
         await this.reload()
-    }
-
-    private handleShowErrors(errorContracts: ParseResult[]) {
-        this.errorContracts = errorContracts
-        this.showPreviewModal = false
-        this.showErrorModal = true
     }
 
     // Drag and drop handlers
