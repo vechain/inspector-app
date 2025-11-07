@@ -17,16 +17,16 @@
             <div v-if="validCount > 0 || contractsNeedingAddress > 0 || skippedCount > 0" class="summary-cards">
                 <div v-if="validCount > 0" class="summary-card success-card">
                     <b-icon icon="check-circle" size="is-small"></b-icon>
-                    <span><strong>{{ validCount }}</strong> contract{{ validCount !== 1 ? 's' : '' }} ready to import</span>
+                    <span><span class="count-number">{{ validCount }}</span> contract{{ validCount !== 1 ? 's' : '' }} ready to import</span>
                 </div>
                 <div v-if="contractsNeedingAddress > 0" class="summary-card warning-card">
                     <b-icon icon="exclamation-circle" size="is-small"></b-icon>
-                    <span><strong>{{ contractsNeedingAddress }}</strong> contract{{ contractsNeedingAddress !== 1 ? 's' : '' }} need{{ contractsNeedingAddress === 1 ? 's' : '' }} deployment address</span>
+                    <span><span class="count-number">{{ contractsNeedingAddress }}</span> contract{{ contractsNeedingAddress !== 1 ? 's' : '' }} need{{ contractsNeedingAddress === 1 ? 's' : '' }} deployment address</span>
                 </div>
                 <div v-if="skippedCount > 0" class="summary-card info-card">
                     <b-icon icon="minus-circle" size="is-small"></b-icon>
                     <div class="summary-details">
-                        <div><strong>{{ skippedCount }}</strong> files skipped</div>
+                        <div><span class="count-number">{{ skippedCount }}</span> files skipped</div>
                         <div class="summary-subtext">{{ skippedReasons }}</div>
                     </div>
                 </div>
@@ -845,6 +845,11 @@ export default class ImportPreviewModal extends Vue {
     padding: 1rem 1.5rem;
     background: var(--modal-card-foot-background);
     border-top: 1px solid var(--border-color);
+}
+
+.count-number {
+    font-weight: 800;
+    color: var(--primary-color);
 }
 </style>
 
