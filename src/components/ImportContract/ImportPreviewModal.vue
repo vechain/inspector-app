@@ -52,28 +52,26 @@
                     </div>
                 </div>
 
-                <!-- Category Input -->
-                <div class="category-input-section">
+                <!-- Search -->
+                <div class="search-section">
                     <label class="category-label">
-                        Set a category for the contracts
-                        <span class="optional-label">(optional)</span>
+                        Filter contracts by name or filename
                     </label>
-                    <b-autocomplete
-                        v-model="categoryForAll"
-                        :data="filteredCategories"
-                        placeholder="Leave empty to keep individual categories"
-                        @typing="filterCategories"
-                        clearable
+                    <b-input
+                        v-model="searchQuery"
+                        placeholder="Search contracts by name or filename..."
+                        icon="search"
+                        icon-right="times-circle"
+                        icon-right-clickable
+                        @icon-right-click="clearSearch"
                         size="is-small"
-                    >
-                        <template slot="empty">Type to create new category</template>
-                    </b-autocomplete>
+                    />
                 </div>
 
                 <!-- Contract Cards -->
                 <div class="contract-cards-list">
                     <div 
-                        v-for="(result, index) in displayedContracts" 
+                        v-for="(result, index) in filteredDisplayedContracts" 
                         :key="index"
                         class="contract-card"
                         :class="{ 
@@ -187,15 +185,32 @@
             </div>
         </section>
         <footer class="modal-card-foot modern-footer">
-            <button class="button is-outlined" type="button" @click="$emit('cancel')">Cancel</button>
-            <button 
-                class="button is-primary" 
-                type="button" 
-                @click="handleImport"
-                :disabled="!canImport"
-            >
-                Import Selected ({{ selectedCount }})
-            </button>
+            <div class="footer-left">
+                <button class="button is-outlined" type="button" @click="$emit('cancel')">Cancel</button>
+            </div>
+            <div class="footer-right">
+                <div class="footer-category">
+                    <label class="footer-category-label">Set a category for the contracts</label>
+                    <b-autocomplete
+                        v-model="categoryForAll"
+                        :data="filteredCategories"
+                        placeholder="Uncategorized"
+                        @typing="filterCategories"
+                        clearable
+                        size="is-small"
+                    >
+                        <template slot="empty">Type to create new category</template>
+                    </b-autocomplete>
+                </div>
+                <button 
+                    class="button is-primary" 
+                    type="button" 
+                    @click="handleImport"
+                    :disabled="!canImport"
+                >
+                    Import Selected ({{ selectedCount }})
+                </button>
+            </div>
         </footer>
     </div>
 </template>
@@ -218,6 +233,7 @@ export default class ImportPreviewModal extends Vue {
     private contractAddresses: { [filename: string]: string } = {}
     private contractAddressErrors: { [filename: string]: string } = {}
     private expandedCards: { [filename: string]: boolean } = {}
+    private searchQuery: string = ''
 
     get isAllSelected(): boolean {
         return this.validContracts.length > 0 && 
@@ -239,6 +255,19 @@ export default class ImportPreviewModal extends Vue {
     get displayedContracts(): ParseResult[] {
         // Only show valid and error contracts, not skipped ones
         return [...this.validContracts, ...this.errorContracts]
+    }
+
+    get filteredDisplayedContracts(): ParseResult[] {
+        if (!this.searchQuery.trim()) {
+            return this.displayedContracts
+        }
+        
+        const query = this.searchQuery.toLowerCase()
+        return this.displayedContracts.filter(result => {
+            const name = (result.contract?.name || '').toLowerCase()
+            const filename = result.filename.toLowerCase()
+            return name.includes(query) || filename.includes(query)
+        })
     }
 
     get selectedCount(): number {
@@ -351,6 +380,10 @@ export default class ImportPreviewModal extends Vue {
         this.filteredCategories = this.existingCategories.filter(category => {
             return category.toLowerCase().includes(text.toLowerCase())
         })
+    }
+
+    clearSearch() {
+        this.searchQuery = ''
     }
 
     selectAll() {
@@ -485,6 +518,11 @@ export default class ImportPreviewModal extends Vue {
     overflow-y: auto;
 }
 
+// Search Section
+.search-section {
+    margin-bottom: 1rem;
+}
+
 // Summary Cards
 .summary-cards {
     display: flex;
@@ -603,25 +641,6 @@ export default class ImportPreviewModal extends Vue {
     font-weight: 600;
 }
 
-// Category Input
-.category-input-section {
-    margin-bottom: 1.25rem;
-}
-
-.category-label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-color-strong);
-    margin-bottom: 0.5rem;
-}
-
-.optional-label {
-    font-size: 0.75rem;
-    font-weight: 400;
-    color: var(--text-color-light);
-    margin-left: 0.25rem;
-}
 
 // Contract Cards
 .contract-cards-list {
@@ -897,9 +916,38 @@ export default class ImportPreviewModal extends Vue {
 .modern-footer {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 1rem 1.5rem;
     background: var(--modal-card-foot-background);
     border-top: 1px solid var(--border-color);
+    gap: 1rem;
+}
+
+.footer-left {
+    display: flex;
+    align-items: center;
+}
+
+.footer-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.footer-category {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 200px;
+}
+
+.footer-category-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color-strong);
+    white-space: nowrap;
 }
 
 .count-number {
