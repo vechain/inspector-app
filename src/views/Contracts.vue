@@ -20,7 +20,8 @@
                 @edit-contract="edit"
                 @export-contract="exportJson"
                 @delete-contract="remove"
-                @import-contract="handleImport"
+                @show-import-instructions="handleShowImportInstructions"
+                @files-selected="handleFilesSelected"
                 @drop-contract="handleDropContract"
                 @move-category-up="moveCategoryUp"
                 @move-category-down="moveCategoryDown"
@@ -90,6 +91,34 @@
         <b-modal :width="640" :canCancel="[]" :active.sync="isModalActive">
             <EditContract @cancel="onCancel" @finished="handleContractSaved" :item="currentItem" :isImport="isImport" />
         </b-modal>
+
+        <!-- Import Instructions Modal -->
+        <b-modal :active.sync="showInstructionsModal" :canCancel="['escape']">
+            <ImportInstructionsModal 
+                @cancel="showInstructionsModal = false"
+                @proceed="handleInstructionsProceed"
+            />
+        </b-modal>
+
+        <!-- Import Type Modal -->
+        <b-modal :active.sync="showTypeModal" :canCancel="['escape', 'outside']">
+            <ImportTypeModal 
+                @cancel="showTypeModal = false"
+                @select-files="handleSelectFiles"
+                @select-folder="handleSelectFolder"
+                @files-dropped="handleFilesDropped"
+            />
+        </b-modal>
+
+        <!-- Import Preview Modal -->
+        <b-modal :active.sync="showPreviewModal" :canCancel="['escape']">
+            <ImportPreviewModal 
+                :parsedContracts="parsedContracts"
+                :existingCategories="existingCategories"
+                @cancel="showPreviewModal = false"
+                @import-selected="handleImportSelected"
+            />
+        </b-modal>
     </section>
 </template>
 
@@ -99,7 +128,12 @@ import Sidebar from '../components/Sidebar.vue'
 import TabBar from '../components/TabBar.vue'
 import ContractDetailPanel from '../components/ContractDetailPanel.vue'
 import EditContract from '../components/EditContract.vue'
+import ImportInstructionsModal from '../components/ImportContract/ImportInstructionsModal.vue'
+import ImportTypeModal from '../components/ImportContract/ImportTypeModal.vue'
+import ImportPreviewModal from '../components/ImportContract/ImportPreviewModal.vue'
 import DB, { Entities } from '../database'
+import { ParseResult } from '../utils/import-utils'
+import { ImportService } from '../services/import-service'
 
 interface OpenContract {
     id: number
@@ -112,7 +146,10 @@ interface OpenContract {
         Sidebar,
         TabBar,
         ContractDetailPanel,
-        EditContract
+        EditContract,
+        ImportInstructionsModal,
+        ImportTypeModal,
+        ImportPreviewModal
     }
 })
 export default class Contracts extends Vue {
@@ -133,11 +170,27 @@ export default class Contracts extends Vue {
     private isMobileView: boolean = false
     private isSidebarOpen: boolean = false
 
+    // Import state
+    private showInstructionsModal: boolean = false
+    private showTypeModal: boolean = false
+    private showPreviewModal: boolean = false
+    private parsedContracts: ParseResult[] = []
+
     get activeContract(): Entities.Contract | null {
         if (this.activeContractId === null) {
             return null
         }
         return this.contracts.find(c => c.id === this.activeContractId) || null
+    }
+
+    get existingCategories(): string[] {
+        const categories = new Set<string>()
+        this.contracts.forEach(contract => {
+            if (contract.category && contract.category.trim() !== '') {
+                categories.add(contract.category)
+            }
+        })
+        return Array.from(categories).sort()
     }
 
     getContractById(id: number): Entities.Contract | null {
@@ -405,18 +458,7 @@ export default class Contracts extends Vue {
     }
 
     private exportJson(item: Entities.Contract) {
-        const fileSaver = require('file-saver-es')
-        const blob = new Blob(
-            [
-                JSON.stringify({
-                    name: item.name,
-                    abi: item.abi,
-                    address: item.address
-                })
-            ],
-            { type: 'text/plain' }
-        )
-        fileSaver.saveAs(blob, `${item.address}.json`)
+        ImportService.exportContractToJson(item)
     }
 
     private remove(item: Entities.Contract) {
@@ -471,22 +513,97 @@ export default class Contracts extends Vue {
         this.open()
     }
 
-    private handleImport(json: Entities.Contract) {
-        this.currentItem = {
-            abi: json.abi,
-            address: json.address,
-            name: json.name
+    private handleShowImportInstructions() {
+        const hideInstructions = localStorage.getItem('hideImportInstructions')
+        if (hideInstructions === 'true') {
+            this.showTypeModal = true
+        } else {
+            this.showInstructionsModal = true
         }
-        const temp = this.contracts.find(
-            (contract) =>
-                contract.address.toLowerCase() ===
-                json.address.toLowerCase()
-        )
-        if (temp) {
-            this.currentItem.id = temp.id
+    }
+
+    private handleInstructionsProceed() {
+        this.showInstructionsModal = false
+        this.showTypeModal = true
+    }
+
+    // Import handlers
+    private handleSelectFiles() {
+        this.showTypeModal = false
+        const sidebar = this.$refs.sidebar as any
+        if (sidebar && sidebar.triggerFileUpload) {
+            sidebar.triggerFileUpload('files')
         }
-        this.isImport = true
-        this.open()
+    }
+
+    private handleSelectFolder() {
+        this.showTypeModal = false
+        const sidebar = this.$refs.sidebar as any
+        if (sidebar && sidebar.triggerFileUpload) {
+            sidebar.triggerFileUpload('folder')
+        }
+    }
+
+    private async handleFilesDropped(payload: { files: File[], isFromFolder?: boolean }) {
+        this.showTypeModal = false
+        await this.processFiles(payload.files, payload.isFromFolder || false)
+    }
+
+    private async handleFilesSelected(files: File[]) {
+        // Determine if it's from folder based on the input element used
+        const sidebar = this.$refs.sidebar as any
+        const isFromFolder = sidebar?.lastUploadMode === 'folder'
+        await this.processFiles(files, isFromFolder)
+    }
+
+    private async processFiles(files: File[], isFromFolder: boolean) {
+        if (files.length === 0) {
+            return
+        }
+
+        const loadingComponent = this.$buefy.loading.open({
+            container: null
+        })
+        
+        try {
+            const results = await ImportService.processFiles(files, isFromFolder)
+            this.parsedContracts = results
+            
+            if (results.length === 0) {
+                this.$buefy.toast.open({
+                    message: 'No valid contract files found',
+                    type: 'is-warning'
+                })
+                return
+            }
+
+            this.showPreviewModal = true
+        } catch (error) {
+            this.$buefy.toast.open({
+                message: `Error processing files: ${(error as Error).message}`,
+                type: 'is-danger'
+            })
+        } finally {
+            loadingComponent.close()
+        }
+    }
+
+    private async handleImportSelected(contracts: Entities.Contract[]) {
+        this.showPreviewModal = false
+        
+        if (contracts.length === 0) {
+            return
+        }
+
+        const currentNetwork = this.$connex.thor.genesis.id
+        const importedCount = await ImportService.importContracts(contracts, currentNetwork)
+
+        this.$buefy.toast.open({
+            message: `Successfully imported ${importedCount} contract(s)`,
+            type: 'is-success'
+        })
+
+        await this.reload()
     }
 
     // Drag and drop handlers

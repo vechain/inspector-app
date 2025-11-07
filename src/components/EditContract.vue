@@ -63,6 +63,7 @@
             :message="formMessage.address.message"
             v-model="form.address"
             type="text"
+            placeholder="0x..."
           ></b-input>
         </b-field>
         <b-field
@@ -128,7 +129,7 @@
   export default class EditContract extends Vue {
     get context() {
       const result = {
-        title: 'Add or Import a Contract',
+        title: 'Add Contract',
         btn: 'Add'
       }
 

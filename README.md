@@ -4,10 +4,6 @@ Static web site for contract call with ABI and contract address.
 
 [Try it out!](https://inspector.vecha.in/#/)
 
-## Screenshots
-
-![Homepage](./screenshots/homepage.png)
-
 ## Project setup
 
 ### Install dependencies
@@ -44,7 +40,7 @@ or with docker compose
 docker compose up -d --build
 ```
 
-### In your local machine 
+### In your local machine
 
 Create a `.env` file with the url of the solo node you want to connect
 
@@ -52,23 +48,24 @@ Create a `.env` file with the url of the solo node you want to connect
 VUE_APP_SOLO_URL=http://localhost:8080
 ```
 
-### With docker 
+### With docker
 
-We can provide runtime env variables using -e 
+We can provide runtime env variables using -e
 
-#### Using image from registry 
+#### Using image from registry
 
 ```
 docker run ghcr.io/vechain/insight-app:master -e VUE_APP_SOLO_URL=http://localhost:8080
 ```
 
-#### Build local image 
+#### Build local image
+
 ```
-docker build -t inspector-app 
+docker build -t inspector-app
 docker run -e VUE_APP_SOLO_URL=http://localhost:8080
 ```
 
-### With compose 
+### With compose
 
 Use the image and pass the env variable in the compose file directly
 
@@ -84,7 +81,6 @@ services:
     ports:
       - "8080:80"
 ```
-
 
 ## Contributing
 

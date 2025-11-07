@@ -69,11 +69,11 @@
 
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
-import { Entities } from '../database'
+import { Entities } from '../../database'
 import {
     getCustomNetworks,
     deleteNetwork
-} from '../services/network-service'
+} from '../../services/network-service'
 import AddNetworkModal from './AddNetworkModal.vue'
 import { isSoloNode } from '@/create-connex'
 

@@ -8,7 +8,7 @@
             </div>
             <div class="sidebar-actions">
                 <button @click="onImport" class="button is-small is-primary is-outlined" title="Import Contract">
-                    <p>Upload</p>
+                    <p>Import</p>
                     <b-icon icon="upload" size="is-small"></b-icon>
                 </button>
                 <button @click="addItem" class="button is-small is-primary is-outlined" title="Add Contract">
@@ -16,7 +16,8 @@
                     <b-icon icon="plus" size="is-small"></b-icon>
                 </button>
             </div>
-            <input class="is-hidden" ref="files" type="file" accept="application/json" />
+            <input class="is-hidden" ref="files" type="file" accept="application/json" multiple webkitdirectory />
+            <input class="is-hidden" ref="filesMultiple" type="file" accept="application/json" multiple />
         </div>
 
         <!-- Search -->
@@ -159,6 +160,7 @@ export default class Sidebar extends Vue {
     private expandedCategories: { [key: string]: boolean } = {}
     private draggedContract: Entities.Contract | null = null
     private dropTarget: { category: string; index: number } | null = null
+    public lastUploadMode: 'files' | 'folder' | null = null
 
     get filteredContracts(): Entities.Contract[] {
         if (!this.searchQuery.trim()) {
@@ -236,8 +238,18 @@ export default class Sidebar extends Vue {
     }
 
     onImport() {
-        const fileEle = this.$refs.files as HTMLInputElement
-        fileEle.click()
+        this.$emit('show-import-instructions')
+    }
+
+    triggerFileUpload(mode: 'files' | 'folder' = 'files') {
+        this.lastUploadMode = mode
+        if (mode === 'folder') {
+            const fileEle = this.$refs.files as HTMLInputElement
+            fileEle.click()
+        } else {
+            const fileEle = this.$refs.filesMultiple as HTMLInputElement
+            fileEle.click()
+        }
     }
 
     moveCategoryUp(category: string) {
@@ -293,23 +305,21 @@ export default class Sidebar extends Vue {
     }
 
     mounted() {
-        const fileEle = this.$refs.files as HTMLInputElement
-        fileEle.onchange = () => {
-            const file = fileEle.files && fileEle.files[0]
-
-            if (file) {
-                const fr = new FileReader()
-                fr.onloadend = () => {
-                    const json: Entities.Contract = JSON.parse(
-                        (fr.result as string) || ''
-                    )
-                    if (json) {
-                        this.$emit('import-contract', json)
-                    }
+        const setupFileInput = (inputRef: string) => {
+            const fileEle = this.$refs[inputRef] as HTMLInputElement
+            fileEle.onchange = () => {
+                const files = fileEle.files
+                if (files && files.length > 0) {
+                    const fileArray = Array.from(files)
+                    this.$emit('files-selected', fileArray)
+                    // Reset the input so the same file can be selected again
+                    fileEle.value = ''
                 }
-                fr.readAsText(file)
             }
         }
+
+        setupFileInput('files')
+        setupFileInput('filesMultiple')
 
         // Initialize all categories as expanded
         this.initializeCategoryExpansion()
