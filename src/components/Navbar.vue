@@ -112,8 +112,8 @@ import { Vue, Component } from 'vue-property-decorator'
 import DB, { Entities } from '../database'
 import { isSoloNode } from '@/create-connex'
 import { networkToGenesisId, genesisIdToNetwork } from '@/utils'
-import AddNetworkModal from './AddNetworkModal.vue'
-import ManageNetworksModal from './ManageNetworksModal.vue'
+import AddNetworkModal from './NetworkManagement/AddNetworkModal.vue'
+import ManageNetworksModal from './NetworkManagement/ManageNetworksModal.vue'
 import { getCustomNetworks, getNetworkById } from '../services/network-service'
 
 @Component({

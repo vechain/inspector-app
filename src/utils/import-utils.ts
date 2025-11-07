@@ -133,7 +133,7 @@ export function validateContract(data: any, isHardhat: boolean = false): Validat
     return errors
 }
 
-export function parseContractFile(content: string, filename: string): ParseResult {
+export function parseContractFile(content: string, filename: string, isFromFolder: boolean = false): ParseResult {
     const result: ParseResult = {
         success: false,
         errors: [],
@@ -156,8 +156,9 @@ export function parseContractFile(content: string, filename: string): ParseResul
         return result
     }
 
-    // Skip interfaces, libraries, deprecated, and mocks
-    if (isInterfaceOrLibrary(json)) {
+    // Only auto-exclude interfaces/libraries/etc when importing from folder
+    // If user manually selected files, they want those specific files
+    if (isFromFolder && isInterfaceOrLibrary(json)) {
         result.skipped = true
         
         // Determine skip reason based on source path or contract name
@@ -234,7 +235,7 @@ export function parseContractFile(content: string, filename: string): ParseResul
     return result
 }
 
-export function parseMultipleFiles(files: File[]): Promise<ParseResult[]> {
+export function parseMultipleFiles(files: File[], isFromFolder: boolean = false): Promise<ParseResult[]> {
     return Promise.all(
         files
             .filter(file => file.name.endsWith('.json') && !file.name.endsWith('.dbg.json'))
@@ -243,7 +244,7 @@ export function parseMultipleFiles(files: File[]): Promise<ParseResult[]> {
                     const reader = new FileReader()
                     reader.onloadend = () => {
                         const content = reader.result as string || ''
-                        resolve(parseContractFile(content, file.name))
+                        resolve(parseContractFile(content, file.name, isFromFolder))
                     }
                     reader.onerror = () => {
                         resolve({

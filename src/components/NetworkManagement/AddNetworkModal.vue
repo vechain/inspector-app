@@ -62,8 +62,8 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator'
-import { fetchGenesisBlock, validateNodeUrl, saveNetwork, updateNetwork } from '../services/network-service'
-import { Entities } from '../database'
+import { fetchGenesisBlock, validateNodeUrl, saveNetwork, updateNetwork } from '../../services/network-service'
+import { Entities } from '../../database'
 
 @Component
 export default class AddNetworkModal extends Vue {

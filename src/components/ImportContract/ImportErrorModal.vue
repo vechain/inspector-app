@@ -91,7 +91,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator'
-import { ParseResult, ValidationError, validateContract } from '../utils/import-utils'
+import { ParseResult, ValidationError, validateContract } from '../../utils/import-utils'
 
 interface DetailedError {
     field?: string
@@ -108,7 +108,7 @@ export default class ImportErrorModal extends Vue {
         // If we have a contract object, validate it to get detailed errors
         if (result.contract) {
             const validationErrors = validateContract(result.contract, result.isHardhatArtifact)
-            return validationErrors.map(e => ({
+            return validationErrors.map((e: ValidationError) => ({
                 field: e.field,
                 message: e.message,
                 fix: e.fix
@@ -116,7 +116,7 @@ export default class ImportErrorModal extends Vue {
         }
         
         // Otherwise, return basic error messages
-        return result.errors.map(error => ({
+        return result.errors.map((error: string) => ({
             message: error,
             fix: this.getSuggestionForError(error)
         }))

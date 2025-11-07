@@ -195,7 +195,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator'
-import { ParseResult } from '../utils/import-utils'
+import { ParseResult } from '../../utils/import-utils'
 
 @Component
 export default class ImportPreviewModal extends Vue {

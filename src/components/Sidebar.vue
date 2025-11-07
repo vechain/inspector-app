@@ -160,6 +160,7 @@ export default class Sidebar extends Vue {
     private expandedCategories: { [key: string]: boolean } = {}
     private draggedContract: Entities.Contract | null = null
     private dropTarget: { category: string; index: number } | null = null
+    public lastUploadMode: 'files' | 'folder' | null = null
 
     get filteredContracts(): Entities.Contract[] {
         if (!this.searchQuery.trim()) {
@@ -241,6 +242,7 @@ export default class Sidebar extends Vue {
     }
 
     triggerFileUpload(mode: 'files' | 'folder' = 'files') {
+        this.lastUploadMode = mode
         if (mode === 'folder') {
             const fileEle = this.$refs.files as HTMLInputElement
             fileEle.click()
