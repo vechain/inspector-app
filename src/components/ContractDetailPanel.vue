@@ -437,7 +437,7 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
     position: -webkit-sticky;
     position: sticky;
     top: 0px;
-    z-index: 100;
+    z-index: 5;
     background: var(--body-background-alt);
     padding: 15px 0 10px 0;
     margin-left: -1rem;
@@ -451,7 +451,7 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
     position: -webkit-sticky;
     position: sticky;
     top: 60px;
-    z-index: 99;
+    z-index: 4;
     background: var(--body-background-alt);
     margin-left: -1rem;
     margin-right: -1rem;
