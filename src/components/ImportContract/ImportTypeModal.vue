@@ -33,6 +33,16 @@
                         <p>Import all contracts from a folder</p>
                     </div>
                 </button>
+
+                <button class="import-option-card" @click="$emit('select-builtin')">
+                    <div class="option-icon-wrapper">
+                        <b-icon icon="database" size="is-medium"></b-icon>
+                    </div>
+                    <div class="option-text">
+                        <h3>Built-in Contracts</h3>
+                        <p>VeChain contracts (VTHO, B3TR, etc.)</p>
+                    </div>
+                </button>
             </div>
 
             <!-- Divider -->
@@ -288,7 +298,7 @@ export default class ImportTypeModal extends Vue {
 // Selection Grid
 .selection-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
     margin-bottom: 1.5rem;
 }

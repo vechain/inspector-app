@@ -91,7 +91,11 @@
                             <div class="card-content">
                                 <div class="card-title-row">
                                     <h3 class="card-title">{{ result.contract?.name || 'Unknown' }}</h3>
-                                    <span v-if="result.isHardhatArtifact" class="badge badge-network">
+                                    <span v-if="isBuiltInMode" class="badge badge-builtin">
+                                        <b-icon icon="database" size="is-small"></b-icon>
+                                        Built-in
+                                    </span>
+                                    <span v-else-if="result.isHardhatArtifact" class="badge badge-network">
                                         Hardhat
                                     </span>
                                     <span v-if="result.contract?.address" class="badge badge-success">
@@ -226,6 +230,9 @@ export default class ImportPreviewModal extends Vue {
 
     @Prop({ default: () => [] })
     private existingCategories!: string[]
+
+    @Prop({ default: false })
+    private isBuiltInMode!: boolean
 
     private selectedContracts: { [filename: string]: boolean } = {}
     private categoryForAll: string = ''
@@ -728,6 +735,24 @@ export default class ImportPreviewModal extends Vue {
 .badge-network {
     background: rgba(50, 115, 220, 0.15);
     color: var(--primary-color);
+}
+
+.badge-builtin {
+    background: rgba(138, 43, 226, 0.15);
+    color: #8a2be2;
+    
+    .icon {
+        color: #8a2be2;
+    }
+}
+
+[data-theme="dark"] .badge-builtin {
+    background: rgba(186, 85, 211, 0.2);
+    color: #ba55d3;
+    
+    .icon {
+        color: #ba55d3;
+    }
 }
 
 .badge-success {

@@ -106,6 +106,7 @@
                 @cancel="showTypeModal = false"
                 @select-files="handleSelectFiles"
                 @select-folder="handleSelectFolder"
+                @select-builtin="handleSelectBuiltIn"
                 @files-dropped="handleFilesDropped"
             />
         </b-modal>
@@ -115,6 +116,7 @@
             <ImportPreviewModal 
                 :parsedContracts="parsedContracts"
                 :existingCategories="existingCategories"
+                :isBuiltInMode="isBuiltInMode"
                 @cancel="showPreviewModal = false"
                 @import-selected="handleImportSelected"
             />
@@ -134,6 +136,7 @@ import ImportPreviewModal from '../components/ImportContract/ImportPreviewModal.
 import DB, { Entities } from '../database'
 import { ParseResult } from '../utils/import-utils'
 import { ImportService } from '../services/import-service'
+import { BuiltInContractsService } from '../services/builtin-contracts-service'
 
 interface OpenContract {
     id: number
@@ -175,6 +178,7 @@ export default class Contracts extends Vue {
     private showTypeModal: boolean = false
     private showPreviewModal: boolean = false
     private parsedContracts: ParseResult[] = []
+    private isBuiltInMode: boolean = false
 
     get activeContract(): Entities.Contract | null {
         if (this.activeContractId === null) {
@@ -544,8 +548,42 @@ export default class Contracts extends Vue {
         }
     }
 
-    private async handleFilesDropped(payload: { files: File[], isFromFolder?: boolean }) {
+    private async handleSelectBuiltIn() {
         this.showTypeModal = false
+        
+        const loadingComponent = this.$buefy.loading.open({
+            container: null
+        })
+        
+        try {
+            const currentNetwork = this.$connex.thor.genesis.id
+            const results = await BuiltInContractsService.getBuiltInContracts(currentNetwork)
+            
+            if (results.length === 0) {
+                this.$buefy.toast.open({
+                    message: 'No built-in contracts available for this network',
+                    type: 'is-info'
+                })
+                return
+            }
+
+            this.parsedContracts = results
+            this.isBuiltInMode = true
+            this.showPreviewModal = true
+        } catch (error) {
+            this.$buefy.toast.open({
+                message: `Error loading built-in contracts: ${(error as Error).message}`,
+                type: 'is-danger'
+            })
+        } finally {
+            loadingComponent.close()
+        }
+    }
+
+    private async handleFilesDropped(payload: { files: File[], isFromFolder?: boolean }) {
+        console.log('handleFilesDropped called with', payload.files.length, 'files, isFromFolder:', payload.isFromFolder)
+        this.showTypeModal = false
+        this.isBuiltInMode = false
         await this.processFiles(payload.files, payload.isFromFolder || false)
     }
 
@@ -568,6 +606,7 @@ export default class Contracts extends Vue {
         try {
             const results = await ImportService.processFiles(files, isFromFolder)
             this.parsedContracts = results
+            this.isBuiltInMode = false
             
             if (results.length === 0) {
                 this.$buefy.toast.open({

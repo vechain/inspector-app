@@ -47,6 +47,13 @@
                                     <span>Import all contracts from a folder (e.g., Hardhat artifacts directory)</span>
                                 </div>
                             </div>
+                            <div class="option-item">
+                                <b-icon icon="database" size="is-small"></b-icon>
+                                <div class="option-content">
+                                    <strong>Built-in Contracts</strong>
+                                    <span>Import pre-configured VeChain contracts (VTHO, Authority, B3TR, etc.)</span>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="exclusion-note">
