@@ -45,9 +45,6 @@ export default class Panel extends Vue {
   @Prop({ default: '' })
   title!: string
 
-  @Prop({ default: false })
-  isHighlighted!: boolean
-
   private activeTab: string = this.value
 
   @Watch('value')

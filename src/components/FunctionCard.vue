@@ -1,5 +1,5 @@
 <template>
-    <Panel v-model="activeTab" :tabs="tabs" :title="item.name" :isHighlighted="isHighlighted">
+    <Panel v-model="activeTab" :tabs="tabs" :title="item.name">
         <template slot="panel-content">
             <form @reset.self.prevent="reset" v-show="activeTab === tabs[0]">
                 <b-field
@@ -120,9 +120,6 @@ import DB from '../database'
     }
 })
 export default class FunctionCard extends Mixins(AccountCall) {
-    @Prop({ default: false })
-    private isHighlighted!: boolean
-
     private tabs = ['Inputs', 'Description']
     private activeTab = 'Inputs'
     private valueUnit: 'vet' | 'wei' = 'vet'

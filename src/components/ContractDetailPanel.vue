@@ -52,7 +52,6 @@
                         :address="contract.address"
                         style="margin-bottom: 20px"
                         :item="item"
-                        :isHighlighted="highlightedItem === item.name"
                     />
                 </div>
                 <div v-show="tabIndex === 1">
@@ -63,7 +62,6 @@
                         :address="contract.address"
                         style="margin-bottom: 20px"
                         :item="item"
-                        :isHighlighted="highlightedItem === item.name"
                     />
                 </div>
                 <div v-show="tabIndex === 2">
@@ -101,7 +99,6 @@
                         :address="contract.address"
                         style="margin-bottom: 20px"
                         :item="item"
-                        :isHighlighted="highlightedItem === item.name"
                     />
                 </div>
                 <div v-show="tabIndex === 6">
@@ -113,7 +110,6 @@
                         :address="contract.address"
                         style="margin-bottom: 20px"
                         :item="item"
-                        :isHighlighted="highlightedItem === item.name"
                     />
                 </div>
                 <div v-show="tabIndex === 7">

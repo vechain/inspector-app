@@ -1,5 +1,5 @@
 <template>
-    <Panel v-model="activeTab" :tabs="tabs" :title="item.name" :isHighlighted="isHighlighted">
+    <Panel v-model="activeTab" :tabs="tabs" :title="item.name">
         <template slot="panel-content">
             <div v-show="activeTab === tabs[0]">
                 <b-field
