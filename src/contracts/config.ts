@@ -42,68 +42,78 @@ const prototype: ContractConfig = {
 };
 
 const b3tr: ContractConfig = {
-  name: "B3TR",
+  name: "VeBetter - B3TR",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-b3tr.json",
 };
 
 const b3trGovernor: ContractConfig = {
-  name: "B3TR - Governor",
+  name: "VeBetter - Governor",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-b3tr-governor.json",
 };
 
 const b3trEmissions: ContractConfig = {
-  name: "B3TR - Emissions",
+  name: "VeBetter - Emissions",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-emissions.json",
 };
 
 const b3trGalaxyMember: ContractConfig = {
-  name: "B3TR - Galaxy Member",
+  name: "VeBetter - Galaxy Member",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-galaxy-member.json",
 };
 
 const b3trTimeLock: ContractConfig = {
-  name: "B3TR - TimeLock",
+  name: "VeBetter - TimeLock",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-timelock.json",
 };
 
 const b3trTreasury: ContractConfig = {
-  name: "B3TR - Treasury",
+  name: "VeBetter - Treasury",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-treasury.json",
 };
 
 const b3trVot3: ContractConfig = {
-  name: "VOT3",
+  name: "VeBetter - VOT3",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-vot3.json",
 };
 
 const b3trVoterRewards: ContractConfig = {
-  name: "B3TR - VoterRewards",
+  name: "VeBetter - VoterRewards",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-voter-rewards.json",
 };
 
 const b3trX2EarnApps: ContractConfig = {
-  name: "B3TR - X2EarnApps",
+  name: "VeBetter - X2EarnApps",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-x-2-earn-apps.json",
 };
 
 const b3trX2EarnRewardsPool: ContractConfig = {
-  name: "B3TR - X2EarnRewardsPool",
+  name: "VeBetter - X2EarnRewardsPool",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-x-2-earn-rewards-pool.json",
 };
 
 const b3trXAllocationPool: ContractConfig = {
-  name: "B3TR - XAllocationPool",
+  name: "VeBetter - XAllocationPool",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-x-allocation-pool.json",
 };
 
 const b3trXAllocationVoting: ContractConfig = {
-  name: "B3TR - XAllocationVoting",
+  name: "VeBetter - XAllocationVoting",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-x-allocations-voting.json",
 };
 
 const b3trVeBetterPassport: ContractConfig = {
-  name: "B3TR - VeBetterPassport",
+  name: "VeBetter - VeBetterPassport",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-ve-better-passport.json",
+};
+
+const b3trDBAPool: ContractConfig = {
+  name: "VeBetter - DBAPool",
+  abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-dynamic-base-allocations-pool.json",
+};
+
+const b3trRelayersRewardsPool: ContractConfig = {
+  name: "VeBetter - RelayersRewardsPool",
+  abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-relayer-rewards-pool.json",
 };
 
 const stargateNFT: ContractConfig = {
@@ -114,6 +124,26 @@ const stargateNFT: ContractConfig = {
 const stargateDelegation: ContractConfig = {
   name: "StargateDelegation (Deprecated)",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/StargateDelegation.json",
+};
+
+const smartAccountsFactory: ContractConfig = {
+  name: "Smart Account Factory",
+  abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/social-login-smart-account-factory.json",
+};
+
+const smartAccount: ContractConfig = {
+  name: "Smart Account",
+  abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/social-login-smart-account.json",
+};
+
+const legacyVeChainNodes: ContractConfig = {
+  name: "Legacy VeChain Nodes",
+  abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/thornode-tokenauction.json",
+};
+
+const oracleVeChainEnergy: ContractConfig = {
+  name: "Oracle (vechain.energy)",
+  abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/oracle.vechain.energy.json",
 };
 
 const common = {
@@ -134,6 +164,40 @@ const common = {
   "0x00000000000000000000000000005374616b6572": staker,
 };
 
+// All available contracts (for showing in built-in list even if not on current network)
+export const AllBuiltInContracts: ContractConfig[] = [
+  authority,
+  vtho,
+  executor,
+  staker,
+  extension,
+  params,
+  prototype,
+  { name: "ERC20", abi: erc20Abi },
+  { name: "ERC721", abi: erc721Abi },
+  b3tr,
+  b3trGovernor,
+  b3trEmissions,
+  b3trGalaxyMember,
+  b3trTimeLock,
+  b3trTreasury,
+  b3trVot3,
+  b3trVoterRewards,
+  b3trX2EarnApps,
+  b3trX2EarnRewardsPool,
+  b3trXAllocationPool,
+  b3trXAllocationVoting,
+  b3trVeBetterPassport,
+  b3trDBAPool,
+  b3trRelayersRewardsPool,
+  stargateNFT,
+  stargateDelegation,
+  smartAccountsFactory,
+  smartAccount,
+  legacyVeChainNodes,
+  oracleVeChainEnergy,
+];
+
 // genesis ID -> contract address -> ContractConfig
 export const ContractConfig: Record<string, Record<string, ContractConfig>> = {
   "0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a": {
@@ -151,8 +215,13 @@ export const ContractConfig: Record<string, Record<string, ContractConfig>> = {
     "0x4191776F05f4bE4848d3f4d587345078B439C7d3": b3trXAllocationPool,
     "0x89A00Bb0947a30FF95BEeF77a66AEdE3842Fe5B7": b3trXAllocationVoting,
     "0x35a267671d8EDD607B2056A9a13E7ba7CF53c8b3": b3trVeBetterPassport,
+    "0x98c1d097c39969bb5de754266f60d22bd105b368": b3trDBAPool,
+    "0x34b56f892c9e977b9ba2e43ba64c27d368ab3c86": b3trRelayersRewardsPool,
     "0x1856c533ac2d94340aaa8544d35a5c1d4a21dee7": stargateNFT,
     "0x4cb1c9ef05b529c093371264fab2c93cc6cddb0e": stargateDelegation,
+    "0xc06ad8573022e2be416ca89da47e8c592971679a": smartAccountsFactory,
+    "0xb81e9c5f9644dec9e5e3cac86b4461a222072302": legacyVeChainNodes,
+    "0x49eC7192BF804Abc289645ca86F1eD01a6C17713": oracleVeChainEnergy,
   },
   "0x000000000b2bce3c70bc649a02749e8687721b09ed2e15997f466536b20bb127": {
     ...common,
@@ -170,5 +239,8 @@ export const ContractConfig: Record<string, Record<string, ContractConfig>> = {
     "0x5859ff910d8b0c127364c98E24233b0af7443c1c": b3trXAllocationVoting,
     "0x887d9102f0003f1724d8fd5d4fe95a11572fcd77": stargateNFT,
     "0x32cb945dc25f4fc4214df63e3825045d6088b096": stargateDelegation,
+    "0x713b908Bcf77f3E00EFEf328E50b657a1A23AeaF": smartAccountsFactory,
+    "0x8dbce5de4c1f1840a47ab10c682aee48e9d06c20": legacyVeChainNodes,
+    "0xdcCAaBd81B38e0dEEf4c202bC7F1261A4D9192C6": oracleVeChainEnergy,
   },
 };
