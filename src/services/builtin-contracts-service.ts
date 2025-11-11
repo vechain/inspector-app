@@ -1,4 +1,4 @@
-import { ContractConfig } from '../contracts/config'
+import { ContractConfig, AllBuiltInContracts } from '../contracts/config'
 import { ParseResult } from '../utils/import-utils'
 import { Entities } from '../database'
 
@@ -29,19 +29,14 @@ export class BuiltInContractsService {
     }
 
     /**
-     * Get all built-in contracts for the current network
+     * Get all built-in contracts, showing all available contracts
+     * Pre-fills addresses for current network, leaves empty for others
      */
     static async getBuiltInContracts(currentNetwork: string): Promise<ParseResult[]> {
-        const networkContracts = ContractConfig[currentNetwork]
-        
-        if (!networkContracts) {
-            return []
-        }
-
         const results: ParseResult[] = []
-        const entries = Object.entries(networkContracts)
-
-        for (const [address, config] of entries) {
+        
+        // Use AllBuiltInContracts list to show everything
+        for (const config of AllBuiltInContracts) {
             try {
                 let abi: any
 
@@ -54,8 +49,19 @@ export class BuiltInContractsService {
                     abi = config.abi
                 }
 
-                // Check if this is a template (ERC20, ERC721) that needs address input
-                const isTemplate = address.startsWith('Enter ')
+                // Find address for current network by searching all network configs
+                let addressForCurrentNetwork = ''
+                const currentNetworkContracts = ContractConfig[currentNetwork]
+                
+                if (currentNetworkContracts) {
+                    // Search for this contract in current network
+                    for (const [address, networkConfig] of Object.entries(currentNetworkContracts)) {
+                        if (networkConfig.name === config.name && !address.startsWith('Enter ')) {
+                            addressForCurrentNetwork = address
+                            break
+                        }
+                    }
+                }
                 
                 const result: ParseResult = {
                     success: true,
@@ -63,7 +69,7 @@ export class BuiltInContractsService {
                     filename: `${config.name}.json`,
                     contract: {
                         name: config.name,
-                        address: isTemplate ? '' : address,
+                        address: addressForCurrentNetwork,
                         abi: abi
                     }
                 }
@@ -77,12 +83,19 @@ export class BuiltInContractsService {
                     filename: `${config.name}.json`,
                     contract: {
                         name: config.name,
-                        address: address.startsWith('Enter ') ? '' : address,
+                        address: '',
                         abi: []
                     }
                 })
             }
         }
+
+        // Sort alphabetically by name
+        results.sort((a, b) => {
+            const nameA = a.contract?.name || ''
+            const nameB = b.contract?.name || ''
+            return nameA.localeCompare(nameB)
+        })
 
         return results
     }
