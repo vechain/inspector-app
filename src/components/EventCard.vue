@@ -95,6 +95,9 @@ export default class EventCard extends Vue {
     @Prop({ default: false })
     private prototype?: boolean
 
+    @Prop({ default: false })
+    private isHighlighted!: boolean
+
     private page = 0
 
     private list: any[] = []
@@ -112,6 +115,18 @@ export default class EventCard extends Vue {
         this.activeTab = this.tabs[0]
         const account = this.$connex.thor.account(this.address)
         this.event = account.event(this.item)
+    }
+
+    @Watch('isHighlighted')
+    onHighlightChange(val: boolean) {
+        if (val) {
+            this.$nextTick(() => {
+                const panelComponent = this.$children[0] as any
+                if (panelComponent && panelComponent.toggle) {
+                    panelComponent.toggle(true)
+                }
+            })
+        }
     }
 
     get filters() {
