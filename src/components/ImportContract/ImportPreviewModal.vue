@@ -327,10 +327,13 @@ export default class ImportPreviewModal extends Vue {
     }
 
     mounted() {
-        // Initially select all valid contracts
-        this.validContracts.forEach(r => {
-            this.$set(this.selectedContracts, r.filename, true)
-        })
+        // For file imports, select all by default
+        // For built-in contracts, start with nothing selected
+        if (!this.isBuiltInMode) {
+            this.validContracts.forEach(r => {
+                this.$set(this.selectedContracts, r.filename, true)
+            })
+        }
         
         // Initialize filtered categories
         this.filteredCategories = this.existingCategories
