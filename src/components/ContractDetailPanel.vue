@@ -9,36 +9,40 @@
                 @delete="deleteContract"
                 @submitABI="submitABI"
             />
-            <section style="margin-top: 20px;">
-                <b-field grouped >
-                    <b-field expanded >
-                        <b-field style="width: 100%;" class="is-pulled-right">
-                            <b-autocomplete
-                                rounded
-                                v-model="name"
-                                :data="filterList"
-                                placeholder="Search for functions or events"
-                                @select="onSearchSelect"
-                            >
-                                <template slot-scope="props">
-                                    <div>
-                                        <span class="is-size-6">{{props.option.name}}</span>
-                                    </div>
-                                    <span class="has-text-grey">{{props.option.type}}</span>
-                                </template>
-                                <template slot="empty">No results found</template>
-                            </b-autocomplete>
+            <section class="search-and-tabs-section">
+                <div class="search-section">
+                    <b-field grouped >
+                        <b-field expanded >
+                            <b-field style="width: 100%;" class="is-pulled-right">
+                                <b-autocomplete
+                                    rounded
+                                    v-model="name"
+                                    :data="filterList"
+                                    placeholder="Search for functions or events"
+                                    @select="onSearchSelect"
+                                >
+                                    <template slot-scope="props">
+                                        <div>
+                                            <span class="is-size-6">{{props.option.name}}</span>
+                                        </div>
+                                        <span class="has-text-grey">{{props.option.type}}</span>
+                                    </template>
+                                    <template slot="empty">No results found</template>
+                                </b-autocomplete>
+                            </b-field>
                         </b-field>
                     </b-field>
-                </b-field>
-                <b-tabs v-model="tabIndex" class="block">
-                    <b-tab-item :visible="item.visible" v-for="(item, index) in tabs" :key="index">
-                        <span slot="header">
-                            {{item.text}}
-                            <span class="is-size-7" v-if="item.count">({{item.count}})</span>
-                        </span>
-                    </b-tab-item>
-                </b-tabs>
+                </div>
+                <div class="tabs-section">
+                    <b-tabs v-model="tabIndex" class="block">
+                        <b-tab-item :visible="item.visible" v-for="(item, index) in tabs" :key="index">
+                            <span slot="header">
+                                {{item.text}}
+                                <span class="is-size-7" v-if="item.count">({{item.count}})</span>
+                            </span>
+                        </b-tab-item>
+                    </b-tabs>
+                </div>
                 <div v-show="tabIndex === 0">
                     <FunctionCard
                         :id="item.name"
@@ -48,6 +52,7 @@
                         :address="contract.address"
                         style="margin-bottom: 20px"
                         :item="item"
+                        :isHighlighted="highlightedItem === item.name"
                     />
                 </div>
                 <div v-show="tabIndex === 1">
@@ -58,6 +63,7 @@
                         :address="contract.address"
                         style="margin-bottom: 20px"
                         :item="item"
+                        :isHighlighted="highlightedItem === item.name"
                     />
                 </div>
                 <div v-show="tabIndex === 2">
@@ -72,12 +78,14 @@
                 </div>
                 <div v-show="tabIndex === 3">
                     <EventCard
+                        :ref="item.name"
                         :address="contract.address"
                         v-for="(item, index) in eventList"
                         :key="index"
                         style="margin-bottom: 20px"
                         :item="item"
                         :title="item.name"
+                        :isHighlighted="highlightedItem === item.name"
                     />
                 </div>
                 <div v-show="tabIndex === 4">
@@ -93,6 +101,7 @@
                         :address="contract.address"
                         style="margin-bottom: 20px"
                         :item="item"
+                        :isHighlighted="highlightedItem === item.name"
                     />
                 </div>
                 <div v-show="tabIndex === 6">
@@ -104,6 +113,7 @@
                         :address="contract.address"
                         style="margin-bottom: 20px"
                         :item="item"
+                        :isHighlighted="highlightedItem === item.name"
                     />
                 </div>
                 <div v-show="tabIndex === 7">
@@ -115,6 +125,7 @@
                         :address="contract.address"
                         style="margin-bottom: 20px"
                         :item="item"
+                        :isHighlighted="highlightedItem === item.name"
                     />
                 </div>
             </section>
@@ -208,12 +219,18 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
     private caller: string = ''
     private isProtoType = true
     private isModalActive = false
+    private highlightedItem: string = ''
 
     @Watch('contract', { immediate: true })
     onContractChange(newContract: Entities.Contract) {
         if (newContract) {
             this.loadContractData()
         }
+    }
+
+    @Watch('tabIndex')
+    onTabChange() {
+        this.highlightedItem = ''
     }
 
     async loadContractData() {
@@ -301,6 +318,9 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
     }
 
     private onSearchSelect(item: any) {
+        // Set highlighted item
+        this.highlightedItem = item.name
+        
         const types = {
             cb: 2,
             fb: 4,
@@ -312,14 +332,26 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
         let type: 'cb' | 'fb' | 'read' | 'write' | 'event' | 'function' =
             item.type
         if (type === 'function') {
-            type = item.constant ? 'read' : 'write'
+            // Check both constant (legacy) and stateMutability (modern) for read functions
+            const isReadFunction = item.constant === true || 
+                ['pure', 'view'].includes(item.stateMutability)
+            type = isReadFunction ? 'read' : 'write'
         }
         this.tabIndex = types[type]
-        const temp = this.$refs[item.name] as any[]
-        if (temp && temp[0]) {
-            temp[0].$children[0].toggle(true)
-            temp[0].$el.scrollIntoView()
-        }
+        
+        // Wait for tab switch and DOM update before scrolling
+        this.$nextTick(() => {
+            setTimeout(() => {
+                const temp = this.$refs[item.name] as any[]
+                if (temp && temp[0]) {
+                    temp[0].$children[0].toggle(true)
+                    // Wait for panel to open before scrolling
+                    setTimeout(() => {
+                        temp[0].$el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    }, 100)
+                }
+            }, 50)
+        })
     }
 }
 </script>
@@ -399,16 +431,82 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
     padding: 1.5rem 1rem;
 }
 
+/* Sticky Search and Tabs Container */
+.search-and-tabs-section {
+    margin-top: 20px;
+}
+
+/* Search Section Sticky Positioning */
+.search-section {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0px;
+    z-index: 100;
+    background: var(--body-background-alt);
+    padding: 15px 0 10px 0;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* Tabs Section Sticky Positioning */
+.tabs-section {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 60px;
+    z-index: 99;
+    background: var(--body-background-alt);
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    box-shadow: 0 2px 1px rgba(0, 0, 0, 0.05);
+    margin-bottom: 10px;
+}
+
+.tabs-section >>> .b-tabs {
+    margin-bottom: 0;
+}
+
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
     .container {
         padding: 1rem 0.75rem;
+    }
+    
+    .search-section {
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .tabs-section {
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
     }
 }
 
 @media (max-width: 480px) {
     .container {
         padding: 0.75rem 0.5rem;
+    }
+    
+    .search-section {
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .tabs-section {
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
     }
 }
 </style>
