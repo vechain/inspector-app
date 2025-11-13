@@ -92,6 +92,7 @@
                             <Contract 
                                 variant="list"
                                 :item="item"
+                                :isActive="activeContractId === item.id"
                                 @select="onSelect(item)"
                                 @edit="edit(item)"
                                 @dragstart="handleDragStartContract"
@@ -155,6 +156,9 @@ export default class Sidebar extends Vue {
 
     @Prop({ default: () => ({}) })
     private categoryOrder!: { [key: string]: number }
+
+    @Prop({ default: null })
+    private activeContractId!: number | null
 
     private searchQuery: string = ''
     private expandedCategories: { [key: string]: boolean } = {}

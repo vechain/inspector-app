@@ -15,6 +15,7 @@
                 ref="sidebar"
                 :contracts="contracts"
                 :categoryOrder="categoryOrder"
+                :activeContractId="activeContractId"
                 @open-contract="handleOpenContract"
                 @add-contract="addItem"
                 @edit-contract="edit"

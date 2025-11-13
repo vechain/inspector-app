@@ -3,7 +3,7 @@
     <div 
         v-if="variant === 'list'" 
         class="contract-card" 
-        :class="{'is-dragging': isDragging}"
+        :class="{'is-dragging': isDragging, 'is-active': isActive}"
         draggable="true"
         @dragstart="handleDragStart"
         @dragend="handleDragEnd"
@@ -151,6 +151,9 @@ export default class Contract extends Vue {
     @Prop({ default: true })
     private isShort!: boolean
 
+    @Prop({ default: false })
+    private isActive!: boolean
+
     private isMenuOpen = false
     private isDragging = false
 
@@ -294,6 +297,11 @@ export default class Contract extends Vue {
 .contract-card:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
     border-color: var(--primary-color);
+}
+
+.contract-card.is-active {
+    border-left: 3px solid var(--primary-color);
+    padding-left: calc(0.75rem - 2px);
 }
 
 .contract-card:active:not(.is-dragging) {
