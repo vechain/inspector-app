@@ -91,7 +91,7 @@
                             <div class="card-content">
                                 <div class="card-title-row">
                                     <h3 class="card-title">{{ result.contract?.name || 'Unknown' }}</h3>
-                                    <span v-if="isBuiltInMode" class="badge badge-builtin">
+                                    <span v-if="result.contract?.name?.includes('(Built-in)')" class="badge badge-builtin">
                                         <b-icon icon="database" size="is-small"></b-icon>
                                         Built-in
                                     </span>
