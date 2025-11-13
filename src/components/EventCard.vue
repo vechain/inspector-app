@@ -251,6 +251,8 @@ export default class EventCard extends Vue {
 /* Dark mode for navbar in event data section */
 ::v-deep .navbar.is-transparent {
     background-color: transparent !important;
+    position: relative;
+    z-index: 1;
 }
 
 ::v-deep .navbar-item {
