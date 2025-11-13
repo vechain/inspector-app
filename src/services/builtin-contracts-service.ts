@@ -33,10 +33,8 @@ export class BuiltInContractsService {
      * Pre-fills addresses for current network, leaves empty for others
      */
     static async getBuiltInContracts(currentNetwork: string): Promise<ParseResult[]> {
-        const results: ParseResult[] = []
-        
-        // Use AllBuiltInContracts list to show everything
-        for (const config of AllBuiltInContracts) {
+        // Fetch all contracts in parallel for better performance
+        const contractPromises = AllBuiltInContracts.map(async (config) => {
             try {
                 let abi: any
 
@@ -74,10 +72,10 @@ export class BuiltInContractsService {
                     }
                 }
 
-                results.push(result)
+                return result
             } catch (error) {
-                // If ABI fetch fails, add as error
-                results.push({
+                // If ABI fetch fails, return as error
+                return {
                     success: false,
                     errors: [`Failed to fetch ABI: ${(error as Error).message}`],
                     filename: `${config.name}.json`,
@@ -86,9 +84,12 @@ export class BuiltInContractsService {
                         address: '',
                         abi: []
                     }
-                })
+                }
             }
-        }
+        })
+
+        // Wait for all contracts to be fetched in parallel
+        const results = await Promise.all(contractPromises)
 
         // Sort alphabetically by name
         results.sort((a, b) => {
