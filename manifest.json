@@ -1,0 +1,1 @@
+{"name":"Inspector-Sync","short_name":"Inspector","theme_color":"#4DBA87","icons":[{"src":"./img/icons/favicon-128.icon","sizes":"128x128","type":"image/icon"},{"src":"./img/icons/favicon-256.icon","sizes":"256x256","type":"image/icon"}],"start_url":"./index.html","display":"standalone","background_color":"#000000"}
