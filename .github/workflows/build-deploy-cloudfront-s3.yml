@@ -27,14 +27,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-deploy-fe
   cancel-in-progress: true
 
-# Required for authentication through GitHub OIDC
-permissions:
-  id-token: write # This is required for requesting the JWT
-  contents: read # This is required for actions/checkout
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    # Required for authentication through GitHub OIDC
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read # This is required for actions/checkout
 
     steps:
       - name: Checkout
