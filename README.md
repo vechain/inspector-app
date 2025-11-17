@@ -1,5 +1,6 @@
-![Zizmor Checks](https://github.com/vechain/inspector-app/actions/workflows/scan-workflows.yaml/badge.svg?branch=main&event=push)
+
 # Inspector
+![Zizmor Checks](https://github.com/vechain/inspector-app/actions/workflows/scan-workflows.yaml/badge.svg?branch=main&event=push)
 
 Static web site for contract call with ABI and contract address.
 
