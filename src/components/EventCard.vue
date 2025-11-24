@@ -180,6 +180,15 @@ export default class EventCard extends Vue {
     }
 
     private async saveFilter(name: string) {
+        // Ensure connex is available before saving
+        if (!this.$connex || !this.$connex.thor || !this.$connex.thor.genesis) {
+            this.$buefy.toast.open({
+                message: 'Network not ready. Please try again.',
+                type: 'is-warning'
+            })
+            return
+        }
+        
         const contract =
             (await DB.contracts
                 .where('address')

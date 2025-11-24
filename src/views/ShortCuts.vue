@@ -87,15 +87,29 @@ export default class ShortCuts extends Vue {
   }
 
   get network() {
+    // Ensure connex is available before accessing genesis ID
+    if (!this.$connex || !this.$connex.thor || !this.$connex.thor.genesis) {
+      return null
+    }
     return this.$connex.thor.genesis.id
   }
 
   private async countList() {
+    // Skip if network is not ready
+    if (!this.network) {
+      return
+    }
+    
     this.count = await DB.shortCuts
       .filter((item) => (item.network === this.network) || (item.network === undefined)).count()
   }
 
   private async onPageChange(page: number) {
+    // Skip if network is not ready
+    if (!this.network) {
+      return
+    }
+    
     this.list = await DB.shortCuts
       .filter((item) => (item.network === this.network) || (item.network === undefined))
       .offset((page - 1) * this.perPage)
