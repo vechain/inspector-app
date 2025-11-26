@@ -92,20 +92,10 @@ export default class FilterMgt extends Vue {
   ]
 
   get network() {
-    // Ensure connex is available before accessing genesis ID
-    if (!this.$connex || !this.$connex.thor || !this.$connex.thor.genesis) {
-      return null
-    }
     return this.$connex.thor.genesis.id
   }
   private async created() {
     this.$ga.page('/inspector/view/mgt')
-    
-    // Skip if network is not ready
-    if (!this.network) {
-      return
-    }
-    
     this.onPageChange(1)
     this.count = await DB.filters
       .filter((item) => (item.network === this.network) || (item.network === undefined)).count()
@@ -145,11 +135,6 @@ export default class FilterMgt extends Vue {
   }
 
   private async onPageChange(page: number) {
-    // Skip if network is not ready
-    if (!this.network) {
-      return
-    }
-    
     this.list = await DB.filters
       .filter((item) => (item.network === this.network) || (item.network === undefined))
       .offset((page - 1) * this.perPage)

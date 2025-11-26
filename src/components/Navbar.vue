@@ -232,21 +232,11 @@ export default class Navbar extends Vue {
         }
     }
     private async getList() {
-        // Ensure connex is available before reading network
-        if (!this.$connex || !this.$connex.thor || !this.$connex.thor.genesis) {
-            return
-        }
-        
         this.views = await DB.filters
             .filter((item) => (item.network === this.network) || (item.network === undefined)).limit(5).toArray()
     }
 
     private async countShortCuts() {
-        // Ensure connex is available before reading network
-        if (!this.$connex || !this.$connex.thor || !this.$connex.thor.genesis) {
-            return
-        }
-        
         this.shortCuts = await DB.shortCuts
             .filter((item) => (item.network === this.network) || (item.network === undefined)).count()
     }

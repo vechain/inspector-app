@@ -389,10 +389,7 @@ export default class Contracts extends Vue {
         loading.close()
 
         DB.subscribe('contracts', () => {
-            // Force Vue to re-read the connex instance to avoid stale references in Safari
-            this.$nextTick(() => {
-                this.list()
-            })
+            this.list()
         })
     }
 
@@ -498,13 +495,6 @@ export default class Contracts extends Vue {
     }
 
     private async list() {
-        // Ensure connex is available and get current network
-        if (!this.$connex || !this.$connex.thor || !this.$connex.thor.genesis) {
-            console.warn('Connex not properly initialized')
-            this.isloading = false
-            return
-        }
-        
         const network = this.$connex.thor.genesis.id
         this.contracts = await DB.contracts
             .filter((item) => (item.network === network) || (item.network === undefined)).toArray()

@@ -194,12 +194,6 @@
     }
     
     loadBuiltinContracts() {
-      // Ensure connex is available before accessing genesis ID
-      if (!this.$connex || !this.$connex.thor || !this.$connex.thor.genesis) {
-        this.allContracts = []
-        return
-      }
-      
       const genesisId = this.$connex.thor.genesis.id
       const contracts = ContractConfig[genesisId] || {}
       
@@ -211,15 +205,6 @@
     
     async onSelectContract(option: {name: string, address: string} | null) {
       if (!option) return
-      
-      // Ensure connex is available before accessing genesis ID
-      if (!this.$connex || !this.$connex.thor || !this.$connex.thor.genesis) {
-        this.$buefy.toast.open({
-          message: 'Network not ready. Please try again.',
-          type: 'is-warning'
-        })
-        return
-      }
       
       this.form.name = option.name
       this.nameInput = option.name
@@ -253,11 +238,6 @@
     }
 
     async loadCategories() {
-      // Ensure connex is available before accessing genesis ID
-      if (!this.$connex || !this.$connex.thor || !this.$connex.thor.genesis) {
-        return
-      }
-      
       const network = this.$connex.thor.genesis.id
       const contracts = await DB.contracts
         .filter((item) => (item.network === network) || (item.network === undefined))
@@ -357,15 +337,6 @@
       }
 
       if (!this.checkform()) {
-        return
-      }
-
-      // Ensure connex is available before accessing genesis ID
-      if (!this.$connex || !this.$connex.thor || !this.$connex.thor.genesis) {
-        this.$buefy.toast.open({
-          message: 'Network not ready. Please try again.',
-          type: 'is-warning'
-        })
         return
       }
 
