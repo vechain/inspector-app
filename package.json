@@ -17,7 +17,7 @@
     "bulma": "^0.7.5",
     "color": "3.1.0",
     "custom-protocol-detection": "1.0.1",
-    "dexie": "3.2.2",
+    "dexie": "2.0.4",
     "dexie-observable": "1.0.0-beta.5",
     "file-saver-es": "^2.0.5",
     "mersenne-twister": "1.1.0",
@@ -50,7 +50,6 @@
     "elliptic": "6.6.1",
     "cipher-base": "1.0.5",
     "sha.js": "2.4.12",
-    "axios": "0.30.2",
-    "webpack-dev-server": "5.2.1"
+    "axios": "0.30.2"
   }
 }
