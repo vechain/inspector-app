@@ -117,13 +117,13 @@ const b3trRelayersRewardsPool: ContractConfig = {
 };
 
 const stargateNFT: ContractConfig = {
-  name: "StargateNFT",
+  name: "StarGate NFT",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/StargateNFT.json",
 };
 
-const stargateDelegation: ContractConfig = {
-  name: "StargateDelegation (Deprecated)",
-  abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/StargateDelegation.json",
+const stargate: ContractConfig = {
+  name: "StarGate",
+  abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/Stargate.json",
 };
 
 const smartAccountsFactory: ContractConfig = {
@@ -191,7 +191,7 @@ export const AllBuiltInContracts: ContractConfig[] = [
   b3trDBAPool,
   b3trRelayersRewardsPool,
   stargateNFT,
-  stargateDelegation,
+  stargate,
   smartAccountsFactory,
   smartAccount,
   legacyVeChainNodes,
@@ -218,7 +218,7 @@ export const ContractConfig: Record<string, Record<string, ContractConfig>> = {
     "0x98c1d097c39969bb5de754266f60d22bd105b368": b3trDBAPool,
     "0x34b56f892c9e977b9ba2e43ba64c27d368ab3c86": b3trRelayersRewardsPool,
     "0x1856c533ac2d94340aaa8544d35a5c1d4a21dee7": stargateNFT,
-    "0x4cb1c9ef05b529c093371264fab2c93cc6cddb0e": stargateDelegation,
+    "0x03c557be98123fdb6fad325328ac6eb77de7248c": stargate,
     "0xc06ad8573022e2be416ca89da47e8c592971679a": smartAccountsFactory,
     "0xb81e9c5f9644dec9e5e3cac86b4461a222072302": legacyVeChainNodes,
     "0x49eC7192BF804Abc289645ca86F1eD01a6C17713": oracleVeChainEnergy,
@@ -238,7 +238,7 @@ export const ContractConfig: Record<string, Record<string, ContractConfig>> = {
     "0x9B9CA9D0C41Add1d204f90BA0E9a6844f1843A84": b3trXAllocationPool,
     "0x5859ff910d8b0c127364c98E24233b0af7443c1c": b3trXAllocationVoting,
     "0x887d9102f0003f1724d8fd5d4fe95a11572fcd77": stargateNFT,
-    "0x32cb945dc25f4fc4214df63e3825045d6088b096": stargateDelegation,
+    "0x1E02B2953AdEfEC225cF0Ec49805b1146a4429C1": stargate,
     "0x713b908Bcf77f3E00EFEf328E50b657a1A23AeaF": smartAccountsFactory,
     "0x8dbce5de4c1f1840a47ab10c682aee48e9d06c20": legacyVeChainNodes,
     "0xdcCAaBd81B38e0dEEf4c202bC7F1261A4D9192C6": oracleVeChainEnergy,
