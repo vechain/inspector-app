@@ -55,7 +55,7 @@
                 <!-- Render all open contracts but show only active one -->
                 <ContractDetailPanel 
                     v-for="contract in openContracts"
-                    :key="contract.id"
+                    :key="getContractKey(contract.id)"
                     v-show="activeContractId === contract.id"
                     :contract="getContractById(contract.id)"
                     @contract-updated="handleContractUpdate"
@@ -200,6 +200,14 @@ export default class Contracts extends Vue {
 
     getContractById(id: number): Entities.Contract | null {
         return this.contracts.find(c => c.id === id) || null
+    }
+
+    getContractKey(id: number): string {
+        const contract = this.contracts.find(c => c.id === id)
+        if (!contract) return String(id)
+        // Create a key that includes ID, address, and ABI hash to force re-render on changes
+        const abiHash = contract.abi ? JSON.stringify(contract.abi).slice(0, 50) : ''
+        return `${id}-${contract.address}-${abiHash}`
     }
 
     handleOpenContract(contract: Entities.Contract) {

@@ -217,10 +217,16 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
     private isModalActive = false
     private highlightedItem: string = ''
 
-    @Watch('contract', { immediate: true })
-    onContractChange(newContract: Entities.Contract) {
+    @Watch('contract', { immediate: true, deep: true })
+    onContractChange(newContract: Entities.Contract, oldContract: Entities.Contract) {
         if (newContract) {
-            this.loadContractData()
+            // Always reload if it's a new contract or if address/ABI changed
+            if (!oldContract || 
+                oldContract.id !== newContract.id ||
+                oldContract.address !== newContract.address || 
+                JSON.stringify(oldContract.abi) !== JSON.stringify(newContract.abi)) {
+                this.loadContractData()
+            }
         }
     }
 
