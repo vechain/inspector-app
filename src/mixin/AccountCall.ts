@@ -131,8 +131,24 @@ export default class AccountCall extends Vue {
         this.startReceiptPolling(resp.txid);
       }
     } catch (error: any) {
-      BUS.$alert(error.message);
-      this.receiptStatus = "error";
+      // Check if error is a user rejection/cancellation
+      const errorMessage = error.message || "";
+      const errorName = error.name || "";
+      const isUserRejection =
+        errorMessage.toLowerCase().includes("rejected") ||
+        errorMessage.toLowerCase().includes("cancelled") ||
+        errorMessage.toLowerCase().includes("cancel") ||
+        errorMessage.toLowerCase().includes("denied") ||
+        errorName.toLowerCase().includes("rejected") ||
+        errorName.toLowerCase().includes("cancelled") ||
+        errorName.toLowerCase().includes("cancel");
+
+      // Only show error for actual failures, not user rejections
+      if (!isUserRejection) {
+        BUS.$alert(error.message);
+        this.receiptStatus = "error";
+      }
+      // Silently handle user rejections - don't show error or set status
     }
   }
 
