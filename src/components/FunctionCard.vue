@@ -102,6 +102,9 @@
                 <b-field v-if="resp" label="Response">
                     <pre style="width: 100%;white-space: break-spaces; word-break: break-all;">{{resp}}</pre>
                 </b-field>
+                <b-field v-if="txid || receipt" label="Receipt">
+                    <pre style="width: 100%;white-space: break-spaces; word-break: break-all;" v-html="receiptDisplay"></pre>
+                </b-field>
             </form>
             <div v-show="activeTab === tabs[1]">
                 <pre>{{item}}</pre>
@@ -198,6 +201,52 @@ export default class FunctionCard extends Mixins(AccountCall) {
     }
     get couldExc() {
         return !(this.item.constant === true || ['view', 'pure'].includes(this.item.stateMutability))
+    }
+    get receiptDisplay() {
+        if (!this.txid && !this.receipt) {
+            return ''
+        }
+        
+        let output = ''
+        
+        if (this.receiptStatus === 'pending') {
+            output += 'Status: Pending\n'
+            output += 'Waiting for transaction confirmation...\n\n'
+        } else if (this.receiptStatus === 'error') {
+            output += 'Status: Error\n'
+            output += 'Failed to retrieve receipt (timeout or transaction not found)\n\n'
+        } else if (this.receiptStatus === 'completed' && this.receipt) {
+            const statusText = this.receipt.reverted ? 'Reverted' : 'Completed'
+            const statusColor = this.receipt.reverted ? '#ff3860' : '#23d160'
+            output += `Status: <span style="color: ${statusColor};">${statusText}</span>\n\n`
+        }
+        
+        if (this.txid) {
+            output += `Transaction ID: ${this.txid}\n`
+            output += `Explorer: ${this.$explorerTx}${this.txid}\n\n`
+        }
+        
+        if (this.receipt) {
+            output += `Gas Used: ${this.receipt.gasUsed}\n`
+            output += `Reverted: ${this.receipt.reverted ? 'Yes' : 'No'}\n`
+            if (this.receipt.meta && this.receipt.meta.blockNumber) {
+                output += `Block Number: ${this.receipt.meta.blockNumber}\n`
+            }
+            if (this.receipt.meta && this.receipt.meta.blockID) {
+                output += `Block ID: ${this.receipt.meta.blockID}\n`
+            }
+            if (this.receipt.gasPayer) {
+                output += `Gas Payer: ${this.receipt.gasPayer}\n`
+            }
+            if (this.receipt.paid) {
+                output += `Paid: ${this.receipt.paid}\n`
+            }
+            if (this.receipt.reward) {
+                output += `Reward: ${this.receipt.reward}\n`
+            }
+        }
+        
+        return output.trim()
     }
     private addShortCut(name: string) {
         this.$buefy.dialog.prompt({
