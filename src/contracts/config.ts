@@ -116,6 +116,16 @@ const b3trRelayersRewardsPool: ContractConfig = {
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-relayer-rewards-pool.json",
 };
 
+const b3trCreatorNFT: ContractConfig = {
+  name: "VeBetter - Creator NFT",
+  abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-x-2-earn-creator.json",
+};
+
+const b3trGrantsManager: ContractConfig = {
+  name: "VeBetter - GrantsManager",
+  abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-grants-manager.json",
+};
+
 const stargateNFT: ContractConfig = {
   name: "StarGate NFT",
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/StargateNFT.json",
@@ -190,6 +200,8 @@ export const AllBuiltInContracts: ContractConfig[] = [
   b3trVeBetterPassport,
   b3trDBAPool,
   b3trRelayersRewardsPool,
+  b3trCreatorNFT,
+  b3trGrantsManager,
   stargateNFT,
   stargate,
   smartAccountsFactory,
@@ -217,6 +229,8 @@ export const ContractConfig: Record<string, Record<string, ContractConfig>> = {
     "0x35a267671d8EDD607B2056A9a13E7ba7CF53c8b3": b3trVeBetterPassport,
     "0x98c1d097c39969bb5de754266f60d22bd105b368": b3trDBAPool,
     "0x34b56f892c9e977b9ba2e43ba64c27d368ab3c86": b3trRelayersRewardsPool,
+    "0xe8e96a768ffd00417d4bd985bec9EcfC6F732a7f": b3trCreatorNFT,
+    "0x055d20914657834c914d7c44bf65b566ab4b45a2": b3trGrantsManager,
     "0x1856c533ac2d94340aaa8544d35a5c1d4a21dee7": stargateNFT,
     "0x03c557be98123fdb6fad325328ac6eb77de7248c": stargate,
     "0xc06ad8573022e2be416ca89da47e8c592971679a": smartAccountsFactory,
