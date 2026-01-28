@@ -156,8 +156,9 @@ export default class AccountCall extends Vue {
     // Stop any existing polling
     this.stopReceiptPolling();
 
-    // Set timeout (5 blocks * ~2 seconds per block = 10 seconds)
-    const timeoutMs = 5 * 2000;
+    // Set timeout to 60 seconds (5 blocks * 12 seconds per block)
+    // This gives enough time for mainnet transactions which can take longer
+    const timeoutMs = 5 * 12000;
     const startTime = Date.now();
 
     // Poll every 1000ms
@@ -167,17 +168,19 @@ export default class AccountCall extends Vue {
 
         if (receipt) {
           this.receipt = receipt;
-          this.receiptStatus = receipt.reverted ? "completed" : "completed";
+          this.receiptStatus = "completed";
           this.stopReceiptPolling();
-        } else {
-          // Check timeout
-          if (Date.now() - startTime > timeoutMs) {
-            this.receiptStatus = "error";
-            this.stopReceiptPolling();
-          }
+          return;
+        }
+
+        // Receipt not available yet - check timeout
+        if (Date.now() - startTime > timeoutMs) {
+          this.receiptStatus = "error";
+          this.stopReceiptPolling();
         }
       } catch (error: any) {
-        // Transaction not found yet, continue polling unless timeout
+        // Error getting receipt (transaction may not be included yet)
+        // Continue polling unless timeout
         if (Date.now() - startTime > timeoutMs) {
           this.receiptStatus = "error";
           this.stopReceiptPolling();
