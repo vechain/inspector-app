@@ -74,10 +74,14 @@ export class BuiltInContractsService {
 
                 return result
             } catch (error) {
+                const message = (error as Error).message || 'Unknown error'
+                const normalizedMessage = message.startsWith('Failed to fetch ABI:')
+                    ? message
+                    : `Failed to fetch ABI: ${message}`
                 // If ABI fetch fails, return as error
                 return {
                     success: false,
-                    errors: [`Failed to fetch ABI: ${(error as Error).message}`],
+                    errors: [normalizedMessage],
                     filename: `${config.name}.json`,
                     contract: {
                         name: config.name,
@@ -132,4 +136,3 @@ export class BuiltInContractsService {
         return knownNetworks[genesisId] || 'Custom Network'
     }
 }
-
