@@ -11,6 +11,7 @@ export interface RoleEvent {
   sender: string
   blockNumber: number
   txId: string
+  timestamp?: number // Unix timestamp in seconds
 }
 
 /**
@@ -146,6 +147,37 @@ export async function fetchRoleEvents(
 
   // Sort by block number descending (most recent first)
   events.sort((a, b) => b.blockNumber - a.blockNumber)
+
+  // Fetch timestamps for unique blocks
+  const uniqueBlocks = new Set(events.map(e => e.blockNumber))
+  const blockTimestamps = new Map<number, number>()
+
+  // Fetch timestamps in parallel with a limit to avoid overwhelming the node
+  const blockNumbers = Array.from(uniqueBlocks)
+  const batchSizeForTimestamps = 10
+
+  for (let i = 0; i < blockNumbers.length; i += batchSizeForTimestamps) {
+    const batch = blockNumbers.slice(i, i + batchSizeForTimestamps)
+    const timestamps = await Promise.all(
+      batch.map(async (blockNum) => {
+        const ts = await getBlockTimestamp(connex, blockNum)
+        return { blockNum, ts }
+      })
+    )
+    for (const { blockNum, ts } of timestamps) {
+      if (ts !== null) {
+        blockTimestamps.set(blockNum, ts)
+      }
+    }
+  }
+
+  // Attach timestamps to events
+  for (const event of events) {
+    const ts = blockTimestamps.get(event.blockNumber)
+    if (ts !== undefined) {
+      event.timestamp = ts
+    }
+  }
 
   return events
 }

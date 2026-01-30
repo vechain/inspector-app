@@ -44,15 +44,24 @@
               {{ event.type === 'granted' ? 'Granted' : 'Revoked' }}
             </span>
           </div>
-          <div class="event-block">
-            <span class="block-label">Block</span>
-            <a
-              :href="`${$explorerBlock}${event.blockNumber}`"
-              target="_blank"
-              class="block-link"
+          <div class="event-meta">
+            <span
+              v-if="event.timestamp"
+              class="event-time"
+              :title="formatFullDate(event.timestamp)"
             >
-              #{{ event.blockNumber }}
-            </a>
+              {{ formatRelativeTime(event.timestamp) }}
+            </span>
+            <span class="event-block">
+              <span class="block-label">Block</span>
+              <a
+                :href="`${$explorerBlock}${event.blockNumber}`"
+                target="_blank"
+                class="block-link"
+              >
+                #{{ event.blockNumber }}
+              </a>
+            </span>
           </div>
         </div>
 
@@ -219,6 +228,52 @@ export default class RoleActivityList extends Vue {
       })
     })
   }
+
+  private formatRelativeTime(timestamp: number): string {
+    const now = Math.floor(Date.now() / 1000)
+    const diff = now - timestamp
+
+    if (diff < 0) {
+      return 'just now'
+    }
+
+    const seconds = diff
+    const minutes = Math.floor(seconds / 60)
+    const hours = Math.floor(minutes / 60)
+    const days = Math.floor(hours / 24)
+    const weeks = Math.floor(days / 7)
+    const months = Math.floor(days / 30)
+    const years = Math.floor(days / 365)
+
+    if (seconds < 60) {
+      return 'just now'
+    } else if (minutes < 60) {
+      return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`
+    } else if (hours < 24) {
+      return hours === 1 ? '1 hour ago' : `${hours} hours ago`
+    } else if (days < 7) {
+      return days === 1 ? '1 day ago' : `${days} days ago`
+    } else if (weeks < 4) {
+      return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`
+    } else if (months < 12) {
+      return months === 1 ? '1 month ago' : `${months} months ago`
+    } else {
+      return years === 1 ? '1 year ago' : `${years} years ago`
+    }
+  }
+
+  private formatFullDate(timestamp: number): string {
+    const date = new Date(timestamp * 1000)
+    return date.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short'
+    })
+  }
 }
 </script>
 <style lang="scss" scoped>
@@ -291,20 +346,30 @@ export default class RoleActivityList extends Vue {
           }
         }
 
-        .event-block {
+        .event-meta {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
           font-size: 0.85rem;
           color: var(--text-color-light, #666);
 
-          .block-label {
-            margin-right: 0.25rem;
+          .event-time {
+            cursor: help;
+            border-bottom: 1px dotted var(--text-color-light, #999);
           }
 
-          .block-link {
-            font-weight: 600;
-            color: var(--primary-color, #3273dc);
+          .event-block {
+            .block-label {
+              margin-right: 0.25rem;
+            }
 
-            &:hover {
-              text-decoration: underline;
+            .block-link {
+              font-weight: 600;
+              color: var(--primary-color, #3273dc);
+
+              &:hover {
+                text-decoration: underline;
+              }
             }
           }
         }
