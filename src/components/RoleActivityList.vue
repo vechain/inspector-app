@@ -1,36 +1,24 @@
 <template>
   <div class="role-activity-list">
     <div class="activity-header">
-      <h4 class="activity-title">Role Activity History</h4>
-      <div class="filters">
-        <b-field grouped>
-          <b-field label="Role" label-position="on-border">
-            <b-select v-model="selectedRole" size="is-small" placeholder="All roles">
-              <option :value="null">All roles</option>
-              <option v-for="role in uniqueRoles" :key="role" :value="role">
-                {{ getRoleDisplayName(role) }}
-              </option>
-            </b-select>
-          </b-field>
-          <b-field label="Event" label-position="on-border">
-            <b-select v-model="selectedEventType" size="is-small" placeholder="All events">
-              <option :value="null">All events</option>
-              <option value="granted">Granted</option>
-              <option value="revoked">Revoked</option>
-            </b-select>
-          </b-field>
-        </b-field>
-      </div>
+      <h5 class="activity-title">Activity</h5>
+      <b-field>
+        <b-select v-model="selectedEventType" size="is-small" placeholder="All events">
+          <option :value="null">All events</option>
+          <option value="granted">Granted</option>
+          <option value="revoked">Revoked</option>
+        </b-select>
+      </b-field>
     </div>
 
     <div v-if="filteredEvents.length === 0" class="no-events">
-      <p class="has-text-grey">No role activity found</p>
+      <p class="has-text-grey is-size-7">No activity found</p>
     </div>
 
     <div v-else class="events-list">
       <div
         v-for="(event, index) in paginatedEvents"
-        :key="`${event.txId}-${event.roleHash}-${event.account}-${index}`"
+        :key="`${event.txId}-${event.account}-${index}`"
         class="event-item"
       >
         <div class="event-header">
@@ -52,27 +40,10 @@
             >
               {{ formatRelativeTime(event.timestamp) }}
             </span>
-            <span class="event-block">
-              <span class="block-label">Block</span>
-              <a
-                :href="`${$explorerBlock}${event.blockNumber}`"
-                target="_blank"
-                class="block-link"
-              >
-                #{{ event.blockNumber }}
-              </a>
-            </span>
           </div>
         </div>
 
         <div class="event-details">
-          <div class="detail-row">
-            <span class="detail-label">Role:</span>
-            <span class="detail-value role-value">
-              <strong>{{ getRoleDisplayName(event.roleHash) }}</strong>
-              <code class="role-hash">{{ truncateHash(event.roleHash) }}</code>
-            </span>
-          </div>
           <div class="detail-row">
             <span class="detail-label">Account:</span>
             <span class="detail-value">
@@ -91,24 +62,17 @@
             </span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Sender:</span>
+            <span class="detail-label">By:</span>
             <span class="detail-value">
               <a
                 :href="`${$explorerAccount}${event.sender}`"
                 target="_blank"
                 class="address-link"
               >{{ event.sender | addr }}</a>
-              <b-button
-                type="is-text"
-                size="is-small"
-                icon-left="copy"
-                class="copy-btn"
-                @click="copyAddress(event.sender)"
-              ></b-button>
             </span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Transaction:</span>
+            <span class="detail-label">Tx:</span>
             <span class="detail-value">
               <a
                 :href="`${$explorerTx}${event.txId}`"
@@ -122,16 +86,12 @@
 
       <div v-if="hasMoreEvents" class="load-more-container">
         <b-button
-          type="is-primary"
-          outlined
+          type="is-text"
+          size="is-small"
           @click="loadMore"
-          :loading="loading"
         >
-          Load more
+          Load more ({{ filteredEvents.length - paginatedEvents.length }} remaining)
         </b-button>
-        <span class="events-count">
-          Showing {{ paginatedEvents.length }} of {{ filteredEvents.length }} events
-        </span>
       </div>
     </div>
   </div>
@@ -145,34 +105,14 @@ export default class RoleActivityList extends Vue {
   @Prop({ default: () => [] })
   events!: RoleEvent[]
 
-  @Prop({ default: () => new Map<string, string>() })
-  knownRoles!: Map<string, string>
-
-  private selectedRole: string | null = null
   private selectedEventType: 'granted' | 'revoked' | null = null
-  private displayCount = 20
-  private loading = false
-
-  get uniqueRoles(): string[] {
-    const roles = new Set<string>()
-    for (const event of this.events) {
-      roles.add(event.roleHash)
-    }
-    return Array.from(roles)
-  }
+  private displayCount = 5
 
   get filteredEvents(): RoleEvent[] {
-    let result = [...this.events]
-
-    if (this.selectedRole) {
-      result = result.filter(e => e.roleHash.toLowerCase() === this.selectedRole!.toLowerCase())
+    if (!this.selectedEventType) {
+      return this.events
     }
-
-    if (this.selectedEventType) {
-      result = result.filter(e => e.type === this.selectedEventType)
-    }
-
-    return result
+    return this.events.filter(e => e.type === this.selectedEventType)
   }
 
   get paginatedEvents(): RoleEvent[] {
@@ -183,34 +123,13 @@ export default class RoleActivityList extends Vue {
     return this.filteredEvents.length > this.displayCount
   }
 
-  @Watch('selectedRole')
   @Watch('selectedEventType')
   onFilterChange() {
-    this.displayCount = 20
-  }
-
-  getRoleDisplayName(roleHash: string): string {
-    const normalizedHash = roleHash.toLowerCase()
-    for (const [hash, name] of this.knownRoles.entries()) {
-      if (hash.toLowerCase() === normalizedHash) {
-        return name
-      }
-    }
-    return this.truncateHash(roleHash)
-  }
-
-  private truncateHash(hash: string): string {
-    if (!hash) return ''
-    if (hash.length <= 16) return hash
-    return `${hash.slice(0, 10)}...${hash.slice(-6)}`
+    this.displayCount = 5
   }
 
   private loadMore() {
-    this.loading = true
-    setTimeout(() => {
-      this.displayCount += 20
-      this.loading = false
-    }, 100)
+    this.displayCount += 5
   }
 
   private copyAddress(address: string) {
@@ -233,144 +152,84 @@ export default class RoleActivityList extends Vue {
     const now = Math.floor(Date.now() / 1000)
     const diff = now - timestamp
 
-    if (diff < 0) {
-      return 'just now'
-    }
+    if (diff < 0) return 'just now'
 
-    const seconds = diff
-    const minutes = Math.floor(seconds / 60)
+    const minutes = Math.floor(diff / 60)
     const hours = Math.floor(minutes / 60)
     const days = Math.floor(hours / 24)
-    const weeks = Math.floor(days / 7)
     const months = Math.floor(days / 30)
     const years = Math.floor(days / 365)
 
-    if (seconds < 60) {
-      return 'just now'
-    } else if (minutes < 60) {
-      return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`
-    } else if (hours < 24) {
-      return hours === 1 ? '1 hour ago' : `${hours} hours ago`
-    } else if (days < 7) {
-      return days === 1 ? '1 day ago' : `${days} days ago`
-    } else if (weeks < 4) {
-      return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`
-    } else if (months < 12) {
-      return months === 1 ? '1 month ago' : `${months} months ago`
-    } else {
-      return years === 1 ? '1 year ago' : `${years} years ago`
-    }
+    if (diff < 60) return 'just now'
+    if (minutes < 60) return `${minutes}m ago`
+    if (hours < 24) return `${hours}h ago`
+    if (days < 30) return `${days}d ago`
+    if (months < 12) return `${months}mo ago`
+    return `${years}y ago`
   }
 
   private formatFullDate(timestamp: number): string {
-    const date = new Date(timestamp * 1000)
-    return date.toLocaleString(undefined, {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      timeZoneName: 'short'
-    })
+    return new Date(timestamp * 1000).toLocaleString()
   }
 }
 </script>
 <style lang="scss" scoped>
 .role-activity-list {
-  margin-top: 1.5rem;
-
   .activity-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
 
     .activity-title {
       font-weight: 600;
-      font-size: 1.1rem;
+      font-size: 0.9rem;
       color: var(--text-color);
       margin: 0;
-    }
-
-    .filters {
-      ::v-deep .field.is-grouped {
-        gap: 0.75rem;
-      }
-
-      ::v-deep .label {
-        color: var(--text-color);
-      }
     }
   }
 
   .no-events {
-    padding: 2rem;
+    padding: 0.5rem 0;
     text-align: center;
   }
 
   .events-list {
     .event-item {
-      background-color: var(--body-background-alt, #f9f9f9);
-      border-radius: 6px;
-      padding: 1rem;
-      margin-bottom: 0.75rem;
+      background-color: var(--body-background, #fff);
+      border-radius: 4px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
       border: 1px solid var(--border-color, #eee);
+      font-size: 0.85rem;
 
       .event-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.75rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid var(--border-color, #eee);
+        margin-bottom: 0.5rem;
 
         .event-type {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.35rem;
 
           .event-type-text {
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
 
-            &.is-success {
-              color: #48c78e;
-            }
-
-            &.is-danger {
-              color: #f14668;
-            }
+            &.is-success { color: #48c78e; }
+            &.is-danger { color: #f14668; }
           }
         }
 
         .event-meta {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          font-size: 0.85rem;
-          color: var(--text-color-light, #666);
+          font-size: 0.75rem;
+          color: var(--text-color-light, #888);
 
           .event-time {
             cursor: help;
-            border-bottom: 1px dotted var(--text-color-light, #999);
-          }
-
-          .event-block {
-            .block-label {
-              margin-right: 0.25rem;
-            }
-
-            .block-link {
-              font-weight: 600;
-              color: var(--primary-color, #3273dc);
-
-              &:hover {
-                text-decoration: underline;
-              }
-            }
+            border-bottom: 1px dotted currentColor;
           }
         }
       }
@@ -378,59 +237,36 @@ export default class RoleActivityList extends Vue {
       .event-details {
         .detail-row {
           display: flex;
-          align-items: flex-start;
-          margin-bottom: 0.5rem;
-          font-size: 0.9rem;
+          align-items: center;
+          margin-bottom: 0.25rem;
+          font-size: 0.8rem;
 
-          &:last-child {
-            margin-bottom: 0;
-          }
+          &:last-child { margin-bottom: 0; }
 
           .detail-label {
-            min-width: 90px;
-            font-weight: 500;
-            color: var(--text-color-light, #666);
+            min-width: 60px;
+            color: var(--text-color-light, #888);
           }
 
           .detail-value {
             flex: 1;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            flex-wrap: wrap;
+            gap: 0.25rem;
 
-            &.role-value {
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 0.25rem;
-            }
-
-            .role-hash {
-              font-size: 0.8rem;
-              background-color: var(--code-bg, #f0f0f0);
-              padding: 0.1rem 0.3rem;
-              border-radius: 3px;
-              color: var(--code-color, #666);
-            }
-
-            .address-link,
-            .tx-link {
+            .address-link, .tx-link {
               font-family: monospace;
+              font-size: 0.75rem;
               color: var(--primary-color, #3273dc);
 
-              &:hover {
-                text-decoration: underline;
-              }
+              &:hover { text-decoration: underline; }
             }
 
             .copy-btn {
-              opacity: 0.6;
+              opacity: 0.5;
               padding: 0;
               height: auto;
-
-              &:hover {
-                opacity: 1;
-              }
+              &:hover { opacity: 1; }
             }
           }
         }
@@ -438,35 +274,17 @@ export default class RoleActivityList extends Vue {
     }
 
     .load-more-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 1rem;
-
-      .events-count {
-        font-size: 0.85rem;
-        color: var(--text-color-light, #666);
-      }
+      text-align: center;
+      margin-top: 0.5rem;
     }
   }
 }
 
-/* Dark mode support */
 [data-theme="dark"] {
   .role-activity-list {
     .event-item {
-      background-color: #1a1a1a;
+      background-color: #252525;
       border-color: #333;
-
-      .event-header {
-        border-bottom-color: #333;
-      }
-
-      .role-hash {
-        background-color: #2a2a2a;
-        color: #b0b0b0;
-      }
     }
   }
 }

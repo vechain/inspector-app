@@ -1,6 +1,6 @@
 <template>
-  <b-collapse class="panel role-card" :open="expanded" @update:open="onToggle">
-    <div slot="trigger" slot-scope="props" class="panel-heading" @click="$emit('toggle')">
+  <b-collapse class="panel role-card" :open="expanded" :aria-id="'role-' + roleHash">
+    <div slot="trigger" slot-scope="props" class="panel-heading" @click.prevent.stop="$emit('toggle')">
       <div class="level">
         <div class="level-left">
           <div class="level-item">
@@ -24,11 +24,6 @@
       </div>
     </div>
     <div class="panel-block is-block role-content">
-      <div class="admin-role-info">
-        <span class="admin-label">Admin role:</span>
-        <span class="admin-value">{{ displayAdminRoleName }}</span>
-        <code class="is-size-7 admin-hash">{{ truncatedAdminHash }}</code>
-      </div>
       <div class="holders-section" v-if="holders.length > 0">
         <p class="holders-title">Holders:</p>
         <div class="holders-list">
@@ -54,13 +49,26 @@
       <div v-else class="no-holders">
         <p class="has-text-grey">No current holders for this role</p>
       </div>
+
+      <!-- Activity History for this role -->
+      <RoleActivityList
+        v-if="events.length > 0"
+        :events="events"
+        class="role-activity"
+      />
     </div>
   </b-collapse>
 </template>
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator'
+import RoleActivityList from './RoleActivityList.vue'
+import { RoleEvent } from '../services/access-control-service'
 
-@Component
+@Component({
+  components: {
+    RoleActivityList
+  }
+})
 export default class RoleCard extends Vue {
   @Prop({ required: true })
   roleHash!: string
@@ -71,11 +79,8 @@ export default class RoleCard extends Vue {
   @Prop({ default: () => [] })
   holders!: string[]
 
-  @Prop({ required: true })
-  adminRoleHash!: string
-
-  @Prop({ default: null })
-  adminRoleName!: string | null
+  @Prop({ default: () => [] })
+  events!: RoleEvent[]
 
   @Prop({ default: false })
   expanded!: boolean
@@ -84,26 +89,14 @@ export default class RoleCard extends Vue {
     return this.roleName || 'Unknown role'
   }
 
-  get displayAdminRoleName(): string {
-    return this.adminRoleName || 'Unknown role'
-  }
-
   get truncatedHash(): string {
     return this.truncateHash(this.roleHash)
-  }
-
-  get truncatedAdminHash(): string {
-    return this.truncateHash(this.adminRoleHash)
   }
 
   private truncateHash(hash: string): string {
     if (!hash) return ''
     if (hash.length <= 16) return hash
     return `${hash.slice(0, 10)}...${hash.slice(-6)}`
-  }
-
-  private onToggle(open: boolean) {
-    this.$emit('toggle', open)
   }
 
   private copyAddress(address: string) {
@@ -151,31 +144,6 @@ export default class RoleCard extends Vue {
 
   .role-content {
     padding: 1rem;
-  }
-
-  .admin-role-info {
-    margin-bottom: 1rem;
-    padding: 0.5rem;
-    background-color: var(--admin-bg, #f9f9f9);
-    border-radius: 4px;
-
-    .admin-label {
-      font-weight: 600;
-      margin-right: 0.5rem;
-      color: var(--text-color);
-    }
-
-    .admin-value {
-      color: var(--text-color);
-      margin-right: 0.5rem;
-    }
-
-    .admin-hash {
-      background-color: var(--code-bg, #f0f0f0);
-      padding: 0.15rem 0.3rem;
-      border-radius: 3px;
-      color: var(--code-color, #666);
-    }
   }
 
   .holders-section {
@@ -236,6 +204,12 @@ export default class RoleCard extends Vue {
   .no-holders {
     padding: 0.5rem 0;
   }
+
+  .role-activity {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color, #eee);
+  }
 }
 
 /* Dark mode support */
@@ -245,14 +219,9 @@ export default class RoleCard extends Vue {
       background-color: #2a2a2a;
     }
 
-    .role-hash-display code,
-    .admin-hash {
+    .role-hash-display code {
       background-color: #2a2a2a;
       color: #b0b0b0;
-    }
-
-    .admin-role-info {
-      background-color: #1a1a1a;
     }
 
     .holder-item {

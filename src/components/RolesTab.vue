@@ -1,11 +1,14 @@
 <template>
   <div class="roles-tab">
-    <!-- Add Custom Role Section -->
-    <AddCustomRoleInput @add="onAddCustomRole" />
+    <!-- Not AccessControl Warning -->
+    <b-message v-if="!hasAccessControl" type="is-warning" class="access-control-warning">
+      <p><strong>Limited AccessControl support</strong></p>
+      <p class="is-size-7">This contract's ABI doesn't include the full AccessControl interface (hasRole, RoleGranted, RoleRevoked events).</p>
+    </b-message>
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-state">
-      <b-loading :is-full-page="false" :active="true"></b-loading>
+      <b-loading :is-full-page="false" :active="true" :can-cancel="false"></b-loading>
       <p class="has-text-grey">Loading roles...</p>
     </div>
 
@@ -35,48 +38,34 @@
         :roleHash="role.roleHash"
         :roleName="role.roleName"
         :holders="role.holders"
-        :adminRoleHash="role.adminRoleHash"
-        :adminRoleName="role.adminRoleName"
-        :expanded="expandedRoles.has(role.roleHash)"
+        :events="getEventsForRole(role.roleHash)"
+        :expanded="!!expandedRoles[role.roleHash]"
         @toggle="toggleRole(role.roleHash)"
       />
     </div>
 
-    <!-- Activity History -->
-    <RoleActivityList
-      v-if="events.length > 0"
-      :events="events"
-      :knownRoles="knownRolesMap"
-    />
   </div>
 </template>
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 import RoleCard from './RoleCard.vue'
-import RoleActivityList from './RoleActivityList.vue'
-import AddCustomRoleInput from './AddCustomRoleInput.vue'
-import DB, { Entities } from '../database'
 import {
   fetchRoleEvents,
   checkHasRole,
-  getRoleAdmin,
+  detectAccessControl,
   RoleEvent
 } from '../services/access-control-service'
-import { getRoleName, KNOWN_ROLES } from '../contracts/access-control-roles'
+import { getRoleName } from '../contracts/access-control-roles'
 
 interface RoleInfo {
   roleHash: string
   roleName: string | null
   holders: string[]
-  adminRoleHash: string
-  adminRoleName: string | null
 }
 
 @Component({
   components: {
-    RoleCard,
-    RoleActivityList,
-    AddCustomRoleInput
+    RoleCard
   }
 })
 export default class RolesTab extends Vue {
@@ -91,32 +80,19 @@ export default class RolesTab extends Vue {
 
   private roles: RoleInfo[] = []
   private events: RoleEvent[] = []
-  private customRoles: Entities.CustomRole[] = []
   private loading = false
   private error: string | null = null
-  private expandedRoles: Set<string> = new Set()
+  private expandedRoles: Record<string, boolean> = {}
 
-  get knownRolesMap(): Map<string, string> {
-    // Combine built-in known roles with custom roles
-    const map = new Map<string, string>()
-
-    // Add built-in roles
-    for (const [name, hash] of KNOWN_ROLES.entries()) {
-      map.set(hash.toLowerCase(), name)
-    }
-
-    // Add custom roles for this contract
-    for (const customRole of this.customRoles) {
-      if (!map.has(customRole.roleHash.toLowerCase())) {
-        map.set(customRole.roleHash.toLowerCase(), customRole.roleName)
-      }
-    }
-
-    return map
+  get hasAccessControl(): boolean {
+    return detectAccessControl(this.abi)
   }
 
   async mounted() {
-    await this.loadData()
+    // Delay loading to avoid reactivity issues during tab switch
+    this.$nextTick(() => {
+      this.loadData()
+    })
   }
 
   @Watch('contractAddress')
@@ -131,20 +107,15 @@ export default class RolesTab extends Vue {
     this.events = []
 
     try {
-      // Load custom roles from database
-      await this.loadCustomRoles()
-
       // Fetch role events
       this.events = await fetchRoleEvents(this.$connex, this.contractAddress)
 
       // Extract unique roles and their potential holders from events
       const roleHolderCandidates = this.extractRoleHolderCandidates()
 
-      // Also include all known roles that might not have events yet
+      // Get all unique role hashes from events
       const allRoleHashes = new Set([
-        ...roleHolderCandidates.keys(),
-        ...Array.from(KNOWN_ROLES.values()).map(h => h.toLowerCase()),
-        ...this.customRoles.map(r => r.roleHash.toLowerCase())
+        ...roleHolderCandidates.keys()
       ])
 
       // Check each role/address combo to get current holders
@@ -170,19 +141,10 @@ export default class RolesTab extends Vue {
 
         // Only include roles that have holders or have events
         if (holders.length > 0 || roleHolderCandidates.has(roleHash)) {
-          const adminRoleHash = await getRoleAdmin(
-            this.$connex,
-            this.contractAddress,
-            this.abi,
-            roleHash
-          )
-
           rolesData.push({
             roleHash,
             roleName: this.lookupRoleName(roleHash),
-            holders,
-            adminRoleHash,
-            adminRoleName: this.lookupRoleName(adminRoleHash)
+            holders
           })
         }
       }
@@ -206,14 +168,6 @@ export default class RolesTab extends Vue {
     }
   }
 
-  private async loadCustomRoles() {
-    this.customRoles = await DB.customRoles
-      .where('contractAddress')
-      .equals(this.contractAddress.toLowerCase())
-      .and(role => role.network === this.network)
-      .toArray()
-  }
-
   private extractRoleHolderCandidates(): Map<string, Set<string>> {
     // Extract all unique role/account combos from events
     // An account is a candidate if they were ever granted the role
@@ -232,83 +186,25 @@ export default class RolesTab extends Vue {
   }
 
   private lookupRoleName(hash: string): string | null {
-    const normalizedHash = hash.toLowerCase()
-
-    // Check known roles first
-    const knownName = getRoleName(normalizedHash)
-    if (knownName) return knownName
-
-    // Check custom roles
-    const customRole = this.customRoles.find(
-      r => r.roleHash.toLowerCase() === normalizedHash
-    )
-    if (customRole) return customRole.roleName
-
-    return null
+    return getRoleName(hash.toLowerCase())
   }
 
   private toggleRole(roleHash: string) {
-    if (this.expandedRoles.has(roleHash)) {
-      this.expandedRoles.delete(roleHash)
-    } else {
-      this.expandedRoles.add(roleHash)
-    }
-    // Force reactivity update
-    this.expandedRoles = new Set(this.expandedRoles)
+    this.$set(this.expandedRoles, roleHash, !this.expandedRoles[roleHash])
   }
 
-  private async onAddCustomRole(data: { name: string; hash: string }) {
-    try {
-      // Check if role already exists for this contract
-      const existing = await DB.customRoles
-        .where('contractAddress')
-        .equals(this.contractAddress.toLowerCase())
-        .and(role =>
-          role.network === this.network &&
-          role.roleHash.toLowerCase() === data.hash.toLowerCase()
-        )
-        .first()
-
-      if (existing) {
-        this.$buefy.toast.open({
-          message: 'This role already exists for this contract',
-          type: 'is-warning',
-          duration: 3000
-        })
-        return
-      }
-
-      // Save to database
-      await DB.customRoles.add({
-        contractAddress: this.contractAddress.toLowerCase(),
-        network: this.network,
-        roleName: data.name,
-        roleHash: data.hash.toLowerCase(),
-        createdTime: Date.now()
-      })
-
-      this.$buefy.toast.open({
-        message: 'Custom role added successfully',
-        type: 'is-success',
-        duration: 2000
-      })
-
-      // Reload data to reflect the new custom role
-      await this.loadData()
-    } catch (err) {
-      console.error('Error adding custom role:', err)
-      this.$buefy.toast.open({
-        message: 'Failed to add custom role',
-        type: 'is-danger',
-        duration: 3000
-      })
-    }
+  private getEventsForRole(roleHash: string): RoleEvent[] {
+    return this.events.filter(e => e.roleHash.toLowerCase() === roleHash.toLowerCase())
   }
 }
 </script>
 <style lang="scss" scoped>
 .roles-tab {
   padding: 1rem 0;
+
+  .access-control-warning {
+    margin-bottom: 1rem;
+  }
 
   .loading-state {
     display: flex;

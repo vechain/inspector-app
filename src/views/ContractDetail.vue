@@ -82,7 +82,6 @@
                 </div>
                 <div v-show="tabIndex === 4">
                     <RolesTab
-                        v-if="hasAccessControl"
                         :contractAddress="contract.address"
                         :abi="abi"
                         :network="network"
@@ -273,7 +272,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
                 count: this.eventList.length,
                 visible: !!this.eventList.length
             },
-            { text: 'Roles', count: '', visible: this.hasAccessControl },
+            { text: 'Roles', count: '', visible: true },
             { text: 'Fallback', count: '', visible: !!this.fb }
         ]
         this.tabs = this.tabs.concat(this.protoTabs)
@@ -349,7 +348,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
                 count: this.eventList.length,
                 visible: !!this.eventList.length
             },
-            { text: 'Roles', count: '', visible: this.hasAccessControl },
+            { text: 'Roles', count: '', visible: true },
             { text: 'Fallback', count: '', visible: !!this.fb }
         ]
         this.tabs = this.tabs.concat(this.protoTabs)
