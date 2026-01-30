@@ -81,10 +81,18 @@
                     />
                 </div>
                 <div v-show="tabIndex === 4">
+                    <RolesTab
+                        v-if="hasAccessControl"
+                        :contractAddress="contract.address"
+                        :abi="abi"
+                        :network="network"
+                    />
+                </div>
+                <div v-show="tabIndex === 5">
                     <FallbackCard :fb="fb" />
                 </div>
 
-                <div v-show="tabIndex === 5">
+                <div v-show="tabIndex === 6">
                     <FunctionCard
                         v-for="(item, index) in prList"
                         :ref="item.name"
@@ -95,7 +103,7 @@
                         :item="item"
                     />
                 </div>
-                <div v-show="tabIndex === 6">
+                <div v-show="tabIndex === 7">
                     <FunctionCard
                         v-for="(item, index) in pwList"
                         :ref="item.name"
@@ -106,7 +114,7 @@
                         :item="item"
                     />
                 </div>
-                <div v-show="tabIndex === 7">
+                <div v-show="tabIndex === 8">
                     <EventCard
                         v-for="(item, index) in peList"
                         :ref="item.name"
@@ -132,8 +140,10 @@ import FunctionCard from '../components/FunctionCard.vue'
 import FallbackCard from '../components/FallbackCard.vue'
 import EventCard from '../components/EventCard.vue'
 import DescCard from '../components/DescCard.vue'
+import RolesTab from '../components/RolesTab.vue'
 import DB, { Entities } from '../database'
 import PrototypeAbi from '../mixin/Prototype'
+import { detectAccessControl } from '../services/access-control-service'
 @Component({
     components: {
         Contract,
@@ -141,7 +151,8 @@ import PrototypeAbi from '../mixin/Prototype'
         FunctionCard,
         FallbackCard,
         DescCard,
-        EventCard
+        EventCard,
+        RolesTab
     }
 })
 export default class ContractDetail extends Mixins(PrototypeAbi) {
@@ -186,6 +197,12 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
         return this.abi.find((item: ABI.EventItem) => {
             return item.type === 'fallback'
         })
+    }
+    get hasAccessControl(): boolean {
+        return detectAccessControl(this.abi)
+    }
+    get network(): string {
+        return this.$connex.thor.genesis.id
     }
     private contract: Entities.Contract | null = null
     private tabIndex: number = 0
@@ -256,6 +273,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
                 count: this.eventList.length,
                 visible: !!this.eventList.length
             },
+            { text: 'Roles', count: '', visible: this.hasAccessControl },
             { text: 'Fallback', count: '', visible: !!this.fb }
         ]
         this.tabs = this.tabs.concat(this.protoTabs)
@@ -331,6 +349,7 @@ export default class ContractDetail extends Mixins(PrototypeAbi) {
                 count: this.eventList.length,
                 visible: !!this.eventList.length
             },
+            { text: 'Roles', count: '', visible: this.hasAccessControl },
             { text: 'Fallback', count: '', visible: !!this.fb }
         ]
         this.tabs = this.tabs.concat(this.protoTabs)
