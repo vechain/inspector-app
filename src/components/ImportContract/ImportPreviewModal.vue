@@ -62,26 +62,10 @@
                     </div>
                 </div>
 
-                <!-- Search -->
-                <div class="search-section">
-                    <label class="category-label">
-                        Filter contracts by name or filename
-                    </label>
-                    <b-input
-                        v-model="searchQuery"
-                        placeholder="Search contracts by name or filename..."
-                        icon="search"
-                        icon-right="times-circle"
-                        icon-right-clickable
-                        @icon-right-click="clearSearch"
-                        size="is-small"
-                    />
-                </div>
-
                 <!-- Contract Cards -->
                 <div class="contract-cards-list">
                     <div 
-                        v-for="(result, index) in filteredDisplayedContracts" 
+                        v-for="(result, index) in displayedContracts" 
                         :key="index"
                         class="contract-card"
                         :class="{ 
@@ -243,7 +227,6 @@ export default class ImportPreviewModal extends Vue {
     private contractAddresses: { [filename: string]: string } = {}
     private contractAddressErrors: { [filename: string]: string } = {}
     private expandedCards: { [filename: string]: boolean } = {}
-    private searchQuery: string = ''
 
     get isAllSelected(): boolean {
         return this.validContracts.length > 0 && 
@@ -267,18 +250,6 @@ export default class ImportPreviewModal extends Vue {
         return [...this.validContracts, ...this.errorContracts]
     }
 
-    get filteredDisplayedContracts(): ParseResult[] {
-        if (!this.searchQuery.trim()) {
-            return this.displayedContracts
-        }
-        
-        const query = this.searchQuery.toLowerCase()
-        return this.displayedContracts.filter(result => {
-            const name = (result.contract?.name || '').toLowerCase()
-            const filename = result.filename.toLowerCase()
-            return name.includes(query) || filename.includes(query)
-        })
-    }
 
     get selectedCount(): number {
         return Object.values(this.selectedContracts).filter(s => s).length
@@ -413,9 +384,6 @@ export default class ImportPreviewModal extends Vue {
         })
     }
 
-    clearSearch() {
-        this.searchQuery = ''
-    }
 
     selectAll() {
         this.validContracts.forEach(r => {
@@ -543,11 +511,6 @@ export default class ImportPreviewModal extends Vue {
     padding: 1.25rem 1.5rem;
     max-height: calc(90vh - 180px);
     overflow-y: auto;
-}
-
-// Search Section
-.search-section {
-    margin-bottom: 1rem;
 }
 
 // Summary Banner
