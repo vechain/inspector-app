@@ -6,10 +6,6 @@
                     <h1 class="modal-title">Import Preview</h1>
                     <p class="modal-subtitle">Review and configure contracts before import</p>
                 </div>
-                <div class="header-right">
-                    <div class="files-count">{{ parsedContracts.length }}</div>
-                    <div class="files-label">files detected</div>
-                </div>
             </div>
         </header>
         <section class="modal-card-body modern-body">
@@ -539,24 +535,6 @@ export default class ImportPreviewModal extends Vue {
 
 .modal-subtitle {
     font-size: 0.875rem;
-    color: var(--text-color-light);
-    margin-top: 0.25rem;
-}
-
-.header-right {
-    text-align: right;
-    flex-shrink: 0;
-}
-
-.files-count {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary-color);
-    line-height: 1;
-}
-
-.files-label {
-    font-size: 0.75rem;
     color: var(--text-color-light);
     margin-top: 0.25rem;
 }
