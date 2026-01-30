@@ -215,13 +215,38 @@ export default class RoleCard extends Vue {
 /* Dark mode support */
 [data-theme="dark"] {
   .role-card {
-    .panel-heading:hover {
-      background-color: #2a2a2a;
+    &.panel {
+      background-color: #1e1e1e;
+      border-color: #333;
+    }
+
+    .panel-heading {
+      background-color: #252525;
+      border-color: #333;
+
+      &:hover {
+        background-color: #2a2a2a;
+      }
+    }
+
+    .role-name {
+      color: #e0e0e0;
     }
 
     .role-hash-display code {
-      background-color: #2a2a2a;
+      background-color: #333;
       color: #b0b0b0;
+    }
+
+    .role-content {
+      background-color: #1e1e1e;
+      border-color: #333;
+    }
+
+    .holders-section {
+      .holders-title {
+        color: #ccc;
+      }
     }
 
     .holder-item {
@@ -235,6 +260,27 @@ export default class RoleCard extends Vue {
         color: #64b5f6;
         background-color: #2a2a2a;
       }
+
+      .copy-btn {
+        color: #888;
+
+        &:hover {
+          color: #64b5f6;
+        }
+      }
+    }
+
+    .no-holders p {
+      color: #888;
+    }
+
+    .role-activity {
+      border-top-color: #333;
+    }
+
+    ::v-deep .tag.is-info {
+      background-color: rgba(62, 142, 208, 0.2);
+      color: #64b5f6;
     }
   }
 }

@@ -21,67 +21,36 @@
         :key="`${event.txId}-${event.account}-${index}`"
         class="event-item"
       >
-        <div class="event-header">
-          <div class="event-type">
-            <b-icon
-              :icon="event.type === 'granted' ? 'plus-circle' : 'minus-circle'"
-              :type="event.type === 'granted' ? 'is-success' : 'is-danger'"
-              size="is-small"
-            ></b-icon>
-            <span :class="['event-type-text', event.type === 'granted' ? 'is-success' : 'is-danger']">
-              {{ event.type === 'granted' ? 'Granted' : 'Revoked' }}
-            </span>
-          </div>
-          <div class="event-meta">
-            <span
-              v-if="event.timestamp"
-              class="event-time"
-              :title="formatFullDate(event.timestamp)"
-            >
-              {{ formatRelativeTime(event.timestamp) }}
-            </span>
-          </div>
-        </div>
-
-        <div class="event-details">
-          <div class="detail-row">
-            <span class="detail-label">Account:</span>
-            <span class="detail-value">
-              <a
-                :href="`${$explorerAccount}${event.account}`"
-                target="_blank"
-                class="address-link"
-              >{{ event.account | addr }}</a>
-              <b-button
-                type="is-text"
-                size="is-small"
-                icon-left="copy"
-                class="copy-btn"
-                @click="copyAddress(event.account)"
-              ></b-button>
-            </span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">By:</span>
-            <span class="detail-value">
-              <a
-                :href="`${$explorerAccount}${event.sender}`"
-                target="_blank"
-                class="address-link"
-              >{{ event.sender | addr }}</a>
-            </span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Tx:</span>
-            <span class="detail-value">
-              <a
-                :href="`${$explorerTx}${event.txId}`"
-                target="_blank"
-                class="tx-link"
-              >{{ event.txId | addr }}</a>
-            </span>
-          </div>
-        </div>
+        <span :class="['event-action', event.type === 'granted' ? 'is-success' : 'is-danger']">
+          {{ event.type === 'granted' ? 'Granted' : 'Revoked' }}
+        </span>
+        <span class="event-text">to</span>
+        <a
+          :href="`${$explorerAccount}${event.account}`"
+          target="_blank"
+          class="address-link"
+          :title="event.account"
+        >{{ event.account | addr }}</a>
+        <span class="event-text">by</span>
+        <a
+          :href="`${$explorerAccount}${event.sender}`"
+          target="_blank"
+          class="address-link"
+          :title="event.sender"
+        >{{ event.sender | addr }}</a>
+        <span
+          v-if="event.timestamp"
+          class="event-time"
+          :title="formatFullDate(event.timestamp)"
+        >{{ formatRelativeTime(event.timestamp) }}</span>
+        <a
+          :href="`${$explorerTx}${event.txId}`"
+          target="_blank"
+          class="tx-link"
+          title="View transaction"
+        >
+          <b-icon icon="external-link-alt" size="is-small"></b-icon>
+        </a>
       </div>
 
       <div v-if="hasMoreEvents" class="load-more-container">
@@ -179,7 +148,7 @@ export default class RoleActivityList extends Vue {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
 
     .activity-title {
       font-weight: 600;
@@ -196,80 +165,49 @@ export default class RoleActivityList extends Vue {
 
   .events-list {
     .event-item {
-      background-color: var(--body-background, #fff);
-      border-radius: 4px;
-      padding: 0.75rem;
-      margin-bottom: 0.5rem;
-      border: 1px solid var(--border-color, #eee);
-      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid var(--border-color, #eee);
+      font-size: 0.8rem;
 
-      .event-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-
-        .event-type {
-          display: flex;
-          align-items: center;
-          gap: 0.35rem;
-
-          .event-type-text {
-            font-weight: 600;
-            font-size: 0.8rem;
-
-            &.is-success { color: #48c78e; }
-            &.is-danger { color: #f14668; }
-          }
-        }
-
-        .event-meta {
-          font-size: 0.75rem;
-          color: var(--text-color-light, #888);
-
-          .event-time {
-            cursor: help;
-            border-bottom: 1px dotted currentColor;
-          }
-        }
+      &:last-of-type {
+        border-bottom: none;
       }
 
-      .event-details {
-        .detail-row {
-          display: flex;
-          align-items: center;
-          margin-bottom: 0.25rem;
-          font-size: 0.8rem;
+      .event-action {
+        font-weight: 600;
 
-          &:last-child { margin-bottom: 0; }
+        &.is-success { color: #48c78e; }
+        &.is-danger { color: #f14668; }
+      }
 
-          .detail-label {
-            min-width: 60px;
-            color: var(--text-color-light, #888);
-          }
+      .event-text {
+        color: var(--text-color-light, #888);
+      }
 
-          .detail-value {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
+      .address-link {
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: var(--primary-color, #3273dc);
 
-            .address-link, .tx-link {
-              font-family: monospace;
-              font-size: 0.75rem;
-              color: var(--primary-color, #3273dc);
+        &:hover { text-decoration: underline; }
+      }
 
-              &:hover { text-decoration: underline; }
-            }
+      .event-time {
+        color: var(--text-color-light, #888);
+        cursor: help;
+        border-bottom: 1px dotted currentColor;
+        margin-left: auto;
+      }
 
-            .copy-btn {
-              opacity: 0.5;
-              padding: 0;
-              height: auto;
-              &:hover { opacity: 1; }
-            }
-          }
-        }
+      .tx-link {
+        color: var(--text-color-light, #888);
+        opacity: 0.6;
+
+        &:hover { opacity: 1; }
       }
     }
 
@@ -282,9 +220,68 @@ export default class RoleActivityList extends Vue {
 
 [data-theme="dark"] {
   .role-activity-list {
+    .activity-header {
+      .activity-title {
+        color: #ccc;
+      }
+    }
+
+    .no-events p {
+      color: #888;
+    }
+
     .event-item {
-      background-color: #252525;
-      border-color: #333;
+      border-bottom-color: #333;
+
+      .event-text {
+        color: #888;
+      }
+
+      .address-link {
+        color: #64b5f6;
+
+        &:hover {
+          color: #90caf9;
+        }
+      }
+
+      .event-time {
+        color: #888;
+      }
+
+      .tx-link {
+        color: #888;
+
+        &:hover {
+          color: #64b5f6;
+        }
+      }
+    }
+
+    .load-more-container {
+      ::v-deep .button.is-text {
+        color: #64b5f6;
+
+        &:hover {
+          background-color: rgba(100, 181, 246, 0.1);
+        }
+      }
+    }
+
+    /* Dark mode for select dropdown */
+    ::v-deep .select select {
+      background-color: #2a2a2a;
+      border-color: #444;
+      color: #e0e0e0;
+
+      &:hover {
+        border-color: #555;
+      }
+
+      option {
+        background-color: #2a2a2a;
+        color: #e0e0e0;
+      }
     }
   }
 }

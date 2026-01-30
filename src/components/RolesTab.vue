@@ -31,7 +31,6 @@
 
     <!-- Roles List -->
     <div v-else class="roles-list">
-      <h4 class="roles-title">Roles ({{ roles.length }})</h4>
       <RoleCard
         v-for="role in roles"
         :key="role.roleHash"
@@ -226,21 +225,48 @@ export default class RolesTab extends Vue {
 
   .roles-list {
     margin-top: 1rem;
-
-    .roles-title {
-      font-weight: 600;
-      font-size: 1.1rem;
-      margin-bottom: 0.75rem;
-      color: var(--text-color);
-    }
   }
 }
 
-/* Dark mode support */
+/* Dark mode support for alerts */
 [data-theme="dark"] {
   .roles-tab {
-    .roles-title {
-      color: #e0e0e0;
+    ::v-deep .message {
+      background-color: #1a1a1a;
+
+      .message-body {
+        color: #e0e0e0;
+        border-color: transparent;
+
+        strong {
+          color: #fff;
+        }
+      }
+
+      &.is-warning {
+        .message-body {
+          background-color: rgba(255, 224, 138, 0.1);
+          border-left: 4px solid #ffe08a;
+        }
+      }
+
+      &.is-danger {
+        .message-body {
+          background-color: rgba(241, 70, 104, 0.1);
+          border-left: 4px solid #f14668;
+        }
+      }
+
+      &.is-info {
+        .message-body {
+          background-color: rgba(62, 142, 208, 0.1);
+          border-left: 4px solid #3e8ed0;
+        }
+      }
+    }
+
+    .loading-state p {
+      color: #aaa;
     }
   }
 }
