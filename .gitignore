@@ -20,3 +20,10 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw*
+
+
+# Ralph autonomous agent
+prd.json
+progress.txt
+tasks/
+docs/
