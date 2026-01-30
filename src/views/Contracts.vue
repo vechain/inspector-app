@@ -93,14 +93,6 @@
             <EditContract @cancel="onCancel" @finished="handleContractSaved" :item="currentItem" :isImport="isImport" />
         </b-modal>
 
-        <!-- Import Instructions Modal -->
-        <b-modal :active.sync="showInstructionsModal" :canCancel="['escape']">
-            <ImportInstructionsModal 
-                @cancel="showInstructionsModal = false"
-                @proceed="handleInstructionsProceed"
-            />
-        </b-modal>
-
         <!-- Import Type Modal -->
         <b-modal :active.sync="showTypeModal" :canCancel="['escape', 'outside']">
             <ImportTypeModal 
@@ -131,7 +123,6 @@ import Sidebar from '../components/Sidebar.vue'
 import TabBar from '../components/TabBar.vue'
 import ContractDetailPanel from '../components/ContractDetailPanel.vue'
 import EditContract from '../components/EditContract.vue'
-import ImportInstructionsModal from '../components/ImportContract/ImportInstructionsModal.vue'
 import ImportTypeModal from '../components/ImportContract/ImportTypeModal.vue'
 import ImportPreviewModal from '../components/ImportContract/ImportPreviewModal.vue'
 import DB, { Entities } from '../database'
@@ -151,7 +142,6 @@ interface OpenContract {
         TabBar,
         ContractDetailPanel,
         EditContract,
-        ImportInstructionsModal,
         ImportTypeModal,
         ImportPreviewModal
     }
@@ -175,7 +165,6 @@ export default class Contracts extends Vue {
     private isSidebarOpen: boolean = false
 
     // Import state
-    private showInstructionsModal: boolean = false
     private showTypeModal: boolean = false
     private showPreviewModal: boolean = false
     private parsedContracts: ParseResult[] = []
@@ -527,16 +516,6 @@ export default class Contracts extends Vue {
     }
 
     private handleShowImportInstructions() {
-        const hideInstructions = localStorage.getItem('hideImportInstructions')
-        if (hideInstructions === 'true') {
-            this.showTypeModal = true
-        } else {
-            this.showInstructionsModal = true
-        }
-    }
-
-    private handleInstructionsProceed() {
-        this.showInstructionsModal = false
         this.showTypeModal = true
     }
 
