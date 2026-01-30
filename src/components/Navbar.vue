@@ -8,7 +8,7 @@
                 </div>
                 <div class="logo-text">
                     <h1 class="logo-title">Inspector</h1>
-                    <p class="logo-subtitle">Smart Contract Explorer</p>
+                    <p class="logo-subtitle">Ciaooooooooo</p>
                 </div>
             </div>
             <a role="button" class="navbar-burger" @click="burgerActive = !burgerActive" :class="{'is-active': burgerActive}">

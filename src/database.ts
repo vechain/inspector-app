@@ -32,6 +32,15 @@ export namespace Entities {
     nodeUrl: string;
     createdTime: number;
   }
+
+  export interface CustomRole {
+    id?: number;
+    contractAddress: string;
+    network: string; // genesis ID
+    roleName: string;
+    roleHash: string; // bytes32
+    createdTime: number;
+  }
 }
 
 class Database extends Dexie {
@@ -39,6 +48,7 @@ class Database extends Dexie {
   public readonly filters!: Dexie.Table<Entities.Filter, number>;
   public readonly shortCuts!: Dexie.Table<Entities.ShortCuts, number>;
   public readonly networks!: Dexie.Table<Entities.Network, number>;
+  public readonly customRoles!: Dexie.Table<Entities.CustomRole, number>;
 
   constructor() {
     super("inspect");
@@ -64,6 +74,9 @@ class Database extends Dexie {
     });
     this.version(7).stores({
       networks: "++id, genesisId, name, nodeUrl",
+    });
+    this.version(8).stores({
+      customRoles: "++id, contractAddress, network",
     });
     this.open().catch((err) => {
       // tslint:disable-next-line:no-console
