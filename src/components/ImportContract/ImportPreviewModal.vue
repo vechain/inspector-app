@@ -90,6 +90,7 @@
                         class="contract-card"
                         :class="{ 
                             'is-selected': selectedContracts[result.filename],
+                            'needs-address': result.success && !result.contract?.address,
                             'has-errors': !result.success
                         }"
                     >
@@ -99,6 +100,7 @@
                                 <b-checkbox 
                                     v-model="selectedContracts[result.filename]"
                                     :disabled="!result.success"
+                                    @input="onContractSelectionChange(result.filename, $event)"
                                 ></b-checkbox>
                             </div>
                             
@@ -141,7 +143,7 @@
                         <div v-if="expandedCards[result.filename]" class="card-body">
                             <!-- Address input for contracts without address -->
                             <div v-if="!result.contract?.address && result.success" class="address-input-container">
-                                <label class="input-label">Deployed contract address</label>
+                                <label class="input-label">Contract Address</label>
                                 <b-field 
                                     :type="contractAddressErrors[result.filename] ? 'is-danger' : ''"
                                     :message="contractAddressErrors[result.filename]"
@@ -217,7 +219,7 @@
                     @click="handleImport"
                     :disabled="!canImport"
                 >
-                    Import Selected ({{ selectedCount }})
+                    {{ importButtonLabel }}
                 </button>
             </div>
         </footer>
@@ -286,15 +288,21 @@ export default class ImportPreviewModal extends Vue {
         return Object.values(this.selectedContracts).filter(s => s).length
     }
 
+    get selectedResults(): ParseResult[] {
+        return this.displayedContracts.filter(r => this.selectedContracts[r.filename])
+    }
+
+    get selectedMissingAddressCount(): number {
+        return this.selectedResults.filter(r => r.success && !r.contract?.address).length
+    }
+
     get contractsNeedingAddress(): number {
         return this.validContracts.filter(r => !r.contract?.address).length
     }
 
     get canImport(): boolean {
         // Check if any selected contracts are missing addresses
-        const selectedResults = this.displayedContracts.filter(r => this.selectedContracts[r.filename])
-        
-        for (const result of selectedResults) {
+        for (const result of this.selectedResults) {
             if (!result.contract?.address) {
                 // This contract needs an address
                 const address = this.contractAddresses[result.filename]
@@ -304,7 +312,18 @@ export default class ImportPreviewModal extends Vue {
             }
         }
         
-        return selectedResults.length > 0
+        return this.selectedResults.length > 0
+    }
+
+    get importButtonLabel(): string {
+        if (this.selectedCount === 0) {
+            return 'Select contracts to import'
+        }
+        if (this.selectedMissingAddressCount > 0) {
+            return 'Add missing addresses to import'
+        }
+        const label = this.selectedCount === 1 ? 'Import Contract' : 'Import Contracts'
+        return `${label} (${this.selectedCount})`
     }
 
     get errorCount(): number {
@@ -348,6 +367,7 @@ export default class ImportPreviewModal extends Vue {
             if (!r.contract?.address) {
                 this.$set(this.contractAddresses, r.filename, '')
                 this.$set(this.contractAddressErrors, r.filename, '')
+                this.$set(this.expandedCards, r.filename, true)
             }
         })
     }
@@ -404,13 +424,27 @@ export default class ImportPreviewModal extends Vue {
     selectAll() {
         this.validContracts.forEach(r => {
             this.$set(this.selectedContracts, r.filename, true)
+            if (!r.contract?.address) {
+                this.validateContractAddress(r.filename)
+            }
         })
     }
 
     deselectAll() {
         this.validContracts.forEach(r => {
             this.$set(this.selectedContracts, r.filename, false)
+            if (!r.contract?.address) {
+                this.$set(this.contractAddressErrors, r.filename, '')
+            }
         })
+    }
+
+    onContractSelectionChange(filename: string, isSelected: boolean) {
+        if (isSelected) {
+            this.validateContractAddress(filename)
+        } else {
+            this.$set(this.contractAddressErrors, filename, '')
+        }
     }
 
     getErrorFix(error: string): string {
@@ -691,6 +725,11 @@ export default class ImportPreviewModal extends Vue {
         border-color: var(--danger-color);
         background: rgba(255, 56, 96, 0.05);
     }
+
+    &.needs-address {
+        border-color: rgba(237, 137, 54, 0.7);
+        background: rgba(237, 137, 54, 0.08);
+    }
 }
 
 [data-theme="dark"] .contract-card {
@@ -700,6 +739,11 @@ export default class ImportPreviewModal extends Vue {
     
     &.has-errors {
         background: rgba(255, 82, 82, 0.1);
+    }
+
+    &.needs-address {
+        background: rgba(255, 234, 127, 0.12);
+        border-color: rgba(255, 234, 127, 0.45);
     }
 }
 
@@ -991,4 +1035,3 @@ export default class ImportPreviewModal extends Vue {
     color: var(--primary-color);
 }
 </style>
-
