@@ -520,9 +520,6 @@ export default class ImportPreviewModal extends Vue {
     gap: 0.5rem;
     margin-bottom: 1.25rem;
     padding: 0.875rem 1rem;
-    background: var(--body-background-alt);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
 }
 
 .summary-row {
