@@ -6,29 +6,39 @@
                     <h1 class="modal-title">Import Preview</h1>
                     <p class="modal-subtitle">Review and configure contracts before import</p>
                 </div>
-                <div class="header-right">
-                    <div class="files-count">{{ parsedContracts.length }}</div>
-                    <div class="files-label">files detected</div>
-                </div>
             </div>
         </header>
         <section class="modal-card-body modern-body">
-            <!-- Summary Cards -->
-            <div v-if="validCount > 0 || contractsNeedingAddress > 0 || skippedCount > 0" class="summary-cards">
-                <div v-if="validCount > 0" class="summary-card success-card">
-                    <b-icon icon="check-circle" size="is-small"></b-icon>
-                    <span><span class="count-number">{{ validCount }}</span> contract{{ validCount !== 1 ? 's' : '' }} ready to import</span>
-                </div>
-                <div v-if="contractsNeedingAddress > 0" class="summary-card warning-card">
-                    <b-icon icon="exclamation-circle" size="is-small"></b-icon>
-                    <span><span class="count-number">{{ contractsNeedingAddress }}</span> contract{{ contractsNeedingAddress !== 1 ? 's' : '' }} need{{ contractsNeedingAddress === 1 ? 's' : '' }} deployment address</span>
-                </div>
-                <div v-if="skippedCount > 0" class="summary-card info-card">
-                    <b-icon icon="minus-circle" size="is-small"></b-icon>
-                    <div class="summary-details">
-                        <div><span class="count-number">{{ skippedCount }}</span> files skipped</div>
-                        <div class="summary-subtext">{{ skippedReasons }}</div>
+            <!-- Summary Banner -->
+            <div v-if="parsedContracts.length > 0" class="summary-banner">
+                <div class="summary-row">
+                    <div class="summary-title">Import summary</div>
+                    <div class="summary-items">
+                        <span class="summary-chip">
+                            <span class="count-number">{{ parsedContracts.length }}</span> file{{ parsedContracts.length !== 1 ? 's' : '' }} detected
+                        </span>
+                        <span v-if="validCount > 0" class="summary-chip">
+                            <span class="count-number">{{ validCount }}</span> ready
+                        </span>
+                        <span v-if="contractsNeedingAddress > 0" class="summary-chip is-warning">
+                            <span class="count-number">{{ contractsNeedingAddress }}</span> need address
+                        </span>
+                        <span v-if="errorCount > 0" class="summary-chip is-danger">
+                            <span class="count-number">{{ errorCount }}</span> error{{ errorCount !== 1 ? 's' : '' }}
+                        </span>
+                        <span v-if="skippedCount > 0" class="summary-chip is-muted">
+                            <span class="count-number">{{ skippedCount }}</span> skipped
+                        </span>
                     </div>
+                </div>
+                <div v-if="contractsNeedingAddress > 0 || errorCount > 0" class="summary-attention">
+                    <b-icon icon="exclamation-triangle" size="is-small"></b-icon>
+                    <span>
+                        Fix {{ errorCount }} error{{ errorCount !== 1 ? 's' : '' }} and add {{ contractsNeedingAddress }} address{{ contractsNeedingAddress !== 1 ? 'es' : '' }} to import all.
+                    </span>
+                </div>
+                <div v-if="skippedCount > 0 && skippedReasons" class="summary-subtext">
+                    Skipped: {{ skippedReasons }}
                 </div>
             </div>
 
@@ -52,30 +62,15 @@
                     </div>
                 </div>
 
-                <!-- Search -->
-                <div class="search-section">
-                    <label class="category-label">
-                        Filter contracts by name or filename
-                    </label>
-                    <b-input
-                        v-model="searchQuery"
-                        placeholder="Search contracts by name or filename..."
-                        icon="search"
-                        icon-right="times-circle"
-                        icon-right-clickable
-                        @icon-right-click="clearSearch"
-                        size="is-small"
-                    />
-                </div>
-
                 <!-- Contract Cards -->
                 <div class="contract-cards-list">
                     <div 
-                        v-for="(result, index) in filteredDisplayedContracts" 
+                        v-for="(result, index) in displayedContracts" 
                         :key="index"
                         class="contract-card"
                         :class="{ 
                             'is-selected': selectedContracts[result.filename],
+                            'needs-address': result.success && !result.contract?.address,
                             'has-errors': !result.success
                         }"
                     >
@@ -85,6 +80,7 @@
                                 <b-checkbox 
                                     v-model="selectedContracts[result.filename]"
                                     :disabled="!result.success"
+                                    @input="onContractSelectionChange(result.filename, $event)"
                                 ></b-checkbox>
                             </div>
                             
@@ -127,7 +123,7 @@
                         <div v-if="expandedCards[result.filename]" class="card-body">
                             <!-- Address input for contracts without address -->
                             <div v-if="!result.contract?.address && result.success" class="address-input-container">
-                                <label class="input-label">Deployed contract address</label>
+                                <label class="input-label">Contract Address</label>
                                 <b-field 
                                     :type="contractAddressErrors[result.filename] ? 'is-danger' : ''"
                                     :message="contractAddressErrors[result.filename]"
@@ -177,15 +173,6 @@
                     </div>
                 </div>
 
-                <div v-if="errorCount > 0" class="error-help">
-                    <b-message type="is-warning">
-                        <p>
-                            <b-icon icon="exclamation-triangle" size="is-small"></b-icon>
-                            <strong>{{ errorCount }} file(s) have errors</strong> and cannot be imported. 
-                            Expand the cards above to see details and fix suggestions.
-                        </p>
-                    </b-message>
-                </div>
             </div>
         </section>
         <footer class="modal-card-foot modern-footer">
@@ -212,7 +199,7 @@
                     @click="handleImport"
                     :disabled="!canImport"
                 >
-                    Import Selected ({{ selectedCount }})
+                    {{ importButtonLabel }}
                 </button>
             </div>
         </footer>
@@ -240,7 +227,6 @@ export default class ImportPreviewModal extends Vue {
     private contractAddresses: { [filename: string]: string } = {}
     private contractAddressErrors: { [filename: string]: string } = {}
     private expandedCards: { [filename: string]: boolean } = {}
-    private searchQuery: string = ''
 
     get isAllSelected(): boolean {
         return this.validContracts.length > 0 && 
@@ -264,21 +250,17 @@ export default class ImportPreviewModal extends Vue {
         return [...this.validContracts, ...this.errorContracts]
     }
 
-    get filteredDisplayedContracts(): ParseResult[] {
-        if (!this.searchQuery.trim()) {
-            return this.displayedContracts
-        }
-        
-        const query = this.searchQuery.toLowerCase()
-        return this.displayedContracts.filter(result => {
-            const name = (result.contract?.name || '').toLowerCase()
-            const filename = result.filename.toLowerCase()
-            return name.includes(query) || filename.includes(query)
-        })
-    }
 
     get selectedCount(): number {
         return Object.values(this.selectedContracts).filter(s => s).length
+    }
+
+    get selectedResults(): ParseResult[] {
+        return this.displayedContracts.filter(r => this.selectedContracts[r.filename])
+    }
+
+    get selectedMissingAddressCount(): number {
+        return this.selectedResults.filter(r => r.success && !r.contract?.address).length
     }
 
     get contractsNeedingAddress(): number {
@@ -287,9 +269,7 @@ export default class ImportPreviewModal extends Vue {
 
     get canImport(): boolean {
         // Check if any selected contracts are missing addresses
-        const selectedResults = this.displayedContracts.filter(r => this.selectedContracts[r.filename])
-        
-        for (const result of selectedResults) {
+        for (const result of this.selectedResults) {
             if (!result.contract?.address) {
                 // This contract needs an address
                 const address = this.contractAddresses[result.filename]
@@ -299,7 +279,18 @@ export default class ImportPreviewModal extends Vue {
             }
         }
         
-        return selectedResults.length > 0
+        return this.selectedResults.length > 0
+    }
+
+    get importButtonLabel(): string {
+        if (this.selectedCount === 0) {
+            return 'Select contracts to import'
+        }
+        if (this.selectedMissingAddressCount > 0) {
+            return 'Add missing addresses to import'
+        }
+        const label = this.selectedCount === 1 ? 'Import Contract' : 'Import Contracts'
+        return `${label} (${this.selectedCount})`
     }
 
     get errorCount(): number {
@@ -343,6 +334,7 @@ export default class ImportPreviewModal extends Vue {
             if (!r.contract?.address) {
                 this.$set(this.contractAddresses, r.filename, '')
                 this.$set(this.contractAddressErrors, r.filename, '')
+                this.$set(this.expandedCards, r.filename, true)
             }
         })
     }
@@ -392,20 +384,31 @@ export default class ImportPreviewModal extends Vue {
         })
     }
 
-    clearSearch() {
-        this.searchQuery = ''
-    }
 
     selectAll() {
         this.validContracts.forEach(r => {
             this.$set(this.selectedContracts, r.filename, true)
+            if (!r.contract?.address) {
+                this.validateContractAddress(r.filename)
+            }
         })
     }
 
     deselectAll() {
         this.validContracts.forEach(r => {
             this.$set(this.selectedContracts, r.filename, false)
+            if (!r.contract?.address) {
+                this.$set(this.contractAddressErrors, r.filename, '')
+            }
         })
+    }
+
+    onContractSelectionChange(filename: string, isSelected: boolean) {
+        if (isSelected) {
+            this.validateContractAddress(filename)
+        } else {
+            this.$set(this.contractAddressErrors, filename, '')
+        }
     }
 
     getErrorFix(error: string): string {
@@ -504,114 +507,95 @@ export default class ImportPreviewModal extends Vue {
     margin-top: 0.25rem;
 }
 
-.header-right {
-    text-align: right;
-    flex-shrink: 0;
-}
-
-.files-count {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary-color);
-    line-height: 1;
-}
-
-.files-label {
-    font-size: 0.75rem;
-    color: var(--text-color-light);
-    margin-top: 0.25rem;
-}
-
 .modern-body {
     padding: 1.25rem 1.5rem;
     max-height: calc(90vh - 180px);
     overflow-y: auto;
 }
 
-// Search Section
-.search-section {
-    margin-bottom: 1rem;
-}
-
-// Summary Cards
-.summary-cards {
+// Summary Banner
+.summary-banner {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     margin-bottom: 1.25rem;
+    padding: 0.875rem 1rem;
 }
 
-.summary-card {
+.summary-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 0.75rem;
-    padding: 0.625rem 0.875rem;
-    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+.summary-title {
     font-size: 0.875rem;
-    
-    .icon {
-        flex-shrink: 0;
-    }
+    font-weight: 600;
+    color: var(--text-color-strong);
 }
 
-.success-card {
-    background: rgba(72, 187, 120, 0.1);
-    border: 1px solid rgba(72, 187, 120, 0.2);
-    color: #38a169;
-    
-    .icon {
-        color: #38a169;
-    }
+.summary-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
 }
 
-[data-theme="dark"] .success-card {
-    background: rgba(90, 214, 125, 0.15);
-    border-color: rgba(90, 214, 125, 0.25);
-    color: #5ad67d;
-    
-    .icon {
-        color: #5ad67d;
-    }
-}
-
-.warning-card {
-    background: rgba(237, 137, 54, 0.1);
-    border: 1px solid rgba(237, 137, 54, 0.2);
-    color: #dd6b20;
-    
-    .icon {
-        color: #dd6b20;
-    }
-}
-
-[data-theme="dark"] .warning-card {
-    background: rgba(255, 234, 127, 0.15);
-    border-color: rgba(255, 234, 127, 0.25);
-    color: #ffea7f;
-    
-    .icon {
-        color: #ffea7f;
-    }
-}
-
-.info-card {
-    background: var(--body-background-alt);
+.summary-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-color-strong);
+    background: var(--card-background);
     border: 1px solid var(--border-color);
-    color: var(--text-color-light);
-    
-    .icon {
-        color: var(--text-color-light);
-    }
 }
 
-.summary-details {
-    flex: 1;
+.summary-chip.is-warning {
+    color: #dd6b20;
+    border-color: rgba(237, 137, 54, 0.35);
+    background: rgba(237, 137, 54, 0.08);
+}
+
+.summary-chip.is-danger {
+    color: #e53e3e;
+    border-color: rgba(255, 56, 96, 0.3);
+    background: rgba(255, 56, 96, 0.08);
+}
+
+.summary-chip.is-muted {
+    color: var(--text-color-light);
+}
+
+[data-theme="dark"] .summary-chip.is-warning {
+    color: #ffea7f;
+    border-color: rgba(255, 234, 127, 0.25);
+    background: rgba(255, 234, 127, 0.1);
+}
+
+[data-theme="dark"] .summary-chip.is-danger {
+    color: #ff5252;
+    border-color: rgba(255, 82, 82, 0.3);
+    background: rgba(255, 82, 82, 0.12);
+}
+
+.summary-attention {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--danger-color);
+    font-weight: 600;
 }
 
 .summary-subtext {
     font-size: 0.75rem;
-    margin-top: 0.125rem;
-    opacity: 0.8;
+    color: var(--text-color-light);
 }
 
 // Selection Controls
@@ -679,6 +663,11 @@ export default class ImportPreviewModal extends Vue {
         border-color: var(--danger-color);
         background: rgba(255, 56, 96, 0.05);
     }
+
+    &.needs-address {
+        border-color: rgba(237, 137, 54, 0.7);
+        background: rgba(237, 137, 54, 0.08);
+    }
 }
 
 [data-theme="dark"] .contract-card {
@@ -688,6 +677,11 @@ export default class ImportPreviewModal extends Vue {
     
     &.has-errors {
         background: rgba(255, 82, 82, 0.1);
+    }
+
+    &.needs-address {
+        background: rgba(255, 234, 127, 0.12);
+        border-color: rgba(255, 234, 127, 0.45);
     }
 }
 
@@ -937,10 +931,6 @@ export default class ImportPreviewModal extends Vue {
     background: rgba(74, 163, 227, 0.12);
 }
 
-.error-help {
-    margin-top: 1rem;
-}
-
 .modern-footer {
     display: flex;
     justify-content: space-between;
@@ -983,5 +973,3 @@ export default class ImportPreviewModal extends Vue {
     color: var(--primary-color);
 }
 </style>
-
-
