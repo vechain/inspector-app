@@ -1,5 +1,5 @@
-
 # Inspector
+
 ![Zizmor Checks](https://github.com/vechain/inspector-app/actions/workflows/scan-workflows.yaml/badge.svg?branch=main&event=push)
 
 Static web site for contract call with ABI and contract address.
@@ -87,3 +87,58 @@ services:
 ## Contributing
 
 Everyone is always welcome to contribute on the codebase.
+
+## Ralph - Autonomous Agent Runner
+
+Ralph is a script that runs Claude autonomously to implement features from a PRD (Product Requirements Document).
+
+### Workflow
+
+1. **Describe the feature** you want to implement
+2. **Run `/prd`** - Creates detailed PRD markdown in `tasks/prd-[feature-name].md`
+   - Asks clarifying questions first
+   - Generates user stories with acceptance criteria
+3. **Run `/ralph`** - Converts PRD to `prd.json` format
+   - Archives previous prd.json/progress.txt if different feature
+   - Resets `progress.txt` to empty
+   - Creates `prd.json` with stories ready for execution
+4. **Run Ralph** in a new terminal tab:
+   ```bash
+   ./ralph.sh 10
+   ```
+5. **Wait for completion** - Ralph implements each story and commits
+
+### PRD Format
+
+```json
+{
+  "project": "Feature Name",
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Story title",
+      "description": "Detailed description of what needs to be done",
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
+```
+
+- **priority**: Lower number = higher priority (1 is first)
+- **passes**: Set to `false` initially, Ralph sets to `true` when done
+- **notes**: Ralph fills this with implementation details
+
+### How Ralph Works
+
+Each iteration:
+
+1. Find highest-priority story with `passes: false`
+2. Implement the feature
+3. Run type checks (`yarn typecheck`)
+4. Update `prd.json`: set `passes: true` and add notes
+5. Append progress to `progress.txt`
+6. Create a git commit
+
+Stops when all stories have `passes: true` or iterations exhausted.

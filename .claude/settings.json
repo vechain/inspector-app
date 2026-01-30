@@ -1,0 +1,9 @@
+{
+  "enabledPlugins": {
+    "building-secure-contracts@trailofbits": true,
+    "entry-point-analyzer@trailofbits": true,
+    "audit-context-building@trailofbits": true,
+    "insecure-defaults@trailofbits": true,
+    "ask-questions-if-underspecified@trailofbits": true
+  }
+}
