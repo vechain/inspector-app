@@ -33,7 +33,14 @@
         <p class="holders-title">Holders:</p>
         <div class="holders-list">
           <div v-for="(holder, index) in holders" :key="index" class="holder-item">
-            <code class="holder-address">{{ holder }}</code>
+            <a
+              :href="`${$explorerAccount}${holder}`"
+              target="_blank"
+              class="holder-address-link"
+              @click.stop
+            >
+              <code class="holder-address">{{ holder }}</code>
+            </a>
             <b-button
               type="is-text"
               size="is-small"
@@ -193,12 +200,26 @@ export default class RoleCard extends Vue {
         border-bottom: none;
       }
 
+      .holder-address-link {
+        flex: 1;
+        text-decoration: none;
+
+        &:hover .holder-address {
+          text-decoration: underline;
+          background-color: var(--code-hover-bg, #e8e8e8);
+        }
+      }
+
       .holder-address {
         font-family: monospace;
         font-size: 0.85rem;
-        flex: 1;
-        color: var(--code-color, #333);
+        display: inline-block;
+        color: var(--primary-color, #3273dc);
         word-break: break-all;
+        padding: 0.1rem 0.3rem;
+        border-radius: 3px;
+        background-color: var(--code-bg, #f0f0f0);
+        transition: background-color 0.15s ease;
       }
 
       .copy-btn {
@@ -237,8 +258,13 @@ export default class RoleCard extends Vue {
     .holder-item {
       border-bottom-color: #333;
 
+      .holder-address-link:hover .holder-address {
+        background-color: #3a3a3a;
+      }
+
       .holder-address {
-        color: #e0e0e0;
+        color: #64b5f6;
+        background-color: #2a2a2a;
       }
     }
   }
