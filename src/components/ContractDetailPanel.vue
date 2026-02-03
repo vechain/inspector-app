@@ -87,10 +87,17 @@
                     />
                 </div>
                 <div v-show="tabIndex === 4">
+                    <RolesTab
+                        :contractAddress="contract.address"
+                        :abi="abi"
+                        :network="network"
+                    />
+                </div>
+                <div v-show="tabIndex === 5">
                     <FallbackCard :fb="fb" />
                 </div>
 
-                <div v-show="tabIndex === 5">
+                <div v-show="tabIndex === 6">
                     <FunctionCard
                         v-for="(item, index) in prList"
                         :ref="item.name"
@@ -101,7 +108,7 @@
                         :item="item"
                     />
                 </div>
-                <div v-show="tabIndex === 6">
+                <div v-show="tabIndex === 7">
                     <FunctionCard
                         v-for="(item, index) in pwList"
                         :ref="item.name"
@@ -112,7 +119,7 @@
                         :item="item"
                     />
                 </div>
-                <div v-show="tabIndex === 7">
+                <div v-show="tabIndex === 8">
                     <EventCard
                         v-for="(item, index) in peList"
                         :ref="item.name"
@@ -140,6 +147,7 @@ import FunctionCard from './FunctionCard.vue'
 import FallbackCard from './FallbackCard.vue'
 import EventCard from './EventCard.vue'
 import DescCard from './DescCard.vue'
+import RolesTab from './RolesTab.vue'
 import { Entities } from '../database'
 import PrototypeAbi from '../mixin/Prototype'
 
@@ -150,7 +158,8 @@ import PrototypeAbi from '../mixin/Prototype'
         FunctionCard,
         FallbackCard,
         DescCard,
-        EventCard
+        EventCard,
+        RolesTab
     }
 })
 export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
@@ -201,6 +210,10 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
         return this.abi.find((item: ABI.EventItem) => {
             return item.type === 'fallback'
         })
+    }
+
+    get network(): string {
+        return this.$connex.thor.genesis.id
     }
 
     private tabIndex: number = 0
@@ -255,15 +268,23 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
                 count: this.eventList.length,
                 visible: !!this.eventList.length
             },
+            { text: 'Roles', count: '', visible: true },
             { text: 'Fallback', count: '', visible: !!this.fb }
         ]
         this.tabs = this.tabs.concat(this.protoTabs)
         
         await this.getCode(this.contract!.address || '')
-        
-        this.tabIndex = this.tabs.findIndex((item) => {
-            return item.visible
-        })
+
+        // Only reset tab index if current tab is invalid or not visible
+        const currentTabValid = this.tabIndex >= 0 &&
+            this.tabIndex < this.tabs.length &&
+            this.tabs[this.tabIndex]?.visible
+
+        if (!currentTabValid) {
+            this.tabIndex = this.tabs.findIndex((item) => {
+                return item.visible
+            })
+        }
     }
 
     editContract() {
@@ -325,7 +346,7 @@ export default class ContractDetailPanel extends Mixins(PrototypeAbi) {
         
         const types = {
             cb: 2,
-            fb: 4,
+            fb: 5,
             read: 0,
             write: 1,
             event: 3
