@@ -1,14 +1,21 @@
 import Connex from "@vechain/connex/esm";
 
+declare global {
+  interface Window {
+    vechain?: {
+      newConnexVendor: (genesisId: string) => any
+    }
+  }
+}
+
 export const soloUrlNode = () => {
-    //Used to support docker runtime env variables. This string is overrided on container startup using the injected env 
+    //Used to support docker runtime env variables. This string is overrided on container startup using the injected env
     if(process.env.VUE_APP_IS_DOCKER) {
         const soloUrlPlaceholder = 'VUE_APP_SOLO_URL_PLACEHOLDER';
         return soloUrlPlaceholder;
     }
     return process.env.VUE_APP_SOLO_URL;
 }
-
 
 //Needed to support runtime env variables
 export const isSoloNode = !!soloUrlNode();
@@ -19,7 +26,13 @@ export const nodeUrls = {
   custom: "",
 };
 
-const soloGenesis = {
+const genesisIds = {
+  main: "0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a",
+  test: "0x000000000b2bce3c70bc649a02749e8687721b09ed2e15997f466536b20bb127",
+  solo: "0x00000000c05a20fbca2bf6ae3affba6af4a74b800b585bf7a4988aba7aea69f6",
+}
+
+export const soloGenesis = {
   number: 0,
   id: "0x00000000c05a20fbca2bf6ae3affba6af4a74b800b585bf7a4988aba7aea69f6",
   size: 170,
@@ -41,27 +54,23 @@ const soloGenesis = {
   transactions: [],
 };
 
-export const isVeWorldAvailable = !!window.vechain
-
-export function createConnex(net?: "main" | "test" | "solo") {
-  if (net) {
-    // net specified
-    const url = nodeUrls[net];
-    if (net == "solo") {
-      return new Connex({ node: url, network: soloGenesis, noExtension: !isVeWorldAvailable })
-}
-    return new Connex({ node: url, network: net, noExtension: !isVeWorldAvailable })
-  } else {
-    const injected = (window as any).connex;
-    // net unspecified
-    if (injected) {
-      return new Connex({ node: "", network: injected.thor.genesis, noExtension: !isVeWorldAvailable });
-    } else {
-      // defaults to main net, or soloUrl if solo is provided
-      if (isSoloNode) {
-        return new Connex({ node: nodeUrls.solo, network: soloGenesis, noExtension: !isVeWorldAvailable });
-      }
-      return new Connex({ node: nodeUrls.main, noExtension: !isVeWorldAvailable })
-    }
+// If window.vechain is present use VeWorld extension, otherwise fall back to Sync2
+function buildConnex(nodeUrl: string, network: any, genesisId: string): any {
+  if (window.vechain) {
+    const thor = new Connex.Thor({ node: nodeUrl, network })
+    const vendor = window.vechain.newConnexVendor(genesisId)
+    return { thor, vendor }
   }
+  return new Connex({ node: nodeUrl, network, signer: 'sync2' })
+}
+
+export function createConnexForNetwork(nodeUrl: string, network: any, genesisId: string): any {
+  return buildConnex(nodeUrl, network, genesisId)
+}
+
+export function createConnex(net: "main" | "test" | "solo"): any {
+  const url = nodeUrls[net]
+  const network = net === 'solo' ? soloGenesis : net
+  const genesisId = genesisIds[net]
+  return buildConnex(url, network, genesisId)
 }

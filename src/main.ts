@@ -13,7 +13,7 @@ import router from './Router'
 import './overwrite.css'
 import VueAnalytics from 'vue-analytics'
 import Connex from '@vechain/connex'
-import { createConnex, isSoloNode, isVeWorldAvailable } from './create-connex'
+import { createConnex, createConnexForNetwork, isSoloNode } from './create-connex'
 import { prePopulate } from '@/pre-populate'
 import { getNetworkById } from './services/network-service'
 import { isCustomNetwork, getCustomNetworkId } from './utils'
@@ -51,28 +51,15 @@ function setExplorerUrl(path: string) {
 }
 
 async function initApp() {
-  if (window.connex) {
-      // sync1
-      console.log("Connex ok", window.connex)
-      Vue.prototype.$connex = new Connex({
-          //@ts-ignore
-        network: window.connex.thor.genesis,
-        node: '',
-        noV1Compat: false,
-        noExtension: !isVeWorldAvailable
-      })
-      setExplorerUrl('')
-  } else {
+  // Default is main net for sync2/VeWorld
+  const defaultNetwork = isSoloNode ? 'solo' : 'main'
+  const net = localStorage.getItem('last-net') || defaultNetwork
+  console.log("net", net)
 
-    // Default is main net for sync2
-    const defaultNetwork = isSoloNode ? 'solo' : 'main'
-    const net = localStorage.getItem('last-net') || defaultNetwork
-    console.log("net", net)
-
-    if (['test', 'main', 'solo'].includes(net)) {
-      setExplorerUrl(net)
-      Vue.prototype.$connex = createConnex(net as "test" | "main" | "solo")
-    } else if (isCustomNetwork(net)) {
+  if (['test', 'main', 'solo'].includes(net)) {
+    setExplorerUrl(net)
+    Vue.prototype.$connex = createConnex(net as "test" | "main" | "solo")
+  } else if (isCustomNetwork(net)) {
       const networkId = getCustomNetworkId(net)
       if (networkId) {
         try {
@@ -102,11 +89,7 @@ async function initApp() {
             Vue.prototype.$explorerBlock = `${host}blocks/`
             Vue.prototype.$explorerTx = `${host}transactions/`
 
-            Vue.prototype.$connex = new Connex({
-              network: genesisBlock,
-              node: customNetwork.nodeUrl,
-              noExtension: !isVeWorldAvailable
-            })
+            Vue.prototype.$connex = createConnexForNetwork(customNetwork.nodeUrl, genesisBlock, genesisBlock.id)
           } else {
             console.error('Custom network not found, falling back to mainnet')
             localStorage.setItem('last-net', 'main')
@@ -122,7 +105,7 @@ async function initApp() {
       }
     } else {
       const node = localStorage.getItem('custom-node')
-      const network = JSON.parse(localStorage.getItem('custom-network') || '') as Connex.Thor.Block // genesis block
+      const network = JSON.parse(localStorage.getItem('custom-network') || '') as any // genesis block
 
       if (node && network) {
         if (network.id === '0x000000000b2bce3c70bc649a02749e8687721b09ed2e15997f466536b20bb127') {
@@ -137,13 +120,9 @@ async function initApp() {
           Vue.prototype.$explorerBlock = `${host}blocks/`
           Vue.prototype.$explorerTx = `${host}transactions/`
         }
-        Vue.prototype.$connex = new Connex({
-          network,
-          node
-        })
+        Vue.prototype.$connex = createConnexForNetwork(node, network, network.id)
       }
     }
-  }
 
   prePopulate()
 
