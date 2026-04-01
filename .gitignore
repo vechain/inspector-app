@@ -27,3 +27,5 @@ prd.json
 progress.txt
 tasks/
 docs/
+
+.omc/

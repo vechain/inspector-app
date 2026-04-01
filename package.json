@@ -47,9 +47,6 @@
     "yarn": "^1.22"
   },
   "resolutions": {
-    "elliptic": "6.6.1",
-    "cipher-base": "1.0.5",
-    "sha.js": "2.4.12",
-    "axios": "0.30.2"
+    "cipher-base": "1.0.7"
   }
 }
