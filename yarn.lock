@@ -1414,12 +1414,12 @@
     thor-devkit "^2.2.0"
     validator-ts "^0.9.1"
 
-"@vechain/connex-types@2.2.1", "@vechain/connex-types@^2.2.1":
+"@vechain/connex-types@^2.2.1":
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@vechain/connex-types/-/connex-types-2.2.1.tgz#a8bb367e002f64891b48c2b1e87ade7801eacce4"
   integrity sha512-jSicxZQznD+UZN0lmxdmIHdruVqTc2b0xDChePIzki/m4AabELJpSrmq7ynu7kEqM1sU9qXZ9KiWkdkBQmWuRw==
 
-"@vechain/connex@2.3.2":
+"@vechain/connex@^2.3.2":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@vechain/connex/-/connex-2.3.2.tgz#50be78c161fea3617d0ad0683627cf53ab4d4fc0"
   integrity sha512-V7t5sAYQEdUxhl4exuLk+EnzxoHdSx6ubX47NlGTUEQUO3yu8dvLAeV5o4QyfQ3bkgjf/fEQO6CVR0Dg4mDdHw==
@@ -4678,9 +4678,9 @@ lodash.uniq@^4.5.0:
   integrity sha512-xfBaXQd9ryd9dlSDvnvI0lvxfLJlYAZzXomUYzLKtUeOQvOP5piqAWuGtrhWeqaXK9hhoM/iyJc5AV+XfsX3HQ==
 
 lodash@^4.17.14, lodash@^4.17.20, lodash@^4.17.21:
-  version "4.17.23"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.23.tgz#f113b0378386103be4f6893388c73d0bde7f2c5a"
-  integrity sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==
+  version "4.18.1"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.18.1.tgz#ff2b66c1f6326d59513de2407bf881439812771c"
+  integrity sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==
 
 log-symbols@^4.1.0:
   version "4.1.0"
@@ -6706,7 +6706,7 @@ thenify-all@^1.0.0:
   dependencies:
     any-promise "^1.0.0"
 
-thor-devkit@2.2.0, thor-devkit@^2.2.0:
+thor-devkit@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/thor-devkit/-/thor-devkit-2.2.0.tgz#fe54abcda4f8c3d46687eb01390427e0f9f2b866"
   integrity sha512-Z9zNSDys84LLscxM27AFMtH3ZclfzsQxg8Jyg7u87N4HoZ6p4YSB2Zs50h+b6h/noIWQXDewll2V31mcM4dd7g==
