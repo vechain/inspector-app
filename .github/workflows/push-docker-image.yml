@@ -24,8 +24,8 @@ jobs:
       matrix:
         platform: [linux/amd64, linux/arm64]
         include:
-          - platform: ubuntu-24.04
-            runner: linux/amd64
+          - platform: linux/amd64
+            runner: ubuntu-24.04
           - platform: linux/arm64
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
