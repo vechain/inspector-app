@@ -127,6 +127,11 @@ jobs:
             TAG_ARGS+=(-t "$tag")
           done <<< "$DOCKER_METADATA_TAGS"
 
+          IMAGE_REFS=()
+          for digest in *; do
+            IMAGE_REFS+=("${IMAGE}@sha256:${digest}")
+          done
+
           docker buildx imagetools create \
             "${TAG_ARGS[@]}" \
-            $(printf '%s@sha256:%s ' "$IMAGE" *)
+            "${IMAGE_REFS[@]}"
