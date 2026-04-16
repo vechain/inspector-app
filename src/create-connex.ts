@@ -1,10 +1,8 @@
 import Connex from "@vechain/connex/esm";
 
-declare global {
-  interface Window {
-    vechain?: {
-      newConnexVendor: (genesisId: string) => any
-    }
+type VeWorldConnexWindow = Window & {
+  vechain?: {
+    newConnexVendor: (genesisId: string) => any
   }
 }
 
@@ -54,14 +52,17 @@ export const soloGenesis = {
   transactions: [],
 };
 
-// If window.vechain is present use VeWorld extension, otherwise fall back to Sync2
+export const isVeWorldAvailable = !!(window as VeWorldConnexWindow).vechain
+
+// Use runtime casts here because the extension API surface is ahead of the published TS types.
 function buildConnex(nodeUrl: string, network: any, genesisId: string): any {
-  if (window.vechain) {
-    const thor = new Connex.Thor({ node: nodeUrl, network })
-    const vendor = window.vechain.newConnexVendor(genesisId)
+  const vechain = (window as VeWorldConnexWindow).vechain
+  if (vechain) {
+    const thor = new (Connex as any).Thor({ node: nodeUrl, network })
+    const vendor = vechain.newConnexVendor(genesisId)
     return { thor, vendor }
   }
-  return new Connex({ node: nodeUrl, network, signer: 'sync2' })
+  return new (Connex as any)({ node: nodeUrl, network, signer: 'sync2' })
 }
 
 export function createConnexForNetwork(nodeUrl: string, network: any, genesisId: string): any {
