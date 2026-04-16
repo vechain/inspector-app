@@ -61,7 +61,9 @@ EXPOSE 8080
 # Copy entrypoint script as /entrypoint.sh
 COPY --chmod=755 ./entrypoint.sh /entrypoint.sh
 
-RUN mkdir -p /tmp/nginx && chown nginx:nginx /tmp/nginx
+RUN chown nginx:nginx /usr/share/nginx/html && \
+    mkdir -p /tmp/nginx && \
+    chown nginx:nginx /tmp/nginx
 
 # Run entrypoint script
 ENTRYPOINT ["/entrypoint.sh"]
