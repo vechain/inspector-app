@@ -54,20 +54,17 @@ RUN yarn run build
 # Create a new stage to run the application with minimal runtime dependencies
 # where the necessary files are copied from the build stage.
 FROM nginx:stable-alpine AS final
-COPY --from=build /usr/src/app/dist /usr/share/nginx/html
-# COPY --from=build /usr/src/app/nginx.prod.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+COPY --from=build --chown=nginx:nginx /usr/src/app/dist /usr/share/nginx/html
+COPY ./nginx.conf /etc/nginx/nginx.conf
+EXPOSE 8080
 
 # Copy entrypoint script as /entrypoint.sh
-COPY ./entrypoint.sh /entrypoint.sh
+COPY --chmod=755 ./entrypoint.sh /entrypoint.sh
 
-# Grant Linux permissions and run entrypoint script
-RUN chmod +x /entrypoint.sh
+RUN mkdir -p /tmp/nginx && chown nginx:nginx /tmp/nginx
+
+# Run entrypoint script
 ENTRYPOINT ["/entrypoint.sh"]
+USER nginx
 
 # CMD ["nginx", "-g", "daemon off;"]
-
-RUN apk add --no-cache libxml2=2.13.9-r0 shadow && \
-    useradd -U -u 1000 appuser && \
-    chown -R 1000:1000 /usr/share/nginx/html /entrypoint.sh
-USER 1000
