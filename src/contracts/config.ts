@@ -156,6 +156,16 @@ const oracleVeChainEnergy: ContractConfig = {
   abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/oracle.vechain.energy.json",
 };
 
+const b3trNavigatorRegistry: ContractConfig = {
+  name: "VeBetter - NavigatorRegistry",
+  abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-navigator-registry.json",
+};
+
+const b3trChallenges: ContractConfig = {
+  name: "VeBetter - B3TRChallenges",
+  abi: "https://raw.githubusercontent.com/vechain/b32/refs/heads/master/ABIs/VeBetterDAO-b3tr-challenges.json",
+};
+
 const common = {
   "Enter ERC20 Address": {
     name: "ERC20",
@@ -202,6 +212,8 @@ export const AllBuiltInContracts: ContractConfig[] = [
   b3trRelayersRewardsPool,
   b3trCreatorNFT,
   b3trGrantsManager,
+  b3trNavigatorRegistry,
+  b3trChallenges,
   stargateNFT,
   stargate,
   smartAccountsFactory,
@@ -231,6 +243,8 @@ export const ContractConfig: Record<string, Record<string, ContractConfig>> = {
     "0x34b56f892c9e977b9ba2e43ba64c27d368ab3c86": b3trRelayersRewardsPool,
     "0xe8e96a768ffd00417d4bd985bec9EcfC6F732a7f": b3trCreatorNFT,
     "0x055d20914657834c914d7c44bf65b566ab4b45a2": b3trGrantsManager,
+    "0xef238e33fc78ecc79beaf8386254a0fc67d048e0": b3trNavigatorRegistry,
+    "0x92a98f23ca4f9703781cf56088b76a1482667166": b3trChallenges,
     "0x1856c533ac2d94340aaa8544d35a5c1d4a21dee7": stargateNFT,
     "0x03c557be98123fdb6fad325328ac6eb77de7248c": stargate,
     "0xc06ad8573022e2be416ca89da47e8c592971679a": smartAccountsFactory,
@@ -251,6 +265,8 @@ export const ContractConfig: Record<string, Record<string, ContractConfig>> = {
     "0x2d2a2207c68a46fc79325d7718e639d1047b0d8b": b3trX2EarnRewardsPool,
     "0x6f7b4bc19b4dc99005b473b9c45ce2815bbe7533": b3trXAllocationPool,
     "0x8800592c463f0b21ae08732559ee8e146db1d7b2": b3trXAllocationVoting,
+    "0x91bdc3ca7228bc28f14990039cab813f98ea1d40": b3trNavigatorRegistry,
+    "0x1e32236be666ee5ae6f737cbe50d096810c66178": b3trChallenges,
     "0x887d9102f0003f1724d8fd5d4fe95a11572fcd77": stargateNFT,
     "0x1E02B2953AdEfEC225cF0Ec49805b1146a4429C1": stargate,
     "0x713b908Bcf77f3E00EFEf328E50b657a1A23AeaF": smartAccountsFactory,
