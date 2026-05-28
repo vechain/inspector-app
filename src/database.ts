@@ -41,6 +41,26 @@ export namespace Entities {
     roleHash: string; // bytes32
     createdTime: number;
   }
+
+  export interface TxBuilderClause {
+    id: string;
+    contractAddress: string;
+    contractName: string;
+    abi: any[];
+    selectedFunction: ABI.FunctionItem | null;
+    params: string[];
+    value: string | null;
+    note?: string;
+  }
+
+  export interface TxBuilderDraft {
+    id?: number;
+    name: string;
+    network: string; // genesis ID
+    clauses: TxBuilderClause[];
+    createdTime: number;
+    updatedTime: number;
+  }
 }
 
 class Database extends Dexie {
@@ -49,6 +69,7 @@ class Database extends Dexie {
   public readonly shortCuts!: Dexie.Table<Entities.ShortCuts, number>;
   public readonly networks!: Dexie.Table<Entities.Network, number>;
   public readonly customRoles!: Dexie.Table<Entities.CustomRole, number>;
+  public readonly txBuilderDrafts!: Dexie.Table<Entities.TxBuilderDraft, number>;
 
   constructor() {
     super("inspect");
@@ -77,6 +98,9 @@ class Database extends Dexie {
     });
     this.version(8).stores({
       customRoles: "++id, contractAddress, network",
+    });
+    this.version(9).stores({
+      txBuilderDrafts: "++id, name, network, updatedTime",
     });
     this.open().catch((err) => {
       // tslint:disable-next-line:no-console
