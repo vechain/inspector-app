@@ -125,6 +125,7 @@ import { getCustomNetworks, getNetworkById } from '../services/network-service'
 export default class Navbar extends Vue {
     private routes = [
         { name: 'contracts', text: 'Contracts' },
+        { name: 'tx_builder', text: 'TX Builder' },
         { name: 'deploy', text: 'Deploy' }
     ]
 
