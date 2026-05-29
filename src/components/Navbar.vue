@@ -194,7 +194,11 @@ export default class Navbar extends Vue {
             return
         }
         localStorage.setItem('last-net', type)
-        window.location.href = window.location.origin
+        // Reload in place so the current route + hash survive — main.ts will
+        // pick up the new `last-net` and rebuild Connex against the right node.
+        // Previously this redirected to the origin (which dropped the path),
+        // forcing users back to /contracts every time they switched networks.
+        window.location.reload()
     }
 
     private openAddNetworkModal() {

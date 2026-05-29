@@ -73,6 +73,13 @@
                             >{{ tag }}</span>
                         </span>
                     </div>
+                    <div class="kv-row">
+                        <span class="kv-key">Shape</span>
+                        <span class="kv-val">
+                            <span v-if="isLikelyLibrary" class="tag-pill is-library">possible library</span>
+                            <span v-else class="tag-pill is-muted">regular contract</span>
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -151,6 +158,36 @@
                         <span class="kv-val">{{ formatTimestamp(sourcedAbi.fetchedTime) }}</span>
                     </div>
                 </div>
+
+                <div class="abi-actions">
+                    <button
+                        v-if="abiSource !== 'imported'"
+                        type="button"
+                        class="button is-small is-primary is-outlined"
+                        @click="addToMyContracts"
+                    >
+                        <b-icon icon="plus" size="is-small"></b-icon>
+                        <span>Add to my contracts</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="button is-small is-light"
+                        @click="showAbi = !showAbi"
+                    >
+                        <b-icon :icon="showAbi ? 'eye-slash' : 'eye'" size="is-small"></b-icon>
+                        <span>{{ showAbi ? 'Hide ABI' : 'View ABI' }}</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="button is-small is-light"
+                        @click="copyAbi"
+                    >
+                        <b-icon icon="copy" size="is-small"></b-icon>
+                        <span>Copy</span>
+                    </button>
+                </div>
+
+                <pre v-if="showAbi" class="abi-display"><code class="is-family-monospace">{{ abiJson }}</code></pre>
             </div>
 
             <!-- No ABI available -->
@@ -193,6 +230,7 @@ import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 import DB, { Entities } from '../../database'
 import { loadAllContracts, ensureAbisForAddresses, findContractByAddress } from '../../utils/abi-registry'
 import { getAccount, getAccountCode, getStorage, AccountInfo } from '../../services/debug-service'
+import EditContract from '../EditContract.vue'
 
 // EIP-1967 storage slots.
 const SLOT_IMPL = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc'
@@ -246,6 +284,7 @@ export default class AddressInspectorPanel extends Vue {
     private importedHit: Entities.Contract | null = null
     private sourcedAbi: Entities.SourcedAbi | null = null
     private helpKey: string | null = null
+    private showAbi: boolean = false
 
     get helpActive(): boolean {
         return this.helpKey !== null
@@ -378,6 +417,31 @@ export default class AddressInspectorPanel extends Vue {
         return tags
     }
 
+    // Heuristic: Solidity emits a library address check at the very start of
+    // a library's bytecode — `PUSH20 <self-address>` (opcode 0x73) followed by
+    // an address-equality check that rejects non-DELEGATECALL invocations.
+    // If we find PUSH20 + this address within the first ~100 bytes of code,
+    // this is most likely a library deployment. Not 100% reliable but covers
+    // standard `library Foo { ... }` Solidity output.
+    get isLikelyLibrary(): boolean {
+        if (!this.hasCode || !this.code) return false
+        const addrHex = this.value.toLowerCase().replace(/^0x/, '')
+        if (addrHex.length !== 40) return false
+        const lowerCode = this.code.toLowerCase()
+        const pattern = '73' + addrHex
+        const head = lowerCode.slice(0, 250) // ~125 bytes
+        return head.includes(pattern)
+    }
+
+    get abiJson(): string {
+        if (!this.registryHit || !Array.isArray(this.registryHit.abi)) return ''
+        try {
+            return JSON.stringify(this.registryHit.abi, null, 2)
+        } catch {
+            return ''
+        }
+    }
+
     get abiSummary(): { functions: number; events: number; errors: number } | null {
         if (!this.registryHit) return null
         const abi = this.registryHit.abi
@@ -428,6 +492,74 @@ export default class AddressInspectorPanel extends Vue {
         if (!ts) return ''
         const d = new Date(ts)
         return d.toLocaleString()
+    }
+
+    private async copyAbi() {
+        if (!this.abiJson) return
+        try {
+            await navigator.clipboard.writeText(this.abiJson)
+        } catch {
+            try {
+                const ta = document.createElement('textarea')
+                ta.value = this.abiJson
+                ta.setAttribute('readonly', '')
+                ta.style.position = 'absolute'
+                ta.style.left = '-9999px'
+                document.body.appendChild(ta)
+                ta.select()
+                document.execCommand('copy')
+                document.body.removeChild(ta)
+            } catch { return }
+        }
+        ;(this as any).$buefy.toast.open({
+            message: 'ABI copied',
+            type: 'is-success',
+            position: 'is-bottom',
+            duration: 1500
+        })
+    }
+
+    private addToMyContracts() {
+        if (!this.registryHit) return
+        const prefill: Entities.Contract = {
+            name: this.registryHit.name || '',
+            address: this.value,
+            abi: this.registryHit.abi as any,
+            category: ''
+        }
+        // $buefy.modal.open doesn't auto-close when the inner component emits
+        // its own `cancel` / `finished` events — only on the modal's own
+        // cancellation (escape, outside-click, ×). EditContract emits cancel
+        // and finished but doesn't tell the modal to close, so we have to
+        // close it ourselves via the returned instance.
+        let modal: any = null
+        modal = (this as any).$buefy.modal.open({
+            parent: this,
+            component: EditContract,
+            hasModalCard: true,
+            trapFocus: true,
+            canCancel: ['escape', 'outside'],
+            props: {
+                item: prefill,
+                isImport: false
+            },
+            events: {
+                cancel: () => {
+                    if (modal) modal.close()
+                },
+                finished: () => {
+                    if (modal) modal.close()
+                    ;(this as any).$buefy.toast.open({
+                        message: `Added "${prefill.name || prefill.address.slice(0, 10) + '…'}" to your contracts`,
+                        type: 'is-success',
+                        position: 'is-bottom',
+                        duration: 2500
+                    })
+                    // Re-run lookup so the panel reflects the new "user-imported" source.
+                    this.load()
+                }
+            }
+        })
     }
 
     private async lookupSourcedAbi(genesisId: string, address: string) {
@@ -755,6 +887,37 @@ export default class AddressInspectorPanel extends Vue {
 .tag-pill.is-muted {
     background: var(--code-bg);
     color: var(--text-color-light);
+}
+.tag-pill.is-library {
+    background: rgba(127, 86, 217, 0.18);
+    color: #7f56d9;
+}
+
+.abi-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.abi-display {
+    margin-top: 0.85rem;
+    background: var(--code-bg);
+    color: var(--text-color);
+    padding: 0.75rem 0.9rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    max-height: 360px;
+    overflow: auto;
+    white-space: pre;
+    border: 1px solid var(--border-color);
+}
+.abi-display code {
+    background: transparent;
+    padding: 0;
+    font-size: inherit;
+    color: inherit;
 }
 
 .empty-mini {
