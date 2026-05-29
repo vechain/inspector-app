@@ -84,6 +84,13 @@ export async function fetchRoleEvents(
   fromBlock?: number
 ): Promise<RoleEvent[]> {
   const account = connex.thor.account(contractAddress)
+
+  // Connex initializes head.number = 0 and updates it asynchronously after the
+  // first poll. If we read it before that update lands, the filter range
+  // collapses to {from: 0, to: 0} and returns no events. Wait one tick.
+  if (connex.thor.status.head.number === 0) {
+    await connex.thor.ticker().next()
+  }
   const currentBlock = connex.thor.status.head.number
 
   const range: Connex.Thor.Filter.Range = {
