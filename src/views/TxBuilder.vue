@@ -185,6 +185,7 @@ function makeEmptyClause(): Entities.TxBuilderClause {
 }
 
 @Component({
+    name: 'TxBuilder',
     components: { ClauseList, ClauseEditor, DraftsMenu }
 })
 export default class TxBuilder extends Vue {
