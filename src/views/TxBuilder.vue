@@ -127,27 +127,10 @@
             </div>
             <div class="footer-actions">
                 <button
-                    v-if="submission.status === 'confirmed'"
-                    type="button"
-                    class="button is-rounded is-primary"
-                    @click="dismissAndReset"
-                >
-                    Start new
-                </button>
-                <button
-                    v-else-if="submission.status !== 'submitting' && submission.status !== 'pending'"
                     type="button"
                     class="button is-rounded"
                     @click="dismissSubmission"
-                >
-                    Dismiss
-                </button>
-                <button
-                    v-else
-                    type="button"
-                    class="button is-rounded"
-                    @click="dismissSubmission"
-                    title="Stop tracking — the transaction will keep its course on-chain"
+                    :title="submission.status === 'submitting' || submission.status === 'pending' ? 'Stop tracking — the transaction will keep its course on-chain' : ''"
                 >
                     Hide
                 </button>
@@ -551,14 +534,6 @@ export default class TxBuilder extends Vue {
     private dismissSubmission() {
         this.stopReceiptPolling()
         this.submission = null
-    }
-
-    private dismissAndReset() {
-        this.dismissSubmission()
-        this.clauses = []
-        this.activeId = null
-        this.loadedDraftId = null
-        this.dirty = false
     }
 
     private beforeDestroy() {
