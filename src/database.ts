@@ -61,6 +61,40 @@ export namespace Entities {
     createdTime: number;
     updatedTime: number;
   }
+
+  export interface SourcedAbi {
+    id?: number;
+    genesisId: string;
+    address: string; // lowercase; the address users see (proxy if applicable)
+    abi: any[];
+    source: string; // 'sourcify' for now
+    fetchedTime: number;
+    contractName?: string;
+    implAddress?: string; // populated when we resolved this address as a proxy
+  }
+
+  // Single ABI item keyed by its keccak hash (4-byte selector for functions,
+  // 32-byte topic0 for events). Source: vechain/b32 keccak directory.
+  // `miss` records 404s so we don't refetch repeatedly.
+  export interface B32Signature {
+    id?: number;
+    hash: string; // 0x... lowercase
+    item: any | null;
+    miss?: boolean;
+    fetchedTime: number;
+  }
+
+  // Canonical signature from OpenChain (api.openchain.xyz). For events we
+  // store the signature string and rebuild an ABI item with a best-guess
+  // indexed pattern at decode time. `miss` records 404s.
+  export interface OpenChainSignature {
+    id?: number;
+    hash: string; // 0x... lowercase
+    kind: 'function' | 'event';
+    canonicalSignature: string | null;
+    miss?: boolean;
+    fetchedTime: number;
+  }
 }
 
 class Database extends Dexie {
@@ -70,6 +104,9 @@ class Database extends Dexie {
   public readonly networks!: Dexie.Table<Entities.Network, number>;
   public readonly customRoles!: Dexie.Table<Entities.CustomRole, number>;
   public readonly txBuilderDrafts!: Dexie.Table<Entities.TxBuilderDraft, number>;
+  public readonly sourcedAbis!: Dexie.Table<Entities.SourcedAbi, number>;
+  public readonly b32Signatures!: Dexie.Table<Entities.B32Signature, number>;
+  public readonly openchainSignatures!: Dexie.Table<Entities.OpenChainSignature, number>;
 
   constructor() {
     super("inspect");
@@ -101,6 +138,15 @@ class Database extends Dexie {
     });
     this.version(9).stores({
       txBuilderDrafts: "++id, name, network, updatedTime",
+    });
+    this.version(10).stores({
+      sourcedAbis: "++id, &[genesisId+address], genesisId, address",
+    });
+    this.version(11).stores({
+      b32Signatures: "++id, &hash",
+    });
+    this.version(12).stores({
+      openchainSignatures: "++id, &[hash+kind], hash, kind",
     });
     this.open().catch((err) => {
       // tslint:disable-next-line:no-console

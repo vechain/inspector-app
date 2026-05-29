@@ -56,9 +56,6 @@
                     active-class="has-background-grey-dark"
                     :to="{name: 'short_cuts'}"
                 >Shortcuts</router-link>
-                <a class="navbar-item" href="https://github.com/vechain/inspector-app" target="_blank">
-                    GitHub
-                </a>
             </div>
             <div class="navbar-end">
                 <div class="navbar-item">
@@ -126,6 +123,7 @@ export default class Navbar extends Vue {
     private routes = [
         { name: 'contracts', text: 'Contracts' },
         { name: 'tx_builder', text: 'TX Builder' },
+        { name: 'debugger', text: 'Debugger' },
         { name: 'deploy', text: 'Deploy' }
     ]
 

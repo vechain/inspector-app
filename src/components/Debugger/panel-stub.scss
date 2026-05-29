@@ -1,0 +1,32 @@
+.panel-stub {
+    padding: 1.5rem;
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin: 1rem;
+}
+
+.stub-kind {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-color-light);
+    margin-bottom: 0.5rem;
+}
+
+.stub-value {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    word-break: break-all;
+    padding: 0.5rem 0.75rem;
+    background: var(--code-bg);
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+}
+
+.stub-hint {
+    font-size: 0.85rem;
+    color: var(--text-color-light);
+    margin: 0;
+}

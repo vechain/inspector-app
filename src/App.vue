@@ -2,7 +2,7 @@
 <body class="has-navbar-fixed-top">
     <Navbar class="is-fixed-top" />
     <div class="router-view">
-        <keep-alive include="TxBuilder">
+        <keep-alive include="TxBuilder,Debugger">
             <router-view></router-view>
         </keep-alive>
     </div>
