@@ -53,8 +53,8 @@
             </div>
         </div>
 
-        <!-- Sticky footer -->
-        <div class="tx-builder-footer">
+        <!-- Sticky footer · normal mode -->
+        <div v-if="!submission" class="tx-builder-footer">
             <div class="footer-summary">
                 <span class="summary-pill" :class="allValid ? 'is-valid' : 'is-pending'">
                     <span class="summary-dot"></span>
@@ -82,6 +82,77 @@
                 </button>
             </div>
         </div>
+
+        <!-- Sticky footer · submission mode -->
+        <div v-else class="tx-builder-footer is-submission" :class="'is-' + submission.status">
+            <div class="submission-main">
+                <div class="submission-icon">
+                    <b-icon
+                        v-if="submission.status === 'submitting' || submission.status === 'pending'"
+                        icon="circle-notch"
+                        custom-class="fa-spin"
+                    ></b-icon>
+                    <b-icon v-else-if="submission.status === 'confirmed'" icon="check-circle"></b-icon>
+                    <b-icon v-else-if="submission.status === 'reverted'" icon="times-circle"></b-icon>
+                    <b-icon v-else-if="submission.status === 'timeout'" icon="exclamation-circle"></b-icon>
+                    <b-icon v-else icon="exclamation-triangle"></b-icon>
+                </div>
+                <div class="submission-text">
+                    <div class="submission-status">{{ statusLabel }}</div>
+                    <div class="submission-meta">
+                        <span v-if="submission.txid" class="submission-txid is-family-monospace">
+                            {{ submission.txid | addr }}
+                        </span>
+                        <a
+                            v-if="submission.txid"
+                            :href="$explorerTx + submission.txid"
+                            target="_blank"
+                            rel="noopener"
+                            class="submission-link"
+                        >
+                            View on explorer
+                            <b-icon icon="external-link-alt" size="is-small"></b-icon>
+                        </a>
+                        <span v-if="submission.receipt && submission.receipt.gasUsed" class="submission-aux">
+                            · gas {{ submission.receipt.gasUsed.toLocaleString() }}
+                        </span>
+                        <span v-if="submission.receipt && submission.receipt.meta && submission.receipt.meta.blockNumber" class="submission-aux">
+                            · block {{ submission.receipt.meta.blockNumber }}
+                        </span>
+                        <span v-if="submission.error" class="submission-error">
+                            · {{ submission.error }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-actions">
+                <button
+                    v-if="submission.status === 'confirmed'"
+                    type="button"
+                    class="button is-rounded is-primary"
+                    @click="dismissAndReset"
+                >
+                    Start new
+                </button>
+                <button
+                    v-else-if="submission.status !== 'submitting' && submission.status !== 'pending'"
+                    type="button"
+                    class="button is-rounded"
+                    @click="dismissSubmission"
+                >
+                    Dismiss
+                </button>
+                <button
+                    v-else
+                    type="button"
+                    class="button is-rounded"
+                    @click="dismissSubmission"
+                    title="Stop tracking — the transaction will keep its course on-chain"
+                >
+                    Hide
+                </button>
+            </div>
+        </div>
     </section>
 </template>
 
@@ -99,6 +170,15 @@ interface EncodedClause {
     data: string
     comment?: string
     error?: string
+}
+
+type SubmissionStatus = 'submitting' | 'pending' | 'confirmed' | 'reverted' | 'timeout' | 'error'
+
+interface Submission {
+    status: SubmissionStatus
+    txid: string | null
+    receipt: Connex.Thor.Transaction.Receipt | null
+    error: string | null
 }
 
 function uid(): string {
@@ -131,6 +211,9 @@ export default class TxBuilder extends Vue {
     private dirty: boolean = false
     private submitting: boolean = false
     private suppressDirty: boolean = false
+    private submission: Submission | null = null
+    private pollIntervalId: number | null = null
+    private pollTimeoutId: number | null = null
 
     get network(): string {
         return this.$connex.thor.genesis.id
@@ -160,7 +243,20 @@ export default class TxBuilder extends Vue {
     }
 
     get canSubmit(): boolean {
-        return this.allValid && !this.submitting
+        return this.allValid && !this.submitting && !this.submission
+    }
+
+    get statusLabel(): string {
+        if (!this.submission) return ''
+        switch (this.submission.status) {
+            case 'submitting': return 'Awaiting signature…'
+            case 'pending': return 'Pending — waiting for confirmation'
+            case 'confirmed': return 'Confirmed'
+            case 'reverted': return 'Reverted on-chain'
+            case 'timeout': return 'Timed out waiting for receipt'
+            case 'error': return 'Submission failed'
+            default: return ''
+        }
     }
 
     get contractsTouched(): number {
@@ -348,18 +444,17 @@ export default class TxBuilder extends Vue {
 
         if (clauses.length === 0) return
         this.submitting = true
+        this.submission = { status: 'submitting', txid: null, receipt: null, error: null }
         try {
             const resp = await this.$connex.vendor
                 .sign('tx', clauses)
                 .comment('Inspector TX Builder')
                 .request()
             if (resp && resp.txid) {
-                this.$buefy.toast.open({
-                    message: 'Transaction submitted',
-                    type: 'is-success',
-                    position: 'is-bottom'
-                })
-                window.open(`${this.$explorerTx}${resp.txid}`)
+                this.submission = { status: 'pending', txid: resp.txid, receipt: null, error: null }
+                this.startReceiptPolling(resp.txid)
+            } else {
+                this.submission = null
             }
         } catch (error: any) {
             const msg = (error && error.message) || ''
@@ -370,17 +465,104 @@ export default class TxBuilder extends Vue {
                 msg.toLowerCase().includes('denied') ||
                 name.toLowerCase().includes('rejected') ||
                 name.toLowerCase().includes('cancel')
-            if (!isUserRejection) {
-                this.$buefy.toast.open({
-                    message: `${name || 'Error'}: ${msg || 'Submission failed'}`,
-                    type: 'is-danger',
-                    position: 'is-bottom',
-                    duration: 4000
-                })
+            if (isUserRejection) {
+                this.submission = null
+            } else {
+                this.submission = {
+                    status: 'error',
+                    txid: null,
+                    receipt: null,
+                    error: msg || 'Submission failed'
+                }
             }
         } finally {
             this.submitting = false
         }
+    }
+
+    private startReceiptPolling(txid: string) {
+        this.stopReceiptPolling()
+        const timeoutMs = 5 * 12000 // 60s — VeChain block time ~10s
+        const startTime = Date.now()
+
+        this.pollIntervalId = window.setInterval(async () => {
+            if (!this.submission || this.submission.txid !== txid) {
+                this.stopReceiptPolling()
+                return
+            }
+            try {
+                const receipt = await this.$connex.thor.transaction(txid).getReceipt()
+                if (receipt) {
+                    this.submission = {
+                        status: receipt.reverted ? 'reverted' : 'confirmed',
+                        txid,
+                        receipt,
+                        error: receipt.reverted ? 'Transaction reverted' : null
+                    }
+                    this.stopReceiptPolling()
+                    return
+                }
+                if (Date.now() - startTime > timeoutMs) {
+                    this.submission = {
+                        status: 'timeout',
+                        txid,
+                        receipt: null,
+                        error: null
+                    }
+                    this.stopReceiptPolling()
+                }
+            } catch {
+                if (Date.now() - startTime > timeoutMs) {
+                    this.submission = {
+                        status: 'timeout',
+                        txid,
+                        receipt: null,
+                        error: null
+                    }
+                    this.stopReceiptPolling()
+                }
+            }
+        }, 1000)
+
+        this.pollTimeoutId = window.setTimeout(() => {
+            if (this.submission && this.submission.status === 'pending') {
+                this.submission = {
+                    status: 'timeout',
+                    txid,
+                    receipt: null,
+                    error: null
+                }
+                this.stopReceiptPolling()
+            }
+        }, timeoutMs)
+    }
+
+    private stopReceiptPolling() {
+        if (this.pollIntervalId !== null) {
+            clearInterval(this.pollIntervalId)
+            this.pollIntervalId = null
+        }
+        if (this.pollTimeoutId !== null) {
+            clearTimeout(this.pollTimeoutId)
+            this.pollTimeoutId = null
+        }
+    }
+
+    private dismissSubmission() {
+        this.stopReceiptPolling()
+        this.submission = null
+    }
+
+    private dismissAndReset() {
+        this.dismissSubmission()
+        this.clauses = []
+        this.activeId = null
+        this.loadedDraftId = null
+        this.dirty = false
+    }
+
+    private beforeDestroy() {
+        this.stopReceiptPolling()
     }
 
     @Watch('network')
@@ -515,6 +697,98 @@ export default class TxBuilder extends Vue {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+.tx-builder-footer.is-submission {
+    border-top-width: 2px;
+}
+.tx-builder-footer.is-submitting,
+.tx-builder-footer.is-pending {
+    border-top-color: #b88010;
+}
+.tx-builder-footer.is-confirmed {
+    border-top-color: #228822;
+}
+.tx-builder-footer.is-reverted,
+.tx-builder-footer.is-error {
+    border-top-color: #ff3860;
+}
+.tx-builder-footer.is-timeout {
+    border-top-color: #b88010;
+}
+
+.submission-main {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+}
+.submission-icon {
+    flex-shrink: 0;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+}
+.is-submitting .submission-icon,
+.is-pending .submission-icon,
+.is-timeout .submission-icon {
+    color: #b88010;
+}
+.is-confirmed .submission-icon {
+    color: #228822;
+}
+.is-reverted .submission-icon,
+.is-error .submission-icon {
+    color: #ff3860;
+}
+.submission-text {
+    flex: 1;
+    min-width: 0;
+}
+.submission-status {
+    font-weight: 600;
+    color: var(--text-color-strong);
+    font-size: 0.9rem;
+}
+.submission-meta {
+    margin-top: 0.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--text-color-light);
+    flex-wrap: wrap;
+}
+.submission-txid {
+    color: var(--text-color);
+    font-weight: 600;
+}
+.submission-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+.submission-link:hover {
+    text-decoration: underline;
+}
+.submission-aux {
+    color: var(--text-color-light);
+}
+.submission-error {
+    color: #ff3860;
+}
+
+::v-deep .fa-spin {
+    animation: fa-spin 1.2s linear infinite;
+}
+@keyframes fa-spin {
+    to { transform: rotate(360deg); }
 }
 
 @keyframes pulse {
