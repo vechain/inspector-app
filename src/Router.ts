@@ -4,6 +4,7 @@ import NotSupport from './views/NotSupport.vue'
 import Contracts from './views/Contracts.vue'
 import Deploy from './views/DeployContract.vue'
 import TxBuilder from './views/TxBuilder.vue'
+import Debugger from './views/Debugger.vue'
 import ContractDetail from './views/ContractDetail.vue'
 import FilterView from './views/FilterView.vue'
 import FilterMgt from './views/FilterMgt.vue'
@@ -38,6 +39,11 @@ const router = new Router({
       name: 'tx_builder',
       component: TxBuilder,
       path: '/tx-builder'
+    },
+    {
+      name: 'debugger',
+      component: Debugger,
+      path: '/debugger'
     },
     {
       name: 'contract_detail',

@@ -13,7 +13,7 @@ import router from './Router'
 import './overwrite.css'
 import VueAnalytics from 'vue-analytics'
 import Connex from '@vechain/connex'
-import { createConnex, createConnexForNetwork, isSoloNode } from './create-connex'
+import { createConnex, createConnexForNetwork, isSoloNode, nodeUrls } from './create-connex'
 import { prePopulate } from '@/pre-populate'
 import { getNetworkById } from './services/network-service'
 import { isCustomNetwork, getCustomNetworkId } from './utils'
@@ -23,6 +23,7 @@ declare module 'vue/types/vue' {
     $explorerAccount: string
     $explorerBlock: string
     $explorerTx: string
+    $nodeUrl: string
   }
 }
 
@@ -59,6 +60,7 @@ async function initApp() {
   if (['test', 'main', 'solo'].includes(net)) {
     setExplorerUrl(net)
     Vue.prototype.$connex = createConnex(net as "test" | "main" | "solo")
+    Vue.prototype.$nodeUrl = nodeUrls[net as "test" | "main" | "solo"]
   } else if (isCustomNetwork(net)) {
       const networkId = getCustomNetworkId(net)
       if (networkId) {
@@ -90,17 +92,20 @@ async function initApp() {
             Vue.prototype.$explorerTx = `${host}transactions/`
 
             Vue.prototype.$connex = createConnexForNetwork(customNetwork.nodeUrl, genesisBlock, genesisBlock.id)
+            Vue.prototype.$nodeUrl = customNetwork.nodeUrl
           } else {
             console.error('Custom network not found, falling back to mainnet')
             localStorage.setItem('last-net', 'main')
             setExplorerUrl('main')
             Vue.prototype.$connex = createConnex('main')
+            Vue.prototype.$nodeUrl = nodeUrls.main
           }
         } catch (error) {
           console.error('Failed to load custom network:', error)
           localStorage.setItem('last-net', 'main')
           setExplorerUrl('main')
           Vue.prototype.$connex = createConnex('main')
+          Vue.prototype.$nodeUrl = (await import('./create-connex')).nodeUrls.main
         }
       }
     } else {
@@ -121,6 +126,7 @@ async function initApp() {
           Vue.prototype.$explorerTx = `${host}transactions/`
         }
         Vue.prototype.$connex = createConnexForNetwork(node, network, network.id)
+        Vue.prototype.$nodeUrl = node
       }
     }
 
