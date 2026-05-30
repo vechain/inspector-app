@@ -84,6 +84,10 @@ export default class CompileStatus extends Vue {
     align-items: center;
     gap: 0.35rem;
     font-size: 0.85rem;
+    color: var(--text-color-strong);
+}
+.block-head strong {
+    color: inherit;
 }
 .block-body {
     margin: 0.4rem 0 0 0;

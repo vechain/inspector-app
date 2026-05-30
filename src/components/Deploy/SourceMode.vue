@@ -131,13 +131,15 @@
                         </b-select>
                     </b-field>
 
-                    <b-field>
-                        <b-checkbox v-model="useProxy">
-                            Deploy as upgradeable (ERC1967Proxy + initialize)
-                        </b-checkbox>
-                    </b-field>
+                    <div v-if="isUUPS" class="proxy-notice">
+                        <b-icon icon="info-circle" size="is-small" />
+                        <span>
+                            UUPS-upgradeable contract detected — will deploy an
+                            implementation + <code>ERC1967Proxy</code>.
+                        </span>
+                    </div>
 
-                    <b-field v-if="useProxy" label="Initializer function">
+                    <b-field v-if="isUUPS && initializerCandidates.length > 1" label="Initializer function">
                         <b-select v-model="initFnName" expanded>
                             <option
                                 v-for="fn in initializerCandidates"
@@ -151,7 +153,7 @@
 
                     <div class="args-section">
                         <span class="args-label">
-                            {{ useProxy ? 'Initializer arguments' : 'Constructor arguments' }}
+                            {{ isUUPS ? 'Initializer arguments' : 'Constructor arguments' }}
                         </span>
                         <ConstructorForm
                             :inputs="entryInputs"
@@ -298,7 +300,6 @@ export default class SourceMode extends Vue {
     compiledContracts: { file: string; name: string }[] = []
     selectedContractKey: string = ''
 
-    useProxy = false
     initFnName: string = 'initialize'
 
     values: any[] = []
@@ -328,9 +329,22 @@ export default class SourceMode extends Vue {
         )
     }
 
+    /**
+     * True when the compiled contract is UUPS-upgradeable (i.e. it exposes
+     * `proxiableUUID()` and `upgradeToAndCall(address,bytes)` per ERC-1822).
+     * Decided purely from the ABI — no user toggle.
+     */
+    get isUUPS(): boolean {
+        if (!this.compileResult) return false
+        const abi: any[] = this.compileResult.abi
+        const hasFn = (name: string) =>
+            abi.some((i) => i.type === 'function' && i.name === name)
+        return hasFn('proxiableUUID') && hasFn('upgradeToAndCall')
+    }
+
     get entryInputs(): ABI.InputItem[] {
         if (!this.compileResult) return []
-        if (this.useProxy) {
+        if (this.isUUPS) {
             const fn = this.compileResult.abi.find(
                 (i: any) => i.type === 'function' && i.name === this.initFnName,
             )
@@ -358,7 +372,7 @@ export default class SourceMode extends Vue {
         if (this.compiling) return 'Compiling…'
         if (this.result) return 'Done'
         if (!this.compileResult) return 'Compile'
-        return this.useProxy ? 'Deploy proxy' : 'Deploy'
+        return this.isUUPS ? 'Deploy proxy' : 'Deploy'
     }
 
     get primaryIcon(): string {
@@ -386,7 +400,7 @@ export default class SourceMode extends Vue {
             return `${this.compileErrors.length} compile error${this.compileErrors.length > 1 ? 's' : ''}`
         }
         if (!this.compileResult) return 'Ready to compile'
-        if (!this.valid) return `Fill ${this.useProxy ? 'initializer' : 'constructor'} arguments`
+        if (!this.valid) return `Fill ${this.isUUPS ? 'initializer' : 'constructor'} arguments`
         return `Ready · ${this.compileResult.contractName}`
     }
 
@@ -575,7 +589,7 @@ export default class SourceMode extends Vue {
             this.compileWarnings = []
             this.compiledContracts = []
             this.selectedContractKey = ''
-            this.useProxy = false
+            
             this.values = []
             this.valid = false
             this.result = null
@@ -652,7 +666,7 @@ export default class SourceMode extends Vue {
             this.compileWarnings = []
             this.compiledContracts = []
             this.selectedContractKey = ''
-            this.useProxy = false
+            
             this.values = []
             this.valid = false
             this.result = null
@@ -712,7 +726,7 @@ export default class SourceMode extends Vue {
         this.compileWarnings = []
         this.compiledContracts = []
         this.selectedContractKey = ''
-        this.useProxy = false
+        
         this.values = []
         this.valid = false
         this.result = null
@@ -802,7 +816,7 @@ export default class SourceMode extends Vue {
         this.result = null
         try {
             const decoded = this.decodeValues(this.values, this.entryInputs)
-            if (this.useProxy) {
+            if (this.isUUPS) {
                 await this.deployUpgradeable(decoded)
             } else {
                 await this.deployRegular(decoded)
@@ -1178,6 +1192,27 @@ function shortAddr(a: string): string {
     font-weight: 600;
     color: var(--text-color-strong);
     margin-bottom: 0.4rem;
+}
+.proxy-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    padding: 0.55rem 0.75rem;
+    background: rgba(72, 95, 199, 0.08);
+    border: 1px solid rgba(72, 95, 199, 0.25);
+    color: var(--text-color);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin: 0 0 0.75rem 0;
+}
+.proxy-notice ::v-deep .icon {
+    color: var(--primary-color, #485fc7);
+    flex-shrink: 0;
+}
+[data-theme='dark'] .proxy-notice {
+    background: rgba(120, 140, 240, 0.12);
+    border-color: rgba(120, 140, 240, 0.3);
 }
 
 .mode-footer {

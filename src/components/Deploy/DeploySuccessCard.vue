@@ -161,6 +161,10 @@ export default class DeploySuccessCard extends Vue {
     align-items: center;
     gap: 0.4rem;
     font-size: 0.95rem;
+    color: var(--text-color-strong);
+}
+.title-line strong {
+    color: inherit;
 }
 .row {
     display: flex;
