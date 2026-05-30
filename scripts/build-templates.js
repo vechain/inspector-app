@@ -176,6 +176,50 @@ const templates = [
     entryFn: 'initialize',
   },
   {
+    id: 'erc4626-basic',
+    label: 'ERC4626 Vault (standard)',
+    description:
+      'Standard tokenized vault wrapping an underlying ERC20. Yields accrue when the vault\'s asset balance grows externally.',
+    dir: null,
+    file: 'ERC4626Basic.sol',
+    contractName: 'ERC4626Basic',
+    upgradeable: false,
+    entryFn: 'constructor',
+  },
+  {
+    id: 'erc4626-upgradeable',
+    label: 'ERC4626 Vault (UUPS)',
+    description:
+      'UUPS-upgradeable tokenized vault. Deploys implementation + ERC1967Proxy.',
+    dir: null,
+    file: 'ERC4626Upgradeable.sol',
+    contractName: 'ERC4626UpgradeableTemplate',
+    upgradeable: true,
+    entryFn: 'initialize',
+  },
+  {
+    id: 'conditional-escrow',
+    label: 'Conditional Escrow (standard)',
+    description:
+      'Holds native VET between a payer and a beneficiary. Arbiter releases before deadline; payer can reclaim after deadline.',
+    dir: null,
+    file: 'ConditionalEscrow.sol',
+    contractName: 'ConditionalEscrow',
+    upgradeable: false,
+    entryFn: 'constructor',
+  },
+  {
+    id: 'conditional-escrow-upgradeable',
+    label: 'Conditional Escrow (UUPS)',
+    description:
+      'UUPS-upgradeable conditional escrow.',
+    dir: null,
+    file: 'ConditionalEscrowUpgradeable.sol',
+    contractName: 'ConditionalEscrowUpgradeable',
+    upgradeable: true,
+    entryFn: 'initialize',
+  },
+  {
     id: 'endorsers-reward-distributor',
     label: 'VeBetterDAO Endorsers Reward Distributor',
     description:

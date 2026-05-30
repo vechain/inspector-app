@@ -192,6 +192,64 @@ export const TEMPLATE_FAMILIES: TemplateFamily[] = [
     ],
   },
   {
+    id: 'erc4626',
+    label: 'ERC4626 Vault',
+    shortDescription: 'Tokenized vault for an underlying ERC20 (yield-bearing)',
+    longDescription:
+      "A tokenized vault following the ERC4626 standard. Depositors transfer an underlying ERC20 asset to the vault and receive vault shares (themselves ERC20-compatible) in return; redeeming the shares pulls back the asset plus any accrued yield. The shares-to-assets ratio drifts upward whenever the vault's asset balance grows — from interest accrued by an external strategy, protocol fees routed back, manual top-ups, or any other on-chain mechanism. The template ships the canonical OpenZeppelin v5.0.2 implementation; you provide the underlying asset address and the share metadata at deploy time.",
+    features: [
+      'Full ERC4626 surface: deposit, mint, withdraw, redeem, totalAssets, convertToShares, convertToAssets',
+      'Preview functions (previewDeposit / previewMint / previewWithdraw / previewRedeem) for off-chain quoting',
+      'maxDeposit / maxMint / maxWithdraw / maxRedeem limit hooks (default: unlimited)',
+      'Inherits ERC20 — shares are themselves transferable, approvable tokens',
+      'Decimal offset handling per OZ 5.0.2 (mitigates first-deposit donation attack)',
+      'Ownable so you can add governance or fee-collection hooks via inheritance later',
+    ],
+    variants: [
+      {
+        id: 'standard',
+        label: 'Standard',
+        blurb: 'One-shot deployment. Logic immutable after deploy.',
+        templateId: 'erc4626-basic',
+      },
+      {
+        id: 'upgradeable',
+        label: 'Upgradeable (UUPS)',
+        blurb: 'Deploys impl + ERC1967Proxy. Owner can upgrade later.',
+        templateId: 'erc4626-upgradeable',
+      },
+    ],
+  },
+  {
+    id: 'conditional-escrow',
+    label: 'Conditional Escrow',
+    shortDescription: 'Hold VET until an arbiter releases or the deadline passes',
+    longDescription:
+      'A simple, single-deal escrow that holds native VET between a payer and a beneficiary. The payer (or anyone) funds the contract by sending VET to it. A third-party arbiter — set at deploy time — can `release()` the entire balance to the beneficiary as long as the deadline has not passed, or `refund()` the payer at any time. After the deadline, the payer can also call `refund()` themselves to permissionlessly reclaim funds, so a non-responsive arbiter cannot lock the deal. The state machine is one-shot: Active → Released **or** Refunded.',
+    features: [
+      'receive() — anyone can fund the escrow by sending VET to its address',
+      'release() — arbiter forwards the full balance to the beneficiary (pre-deadline only)',
+      'refund() — arbiter any time, payer after deadline; returns full balance to payer',
+      'One-shot state machine: Active → Released | Refunded (no re-entry)',
+      'ReentrancyGuard on release/refund',
+      'Custom errors (NotArbiter, WrongState, DeadlineReached, …) for cheap reverts',
+    ],
+    variants: [
+      {
+        id: 'standard',
+        label: 'Standard',
+        blurb: 'One-shot deployment. Logic immutable after deploy.',
+        templateId: 'conditional-escrow',
+      },
+      {
+        id: 'upgradeable',
+        label: 'Upgradeable (UUPS)',
+        blurb: 'Deploys impl + ERC1967Proxy. Owner can upgrade later.',
+        templateId: 'conditional-escrow-upgradeable',
+      },
+    ],
+  },
+  {
     id: 'endorsers-reward-distributor',
     label: 'VeBetterDAO Endorsers Reward Distributor',
     shortDescription: 'Distribute round earnings to X-Node endorsers',
