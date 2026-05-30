@@ -66,7 +66,9 @@ export function getEntryFragment(t: DeployTemplate): TemplateAbiItem | undefined
 // variant; the user picks the family from the sidebar, then toggles the variant
 // (and any future feature flags) from the main view.
 
-export type VariantId = 'standard' | 'upgradeable'
+// VariantId is intentionally a free-form string so families can expose more
+// than the standard / upgradeable axis (e.g. single / multi beneficiary).
+export type VariantId = string
 
 export interface TemplateVariant {
   id: VariantId
@@ -217,6 +219,47 @@ export const TEMPLATE_FAMILIES: TemplateFamily[] = [
         label: 'Upgradeable (UUPS)',
         blurb: 'Deploys impl + ERC1967Proxy. Owner can upgrade later.',
         templateId: 'erc4626-upgradeable',
+      },
+    ],
+  },
+  {
+    id: 'vesting-wallet',
+    label: 'Vesting Wallet',
+    shortDescription: 'Hold an asset and release it linearly over time',
+    longDescription:
+      "A vault that holds an asset and releases it gradually over time on a linear schedule. Pick the single-beneficiary variant to vest VET and/or any ERC20 to one address (wraps OpenZeppelin's VestingWallet) — the beneficiary is also the owner. Pick the multi-beneficiary variant to vest a single ERC20 across many addresses with the same start/duration but individual allocations; schedules are locked at deploy and anyone can call `release(beneficiary)` to forward each beneficiary's vested-but-unreleased share.",
+    features: [
+      'Linear vesting between `start` and `start + duration` — no cliff (vests proportionally from t=0)',
+      'Single mode: holds VET + any ERC20 (release() / release(token))',
+      'Multi mode: one ERC20, many beneficiaries with individual allocations, all on the same schedule',
+      'Permissionless release — anyone can trigger a payout (single: msg.sender ignored; multi: pass the beneficiary)',
+      'View helpers: vestedAmount, releasable, scheduleOf — for off-chain UIs',
+      'Multi mode locks schedules at construction; fund the contract for the sum of all allocations before any vested amount can release',
+    ],
+    variants: [
+      {
+        id: 'single',
+        label: 'Single beneficiary',
+        blurb: 'One recipient. Vests VET + any ERC20. Beneficiary owns the wallet.',
+        templateId: 'vesting-single',
+      },
+      {
+        id: 'single-uups',
+        label: 'Single beneficiary (UUPS)',
+        blurb: 'Same as above + ERC1967Proxy. Beneficiary controls upgrades.',
+        templateId: 'vesting-single-upgradeable',
+      },
+      {
+        id: 'multi',
+        label: 'Multi-beneficiary',
+        blurb: 'Many recipients of one ERC20. Schedules locked at deploy.',
+        templateId: 'vesting-multi',
+      },
+      {
+        id: 'multi-uups',
+        label: 'Multi-beneficiary (UUPS)',
+        blurb: 'Same as above + ERC1967Proxy. Owner controls upgrades.',
+        templateId: 'vesting-multi-upgradeable',
       },
     ],
   },

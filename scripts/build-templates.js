@@ -220,6 +220,50 @@ const templates = [
     entryFn: 'initialize',
   },
   {
+    id: 'vesting-single',
+    label: 'Vesting Wallet (single beneficiary)',
+    description:
+      'Linear vesting for one beneficiary (VET + any ERC20). Wraps OZ VestingWallet.',
+    dir: null,
+    file: 'VestingWalletSingle.sol',
+    contractName: 'VestingWalletSingle',
+    upgradeable: false,
+    entryFn: 'constructor',
+  },
+  {
+    id: 'vesting-single-upgradeable',
+    label: 'Vesting Wallet (single beneficiary, UUPS)',
+    description:
+      'UUPS-upgradeable single-beneficiary linear vesting wallet.',
+    dir: null,
+    file: 'VestingWalletSingleUpgradeable.sol',
+    contractName: 'VestingWalletSingleUpgradeable',
+    upgradeable: true,
+    entryFn: 'initialize',
+  },
+  {
+    id: 'vesting-multi',
+    label: 'Vesting Wallet (multi-beneficiary)',
+    description:
+      'Linear vesting for many beneficiaries sharing one ERC20 and one schedule.',
+    dir: null,
+    file: 'VestingWalletMulti.sol',
+    contractName: 'VestingWalletMulti',
+    upgradeable: false,
+    entryFn: 'constructor',
+  },
+  {
+    id: 'vesting-multi-upgradeable',
+    label: 'Vesting Wallet (multi-beneficiary, UUPS)',
+    description:
+      'UUPS-upgradeable multi-beneficiary linear vesting.',
+    dir: null,
+    file: 'VestingWalletMultiUpgradeable.sol',
+    contractName: 'VestingWalletMultiUpgradeable',
+    upgradeable: true,
+    entryFn: 'initialize',
+  },
+  {
     id: 'endorsers-reward-distributor',
     label: 'VeBetterDAO Endorsers Reward Distributor',
     description:

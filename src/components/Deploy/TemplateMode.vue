@@ -58,8 +58,8 @@
 
                     <div v-if="hasVariantChoice" class="config-row">
                         <span class="config-label">
-                            Deployment model
-                            <span class="config-hint">Pick how you want to upgrade later (or not).</span>
+                            Variant
+                            <span class="config-hint">Pick which version of this contract to deploy.</span>
                         </span>
                         <div class="variant-toggle">
                             <button
@@ -77,7 +77,7 @@
                     </div>
                     <div v-else class="config-row">
                         <span class="config-label">
-                            Deployment model
+                            Variant
                             <span class="config-hint">Only one variant available for this template.</span>
                         </span>
                         <div class="variant-fixed">
