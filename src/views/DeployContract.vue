@@ -22,21 +22,26 @@
             </div>
         </div>
 
-        <TemplateMode
-            v-if="mode === 'template'"
-            :network="network"
-            :existing-categories="existingCategories"
-        />
-        <SourceMode
-            v-else-if="mode === 'source'"
-            :network="network"
-            :existing-categories="existingCategories"
-        />
-        <BytecodeMode
-            v-else
-            :network="network"
-            :existing-categories="existingCategories"
-        />
+        <keep-alive>
+            <TemplateMode
+                v-if="mode === 'template'"
+                key="template"
+                :network="network"
+                :existing-categories="existingCategories"
+            />
+            <SourceMode
+                v-else-if="mode === 'source'"
+                key="source"
+                :network="network"
+                :existing-categories="existingCategories"
+            />
+            <BytecodeMode
+                v-else
+                key="bytecode"
+                :network="network"
+                :existing-categories="existingCategories"
+            />
+        </keep-alive>
     </section>
 </template>
 
@@ -51,7 +56,10 @@ const SourceMode = () =>
 
 type DeployMode = 'template' | 'source' | 'bytecode'
 
-@Component({ components: { BytecodeMode, TemplateMode, SourceMode } })
+@Component({
+    name: 'DeployContract',
+    components: { BytecodeMode, TemplateMode, SourceMode },
+})
 export default class DeployContract extends Vue {
     mode: DeployMode = 'template'
     existingCategories: string[] = []
@@ -90,6 +98,11 @@ export default class DeployContract extends Vue {
     }
 
     private async created() {
+        // First activation triggers `activated()` after `mounted()`, so the
+        // page-view + category refresh land there. Nothing to do at creation.
+    }
+
+    private async activated() {
         ;(this as any).$ga.page('/inspector/deploy')
         await this.loadCategories()
     }
