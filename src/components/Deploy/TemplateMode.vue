@@ -7,57 +7,107 @@
             </div>
             <nav class="template-list">
                 <button
-                    v-for="t in templates"
-                    :key="t.id"
+                    v-for="f in families"
+                    :key="f.id"
                     type="button"
                     class="template-row"
-                    :class="{ active: selectedId === t.id }"
-                    @click="onPick(t.id)"
+                    :class="{ active: selectedFamilyId === f.id }"
+                    @click="onPickFamily(f.id)"
                 >
                     <span class="row-head">
-                        <span class="row-name">{{ t.label }}</span>
-                        <span v-if="t.upgradeable" class="row-tag">UUPS</span>
+                        <span class="row-name">{{ f.label }}</span>
+                        <span v-if="f.variants.length > 1" class="row-tag">
+                            {{ f.variants.length }} variants
+                        </span>
                     </span>
-                    <span class="row-desc">{{ t.description }}</span>
+                    <span class="row-desc">{{ f.shortDescription }}</span>
                 </button>
             </nav>
         </aside>
 
         <main class="mode-main">
-            <div v-if="!template" class="empty-state">
+            <div v-if="!family" class="empty-state">
                 <b-icon icon="th-large" size="is-large" custom-class="has-text-grey-light" />
                 <p class="empty-title">Pick a template to begin</p>
-                <p class="empty-desc">Choose a contract on the left to configure its constructor or initializer arguments.</p>
+                <p class="empty-desc">Choose a contract on the left to configure and deploy.</p>
             </div>
 
             <div v-else class="content-pad">
-                <div class="deploy-card">
+                <!-- Long description + features -->
+                <div class="deploy-card intro-card">
                     <div class="card-head">
                         <div class="card-head-text">
-                            <h3 class="card-title">{{ template.label }}</h3>
-                            <p class="card-sub" v-if="template.upgradeable">
-                                Upgradeable (UUPS) — deploys an implementation then an
-                                <code>ERC1967Proxy</code> with the encoded
-                                <code>{{ template.entryFn }}(…)</code> call.
-                            </p>
-                            <p class="card-sub" v-else>
-                                Constructor arguments are encoded and appended to the creation bytecode.
-                            </p>
+                            <h3 class="card-title">{{ family.label }}</h3>
+                            <p class="long-desc">{{ family.longDescription }}</p>
                         </div>
-                        <span class="contract-name-tag">{{ template.contractName }}</span>
+                        <span class="contract-name-tag" v-if="template">{{ template.contractName }}</span>
+                    </div>
+                    <div class="features" v-if="family.features.length">
+                        <span class="features-label">What's included</span>
+                        <ul class="features-list">
+                            <li v-for="(f, i) in family.features" :key="i">{{ f }}</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Configure -->
+                <div class="deploy-card configure-card">
+                    <div class="card-head">
+                        <h3 class="card-title small">Configure</h3>
                     </div>
 
-                    <ConstructorForm
-                        :inputs="entryInputs"
-                        @input="onValues"
-                        @valid="onValid"
-                    />
+                    <div v-if="hasVariantChoice" class="config-row">
+                        <span class="config-label">
+                            Deployment model
+                            <span class="config-hint">Pick how you want to upgrade later (or not).</span>
+                        </span>
+                        <div class="variant-toggle">
+                            <button
+                                v-for="v in family.variants"
+                                :key="v.id"
+                                type="button"
+                                class="variant-btn"
+                                :class="{ active: variantId === v.id }"
+                                @click="onPickVariant(v.id)"
+                            >
+                                <span class="variant-label">{{ v.label }}</span>
+                                <span class="variant-blurb">{{ v.blurb }}</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div v-else class="config-row">
+                        <span class="config-label">
+                            Deployment model
+                            <span class="config-hint">Only one variant available for this template.</span>
+                        </span>
+                        <div class="variant-fixed">
+                            <span class="variant-label">{{ family.variants[0].label }}</span>
+                            <span class="variant-blurb">{{ family.variants[0].blurb }}</span>
+                        </div>
+                    </div>
+
+                    <div class="config-row args-row" v-if="template">
+                        <span class="config-label">
+                            {{ template.upgradeable ? 'Initializer arguments' : 'Constructor arguments' }}
+                            <span class="config-hint" v-if="template.upgradeable">
+                                Encoded into the proxy's <code>_data</code> and delegate-called once at deploy.
+                            </span>
+                            <span class="config-hint" v-else>
+                                Encoded and appended to the creation bytecode.
+                            </span>
+                        </span>
+                        <ConstructorForm
+                            :inputs="entryInputs"
+                            @input="onValues"
+                            @valid="onValid"
+                        />
+                    </div>
 
                     <DeployStatus v-if="stages.length" :stages="stages" />
                 </div>
 
                 <DeploySuccessCard
-                    v-if="result"
+                    v-if="result && template"
                     :address="result.address"
                     :impl-address="result.implAddress"
                     :txid="result.txid"
@@ -80,7 +130,7 @@
             :primary-icon="result ? 'check' : 'rocket'"
             :primary-disabled="!canDeploy || !!result"
             :primary-loading="deploying"
-            :show-cancel="!!result || !!template"
+            :show-cancel="!!result || !!family"
             :cancel-label="result ? 'Reset' : 'Clear'"
             :cancel-disabled="deploying"
             @primary="deploy"
@@ -96,10 +146,14 @@ import DeploySuccessCard from './DeploySuccessCard.vue'
 import DeployStatus from './DeployStatus.vue'
 import DeployFooter, { FooterStatus } from './DeployFooter.vue'
 import {
-    listTemplates,
+    listFamilies,
+    getFamily,
     getTemplate,
     getEntryFragment,
+    familyHasChoice,
     DeployTemplate,
+    TemplateFamily,
+    VariantId,
     COMPILER_VERSION,
 } from '@/contracts/templates'
 import { Entities } from '@/database'
@@ -129,16 +183,27 @@ export default class TemplateMode extends Vue {
     @Prop({ required: true }) network!: string
     @Prop({ default: () => [] }) existingCategories!: string[]
 
-    templates: DeployTemplate[] = listTemplates()
-    selectedId: string = ''
+    families: TemplateFamily[] = listFamilies()
+    selectedFamilyId: string = ''
+    variantId: VariantId | '' = ''
     values: any[] = []
     valid = false
     deploying = false
     result: DeployResult | null = null
     stages: { label: string; state: 'pending' | 'active' | 'done' | 'error' }[] = []
 
+    get family(): TemplateFamily | undefined {
+        return getFamily(this.selectedFamilyId)
+    }
+
+    get hasVariantChoice(): boolean {
+        return !!this.family && familyHasChoice(this.family)
+    }
+
     get template(): DeployTemplate | undefined {
-        return getTemplate(this.selectedId)
+        if (!this.family) return undefined
+        const v = this.family.variants.find((x) => x.id === this.variantId) || this.family.variants[0]
+        return v ? getTemplate(v.templateId) : undefined
     }
 
     get entryInputs(): ABI.InputItem[] {
@@ -154,7 +219,7 @@ export default class TemplateMode extends Vue {
     get footerStatus(): FooterStatus {
         if (this.result) return 'success'
         if (this.deploying) return 'busy'
-        if (!this.template) return 'idle'
+        if (!this.family) return 'idle'
         if (this.valid) return 'ready'
         return 'pending'
     }
@@ -165,9 +230,9 @@ export default class TemplateMode extends Vue {
             const active = this.stages.find((s) => s.state === 'active')
             return active ? active.label : 'Deploying…'
         }
-        if (!this.template) return 'Pick a template'
+        if (!this.family) return 'Pick a template'
         if (!this.valid) return 'Fill required arguments'
-        return `Ready · ${this.template.contractName}`
+        return `Ready · ${this.template?.contractName || this.family.label}`
     }
 
     get footerAux(): string {
@@ -199,9 +264,24 @@ export default class TemplateMode extends Vue {
         }
     }
 
-    onPick(id: string) {
+    onPickFamily(id: string) {
         if (this.deploying) return
-        this.selectedId = id
+        this.selectedFamilyId = id
+        const f = getFamily(id)
+        // Default variant: prefer 'standard' if present, otherwise the first.
+        const def = f?.variants.find((v) => v.id === 'standard') || f?.variants[0]
+        this.variantId = def ? def.id : ''
+        this.values = []
+        this.valid = false
+        this.result = null
+        this.stages = []
+    }
+
+    onPickVariant(id: VariantId) {
+        if (this.deploying) return
+        if (this.variantId === id) return
+        this.variantId = id
+        // Args differ between variants (constructor vs initialize), so reset.
         this.values = []
         this.valid = false
         this.result = null
@@ -220,9 +300,8 @@ export default class TemplateMode extends Vue {
         if (this.deploying) return
         this.result = null
         this.stages = []
-        if (!this.template) return
-        // Reset args by re-picking the same template (clears the form).
-        this.onPick(this.selectedId)
+        if (!this.family) return
+        this.onPickFamily(this.selectedFamilyId)
     }
 
     async deploy() {
@@ -399,13 +478,13 @@ function shortAddr(a: string): string {
     text-align: left;
     background: transparent;
     border: 0;
-    padding: 0.55rem 1rem;
+    padding: 0.6rem 1rem;
     cursor: pointer;
     color: var(--text-color);
     transition: background 0.12s;
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.25rem;
     border-left: 3px solid transparent;
 }
 .template-row:hover {
@@ -422,7 +501,7 @@ function shortAddr(a: string): string {
     gap: 0.4rem;
 }
 .row-name {
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     font-weight: 600;
     color: var(--text-color-strong);
     line-height: 1.25;
@@ -440,7 +519,7 @@ function shortAddr(a: string): string {
 .row-desc {
     font-size: 0.74rem;
     color: var(--text-color-light);
-    line-height: 1.35;
+    line-height: 1.4;
 }
 
 .mode-main {
@@ -479,8 +558,11 @@ function shortAddr(a: string): string {
 
 .content-pad {
     padding: 1.25rem;
-    max-width: 820px;
+    max-width: 860px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .deploy-card {
@@ -489,28 +571,33 @@ function shortAddr(a: string): string {
     border-radius: 8px;
     padding: 1.25rem 1.5rem;
 }
-.card-head {
+
+.intro-card .card-head {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 0.75rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.85rem;
 }
 .card-head-text {
     flex: 1;
     min-width: 0;
 }
 .card-title {
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-weight: 600;
     color: var(--text-color-strong);
-    margin: 0 0 0.2rem 0;
+    margin: 0 0 0.4rem 0;
 }
-.card-sub {
-    font-size: 0.82rem;
-    color: var(--text-color-light);
+.card-title.small {
+    font-size: 0.95rem;
+    margin-bottom: 0;
+}
+.long-desc {
+    font-size: 0.88rem;
+    color: var(--text-color);
+    line-height: 1.55;
     margin: 0;
-    line-height: 1.45;
 }
 .contract-name-tag {
     font-size: 0.72rem;
@@ -521,6 +608,111 @@ function shortAddr(a: string): string {
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
     flex-shrink: 0;
+}
+
+.features {
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px dashed var(--border-color);
+}
+.features-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-color-light);
+    margin-bottom: 0.4rem;
+}
+.features-list {
+    margin: 0;
+    padding-left: 1.1rem;
+    list-style: disc;
+    color: var(--text-color);
+    font-size: 0.84rem;
+    line-height: 1.55;
+}
+.features-list li {
+    margin-bottom: 0.15rem;
+}
+
+.configure-card .card-head {
+    margin-bottom: 1rem;
+}
+.config-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 0.85rem 0;
+    border-top: 1px dashed var(--border-color);
+}
+.config-row:first-of-type {
+    border-top: 0;
+    padding-top: 0.5rem;
+}
+.config-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-color-strong);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.config-hint {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-color-light);
+    line-height: 1.4;
+}
+
+.variant-toggle {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.5rem;
+}
+.variant-btn {
+    text-align: left;
+    background: var(--body-background-alt);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.65rem 0.85rem;
+    cursor: pointer;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.variant-btn:hover {
+    border-color: var(--primary-color, #485fc7);
+}
+.variant-btn.active {
+    border-color: var(--primary-color, #485fc7);
+    background: var(--card-background);
+    box-shadow: 0 0 0 1px var(--primary-color, #485fc7);
+}
+.variant-fixed {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    background: var(--body-background-alt);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.65rem 0.85rem;
+}
+.variant-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-color-strong);
+}
+.variant-blurb {
+    font-size: 0.74rem;
+    color: var(--text-color-light);
+    line-height: 1.4;
+}
+
+.args-row {
+    padding-top: 1rem;
 }
 
 @media (max-width: 900px) {
