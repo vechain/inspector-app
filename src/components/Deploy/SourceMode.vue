@@ -34,13 +34,17 @@
             </div>
 
             <nav class="file-list">
-                <button
+                <div
                     v-for="(_, name) in files"
                     :key="name"
-                    type="button"
                     class="file-row"
-                    :class="{ active: activeFile === name, entry: name === entryFile }"
-                    @click="activeFile = name"
+                    :class="{
+                        active: activeFile === name,
+                        entry: name === entryFile,
+                        renaming: renamingFile === name,
+                    }"
+                    @click="onFileRowClick(name)"
+                    @dblclick="onRenameStart(name)"
                 >
                     <span class="file-marker" :title="name === entryFile ? 'Entry file' : ''">
                         <b-icon
@@ -48,14 +52,26 @@
                             size="is-small"
                         />
                     </span>
-                    <span class="file-name">{{ name }}</span>
+                    <input
+                        v-if="renamingFile === name"
+                        ref="renameInput"
+                        v-model="renameValue"
+                        class="file-rename-input"
+                        type="text"
+                        spellcheck="false"
+                        @keydown.enter.prevent="onRenameCommit"
+                        @keydown.escape.prevent="onRenameCancel"
+                        @blur="onRenameCommit"
+                        @click.stop
+                    />
+                    <span v-else class="file-name" :title="`Double-click to rename`">{{ name }}</span>
                     <span
-                        v-if="canRemove(name)"
+                        v-if="canRemove(name) && renamingFile !== name"
                         class="file-close"
                         @click.stop="onCloseFile(name)"
                         title="Remove file"
                     >×</span>
-                </button>
+                </div>
             </nav>
 
             <div class="sidebar-foot">
@@ -268,6 +284,13 @@ export default class SourceMode extends Vue {
     dirty: boolean = false
     private suppressDirty: boolean = false
 
+    // Inline rename state for the file list. `renamingFile` is the original
+    // key being edited; `renameValue` is the live input value.
+    renamingFile: string | null = null
+    renameValue: string = ''
+    /** Set on the freshly-added file so a "revert" Escape removes it. */
+    private newFilePlaceholder: string | null = null
+
     compiling = false
     compileErrors: any[] = []
     compileWarnings: any[] = []
@@ -409,35 +432,108 @@ export default class SourceMode extends Vue {
     }
 
     onAddFile() {
+        // Add a placeholder file and drop straight into rename mode — no
+        // alert/prompt. Escape removes the placeholder; Enter / blur commits.
         let i = Object.keys(this.files).length + 1
-        let name = `File${i}.sol`
+        let name = `Untitled${i}.sol`
         while (this.files[name] !== undefined) {
             i++
-            name = `File${i}.sol`
+            name = `Untitled${i}.sol`
         }
-        const input = window.prompt('New file name (must end with .sol)', name)
-        if (!input) return
-        if (!input.endsWith('.sol')) {
-            ;(this as any).$buefy.toast.open({
-                message: 'File name must end with .sol',
-                type: 'is-warning',
-                position: 'is-top',
-                duration: 2500,
-            })
-            return
-        }
-        if (this.files[input] !== undefined) {
-            ;(this as any).$buefy.toast.open({
-                message: 'A file with that name already exists',
-                type: 'is-warning',
-                position: 'is-top',
-                duration: 2500,
-            })
-            return
-        }
-        this.$set(this.files, input, '')
-        this.activeFile = input
+        this.$set(this.files, name, '')
+        this.activeFile = name
+        this.newFilePlaceholder = name
         this.markDirty()
+        this.onRenameStart(name)
+    }
+
+    onFileRowClick(name: string) {
+        if (this.renamingFile === name) return
+        // Click on a different row while another is being renamed → commit the
+        // pending rename first, then switch.
+        if (this.renamingFile !== null) this.onRenameCommit()
+        this.activeFile = name
+    }
+
+    onRenameStart(name: string) {
+        if (!this.files.hasOwnProperty(name)) return
+        this.renamingFile = name
+        this.renameValue = name
+        this.$nextTick(() => {
+            const refs = (this.$refs as any).renameInput as HTMLInputElement[] | HTMLInputElement | undefined
+            const el = Array.isArray(refs) ? refs[0] : refs
+            if (!el) return
+            el.focus()
+            // Select the basename (before the .sol extension) for quick replacement.
+            const dot = name.lastIndexOf('.')
+            const stop = dot > 0 ? dot : name.length
+            try {
+                el.setSelectionRange(0, stop)
+            } catch {
+                /* setSelectionRange only works on text-like inputs; harmless */
+            }
+        })
+    }
+
+    onRenameCommit() {
+        if (this.renamingFile === null) return
+        const oldName = this.renamingFile
+        let next = (this.renameValue || '').trim()
+        // Friendly: auto-append .sol if the user forgot it.
+        if (next && !next.endsWith('.sol')) next = `${next}.sol`
+
+        // Reset state up-front so a downstream toast doesn't trigger a second
+        // blur-driven commit.
+        this.renamingFile = null
+        this.renameValue = ''
+        const isNew = this.newFilePlaceholder === oldName
+        this.newFilePlaceholder = null
+
+        if (!next || next === '.sol') {
+            // Empty rename → treat as cancel. For a brand-new file, remove it.
+            if (isNew) this.removeFile(oldName)
+            return
+        }
+        if (next === oldName) return
+        if (this.files.hasOwnProperty(next)) {
+            ;(this as any).$buefy.toast.open({
+                message: `A file named "${next}" already exists`,
+                type: 'is-warning',
+                position: 'is-top',
+                duration: 2500,
+            })
+            return
+        }
+        // Re-key the file map preserving order.
+        const ordered: Record<string, string> = {}
+        for (const key of Object.keys(this.files)) {
+            if (key === oldName) ordered[next] = this.files[oldName]
+            else ordered[key] = this.files[key]
+        }
+        this.files = ordered
+        if (this.activeFile === oldName) this.activeFile = next
+        if (this.entryFile === oldName) this.entryFile = next
+        this.markDirty()
+    }
+
+    onRenameCancel() {
+        const old = this.renamingFile
+        this.renamingFile = null
+        this.renameValue = ''
+        // If the user hit Escape on a brand-new file before naming it, drop it.
+        if (old && this.newFilePlaceholder === old) {
+            this.removeFile(old)
+        }
+        this.newFilePlaceholder = null
+    }
+
+    private removeFile(name: string) {
+        if (!this.files.hasOwnProperty(name)) return
+        if (Object.keys(this.files).length <= 1) return
+        this.$delete(this.files, name)
+        const remaining = Object.keys(this.files)
+        if (this.activeFile === name) this.activeFile = remaining[0]
+        if (this.entryFile === name) this.entryFile = remaining[0]
     }
 
     onCloseFile(name: string) {
@@ -963,6 +1059,24 @@ function shortAddr(a: string): string {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-family: monospace;
+    user-select: none;
+}
+.file-rename-input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--primary-color, #485fc7);
+    border-radius: 4px;
+    background: var(--card-background);
+    color: var(--text-color-strong);
+    font-family: monospace;
+    font-size: 0.82rem;
+    padding: 0.1rem 0.35rem;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(72, 95, 199, 0.15);
+}
+.file-row.renaming {
+    cursor: text;
+    background: var(--body-background-alt);
 }
 .file-close {
     color: var(--text-color-light);
