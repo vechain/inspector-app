@@ -63,6 +63,12 @@ import { Vue, Component, Prop } from 'vue-property-decorator'
 import { Entities } from '@/database'
 import { ImportService } from '@/services/import-service'
 
+function plain<T>(obj: T): T {
+    // JSON round-trip drops keys whose value is undefined and strips reactive
+    // wrappers — exactly what Dexie wants before it structured-clones into IDB.
+    return JSON.parse(JSON.stringify(obj)) as T
+}
+
 @Component
 export default class DeploySuccessCard extends Vue {
     @Prop({ required: true }) address!: string
@@ -85,9 +91,10 @@ export default class DeploySuccessCard extends Vue {
     }
 
     get filteredCategories(): string[] {
+        const all = this.existingCategories || []
         const q = (this.form.category || '').toLowerCase()
-        if (!q) return this.existingCategories
-        return this.existingCategories.filter((c) => c.toLowerCase().includes(q))
+        if (!q) return all
+        return all.filter((c) => c.toLowerCase().includes(q))
     }
 
     async copy(value: string) {
@@ -105,19 +112,25 @@ export default class DeploySuccessCard extends Vue {
     }
 
     async save() {
-        const contract: Entities.Contract = {
+        // Strip Vue's reactivity (and any other non-cloneable wrappers) by going
+        // through JSON. Dexie's hooks call JSON.stringify on the object and
+        // structured-clone it into IndexedDB; reactive proxies sometimes carry
+        // hidden Dep references that round-trip badly.
+        const contract: Entities.Contract = plain({
             address: this.address,
             name: this.form.name || `Contract ${this.address.slice(0, 8)}`,
-            abi: this.abi,
+            abi: this.abi || [],
             network: this.network,
             category: this.form.category || undefined,
             source: this.source || undefined,
-        }
+        })
         try {
             await ImportService.importContract(contract, this.network)
             this.saved = true
             this.$emit('saved', contract)
         } catch (err: any) {
+            // eslint-disable-next-line no-console
+            console.error('DeploySuccessCard.save failed', err, { contract })
             ;(this as any).$buefy.toast.open({
                 message: `Failed to save: ${err.message || err}`,
                 type: 'is-danger',
