@@ -2,6 +2,21 @@
     <div class="mode-shell">
         <aside class="mode-sidebar">
             <div class="sidebar-head">
+                <span class="sidebar-eyebrow">Project</span>
+                <SourceProjectsMenu
+                    :loaded-project-id="loadedProjectId"
+                    :dirty="dirty"
+                    :workspace-has-content="workspaceHasContent"
+                    @load="onLoadProject"
+                    @save="onSaveProject"
+                    @save-as="onSaveAsProject"
+                    @new="onNewProject"
+                    @deleted="onProjectDeleted"
+                    @renamed="onProjectRenamed"
+                />
+            </div>
+
+            <div class="sidebar-head sidebar-head--files">
                 <div class="sidebar-head-row">
                     <h3 class="sidebar-title">Files</h3>
                     <button
@@ -177,6 +192,7 @@ import ConstructorForm from './ConstructorForm.vue'
 import DeployStatus from './DeployStatus.vue'
 import DeploySuccessCard from './DeploySuccessCard.vue'
 import DeployFooter, { FooterStatus } from './DeployFooter.vue'
+import SourceProjectsMenu from './SourceProjectsMenu.vue'
 import {
     compile,
     listCompiledContracts,
@@ -195,7 +211,7 @@ import {
     isUserRejection,
     containsPush0,
 } from '@/services/deploy-service'
-import { Entities } from '@/database'
+import DB, { Entities } from '@/database'
 
 const DEFAULT_FILE = 'Contract.sol'
 const STARTER_SOURCE = `// SPDX-License-Identifier: MIT
@@ -236,6 +252,7 @@ interface DeployResult {
         DeployStatus,
         DeploySuccessCard,
         DeployFooter,
+        SourceProjectsMenu,
     },
 })
 export default class SourceMode extends Vue {
@@ -245,6 +262,11 @@ export default class SourceMode extends Vue {
     files: Record<string, string> = { [DEFAULT_FILE]: STARTER_SOURCE }
     activeFile: string = DEFAULT_FILE
     entryFile: string = DEFAULT_FILE
+
+    // Project persistence (sourceProjects Dexie table)
+    loadedProjectId: number | null = null
+    dirty: boolean = false
+    private suppressDirty: boolean = false
 
     compiling = false
     compileErrors: any[] = []
@@ -383,6 +405,7 @@ export default class SourceMode extends Vue {
 
     onFileChange(name: string, text: string) {
         this.$set(this.files, name, text)
+        this.markDirty()
     }
 
     onAddFile() {
@@ -414,6 +437,7 @@ export default class SourceMode extends Vue {
         }
         this.$set(this.files, input, '')
         this.activeFile = input
+        this.markDirty()
     }
 
     onCloseFile(name: string) {
@@ -426,6 +450,143 @@ export default class SourceMode extends Vue {
         if (this.entryFile === name) {
             this.entryFile = remaining[0]
         }
+        this.markDirty()
+    }
+
+    private markDirty() {
+        if (this.suppressDirty) return
+        this.dirty = true
+    }
+
+    get workspaceHasContent(): boolean {
+        return Object.values(this.files).some((s) => (s || '').trim().length > 0)
+    }
+
+    // ─── Project save / load ──────────────────────────────────────────────
+
+    onLoadProject(p: Entities.SourceProject) {
+        const apply = () => {
+            this.suppressDirty = true
+            this.files = JSON.parse(JSON.stringify(p.files || {}))
+            const fileNames = Object.keys(this.files)
+            this.entryFile = p.entry && this.files[p.entry] ? p.entry : fileNames[0] || ''
+            this.activeFile = this.entryFile
+            this.loadedProjectId = p.id || null
+            this.dirty = false
+            // Compile state from the previous workspace is meaningless now.
+            this.compileResult = null
+            this.compileErrors = []
+            this.compileWarnings = []
+            this.compiledContracts = []
+            this.selectedContractKey = ''
+            this.useProxy = false
+            this.values = []
+            this.valid = false
+            this.result = null
+            this.stages = []
+            this.$nextTick(() => {
+                this.suppressDirty = false
+            })
+        }
+        if (this.dirty && this.workspaceHasContent) {
+            ;(this as any).$buefy.dialog.confirm({
+                title: 'Replace workspace',
+                message: `You have unsaved changes. Load "${p.name}" anyway?`,
+                confirmText: 'Load',
+                onConfirm: apply,
+            })
+        } else {
+            apply()
+        }
+    }
+
+    async onSaveProject() {
+        if (!this.loadedProjectId) return
+        await DB.sourceProjects.update(this.loadedProjectId, {
+            files: JSON.parse(JSON.stringify(this.files)),
+            entry: this.entryFile,
+            updatedTime: Date.now(),
+        })
+        this.dirty = false
+        ;(this as any).$buefy.toast.open({
+            message: 'Project saved',
+            type: 'is-success',
+            position: 'is-bottom',
+        })
+    }
+
+    onSaveAsProject() {
+        if (!this.workspaceHasContent) return
+        ;(this as any).$buefy.dialog.prompt({
+            title: 'Save project',
+            message: 'Give your project a name.',
+            inputAttrs: { placeholder: 'e.g. MyVault demo', maxlength: 60, required: true },
+            onConfirm: async (val: string) => {
+                const name = val.trim()
+                if (!name) return
+                const now = Date.now()
+                const id = await DB.sourceProjects.add({
+                    name,
+                    files: JSON.parse(JSON.stringify(this.files)),
+                    entry: this.entryFile,
+                    createdTime: now,
+                    updatedTime: now,
+                })
+                this.loadedProjectId = typeof id === 'number' ? id : null
+                this.dirty = false
+                ;(this as any).$buefy.toast.open({
+                    message: 'Project saved',
+                    type: 'is-success',
+                    position: 'is-bottom',
+                })
+            },
+        })
+    }
+
+    onNewProject() {
+        const apply = () => {
+            this.suppressDirty = true
+            this.files = { [DEFAULT_FILE]: STARTER_SOURCE }
+            this.activeFile = DEFAULT_FILE
+            this.entryFile = DEFAULT_FILE
+            this.loadedProjectId = null
+            this.dirty = false
+            this.compileResult = null
+            this.compileErrors = []
+            this.compileWarnings = []
+            this.compiledContracts = []
+            this.selectedContractKey = ''
+            this.useProxy = false
+            this.values = []
+            this.valid = false
+            this.result = null
+            this.stages = []
+            this.$nextTick(() => {
+                this.suppressDirty = false
+            })
+        }
+        if (this.dirty && this.workspaceHasContent) {
+            ;(this as any).$buefy.dialog.confirm({
+                title: 'Discard workspace',
+                message: 'You have unsaved changes. Start a new blank project?',
+                confirmText: 'Discard',
+                type: 'is-warning',
+                onConfirm: apply,
+            })
+        } else {
+            apply()
+        }
+    }
+
+    onProjectDeleted(id: number) {
+        if (this.loadedProjectId === id) {
+            this.loadedProjectId = null
+            this.dirty = true
+        }
+    }
+
+    onProjectRenamed(_: { id: number; name: string }) {
+        /* the dropdown re-fetches its own list; nothing to do here */
     }
 
     onValues(values: any[]) {
@@ -710,9 +871,22 @@ function shortAddr(a: string): string {
     min-height: 0;
 }
 .sidebar-head {
-    padding: 0.9rem 1rem 0.5rem 1rem;
+    padding: 0.85rem 0.85rem 0.7rem 0.85rem;
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.sidebar-head--files {
+    padding-top: 0.7rem;
+}
+.sidebar-eyebrow {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-color-light);
 }
 .sidebar-head-row {
     display: flex;

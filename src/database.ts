@@ -74,6 +74,17 @@ export namespace Entities {
     updatedTime: number;
   }
 
+  // A saved Deploy "Source" workspace: a set of .sol files + entry. Compiles
+  // on any network so we don't scope by genesis id (unlike TxBuilder drafts).
+  export interface SourceProject {
+    id?: number;
+    name: string;
+    files: Record<string, string>;
+    entry: string;
+    createdTime: number;
+    updatedTime: number;
+  }
+
   export interface SourcedAbi {
     id?: number;
     genesisId: string;
@@ -119,6 +130,7 @@ class Database extends Dexie {
   public readonly sourcedAbis!: Dexie.Table<Entities.SourcedAbi, number>;
   public readonly b32Signatures!: Dexie.Table<Entities.B32Signature, number>;
   public readonly openchainSignatures!: Dexie.Table<Entities.OpenChainSignature, number>;
+  public readonly sourceProjects!: Dexie.Table<Entities.SourceProject, number>;
 
   constructor() {
     super("inspect");
@@ -159,6 +171,9 @@ class Database extends Dexie {
     });
     this.version(12).stores({
       openchainSignatures: "++id, &[hash+kind], hash, kind",
+    });
+    this.version(13).stores({
+      sourceProjects: "++id, name, updatedTime",
     });
     this.open().catch((err) => {
       // tslint:disable-next-line:no-console
