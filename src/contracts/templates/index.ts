@@ -298,41 +298,6 @@ export const TEMPLATE_FAMILIES: TemplateFamily[] = [
     ],
   },
   {
-    id: 'conditional-escrow',
-    label: 'Conditional Escrow',
-    shortDescription: 'Hold VET until an arbiter releases or the deadline passes',
-    longDescription:
-      'A simple, single-deal escrow that holds native VET between a payer and a beneficiary. The payer (or anyone) funds the contract by sending VET to it. A third-party arbiter — set at deploy time — can `release()` the entire balance to the beneficiary as long as the deadline has not passed, or `refund()` the payer at any time. After the deadline, the payer can also call `refund()` themselves to permissionlessly reclaim funds, so a non-responsive arbiter cannot lock the deal. The state machine is one-shot: Active → Released **or** Refunded.',
-    features: [
-      'receive() — anyone can fund the escrow by sending VET to its address',
-      'release() — arbiter forwards the full balance to the beneficiary (pre-deadline only)',
-      'refund() — arbiter any time, payer after deadline; returns full balance to payer',
-      'One-shot state machine: Active → Released | Refunded (no re-entry)',
-      'ReentrancyGuard on release/refund',
-      'Custom errors (NotArbiter, WrongState, DeadlineReached, …) for cheap reverts',
-    ],
-    variants: [
-      {
-        id: 'standard',
-        label: 'Standard',
-        blurb: 'One-shot deployment. Logic immutable after deploy.',
-        templateId: 'conditional-escrow',
-        audited: 'custom',
-        auditNote:
-          'Conditional Escrow is a custom contract written for this tool — not inherited from OpenZeppelin and not formally audited. Read the source carefully and consider it experimental before holding real funds.',
-      },
-      {
-        id: 'upgradeable',
-        label: 'Upgradeable (UUPS)',
-        blurb: 'Deploys impl + ERC1967Proxy. Owner can upgrade later.',
-        templateId: 'conditional-escrow-upgradeable',
-        audited: 'custom',
-        auditNote:
-          'Conditional Escrow (UUPS) is a custom contract written for this tool — not inherited from OpenZeppelin and not formally audited. Read the source carefully and consider it experimental before holding real funds.',
-      },
-    ],
-  },
-  {
     id: 'endorsers-reward-distributor',
     label: 'VeBetterDAO Endorsers Reward Distributor',
     shortDescription: 'Distribute round earnings to X-Node endorsers',

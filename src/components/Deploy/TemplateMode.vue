@@ -16,18 +16,8 @@
                 >
                     <span class="row-head">
                         <span class="row-name">{{ f.label }}</span>
-                        <span class="row-tags">
-                            <span
-                                v-if="familyAuditStatus(f) !== 'oz'"
-                                class="audit-pip"
-                                :class="`audit-pip--${familyAuditStatus(f)}`"
-                                :title="auditPipTitle(familyAuditStatus(f))"
-                            >
-                                <b-icon icon="exclamation-triangle" size="is-small" />
-                            </span>
-                            <span v-if="f.variants.length > 1" class="row-tag">
-                                {{ f.variants.length }} variants
-                            </span>
+                        <span v-if="f.variants.length > 1" class="row-tag">
+                            {{ f.variants.length }} variants
                         </span>
                     </span>
                     <span class="row-desc">{{ f.shortDescription }}</span>
@@ -967,6 +957,10 @@ function shortAddr(a: string): string {
     margin-bottom: 0.35rem;
     color: var(--text-color-strong);
     font-size: 0.9rem;
+}
+.audit-banner__head strong,
+.audit-banner__cta strong {
+    color: var(--text-color-strong);
 }
 .audit-banner__head ::v-deep .icon {
     color: #b88010;

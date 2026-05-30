@@ -198,28 +198,6 @@ const templates = [
     entryFn: 'initialize',
   },
   {
-    id: 'conditional-escrow',
-    label: 'Conditional Escrow (standard)',
-    description:
-      'Holds native VET between a payer and a beneficiary. Arbiter releases before deadline; payer can reclaim after deadline.',
-    dir: null,
-    file: 'ConditionalEscrow.sol',
-    contractName: 'ConditionalEscrow',
-    upgradeable: false,
-    entryFn: 'constructor',
-  },
-  {
-    id: 'conditional-escrow-upgradeable',
-    label: 'Conditional Escrow (UUPS)',
-    description:
-      'UUPS-upgradeable conditional escrow.',
-    dir: null,
-    file: 'ConditionalEscrowUpgradeable.sol',
-    contractName: 'ConditionalEscrowUpgradeable',
-    upgradeable: true,
-    entryFn: 'initialize',
-  },
-  {
     id: 'vesting-single',
     label: 'Vesting Wallet (single beneficiary)',
     description:
