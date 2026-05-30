@@ -16,8 +16,18 @@
                 >
                     <span class="row-head">
                         <span class="row-name">{{ f.label }}</span>
-                        <span v-if="f.variants.length > 1" class="row-tag">
-                            {{ f.variants.length }} variants
+                        <span class="row-tags">
+                            <span
+                                v-if="familyAuditStatus(f) !== 'oz'"
+                                class="audit-pip"
+                                :class="`audit-pip--${familyAuditStatus(f)}`"
+                                :title="auditPipTitle(familyAuditStatus(f))"
+                            >
+                                <b-icon icon="exclamation-triangle" size="is-small" />
+                            </span>
+                            <span v-if="f.variants.length > 1" class="row-tag">
+                                {{ f.variants.length }} variants
+                            </span>
                         </span>
                     </span>
                     <span class="row-desc">{{ f.shortDescription }}</span>
@@ -62,6 +72,24 @@
                     </div>
                 </div>
 
+                <!-- Audit warning when the selected variant isn't pure OZ -->
+                <div
+                    v-if="selectedVariant && (selectedVariant.audited || 'oz') !== 'oz'"
+                    class="deploy-card audit-banner"
+                    :class="`audit-banner--${selectedVariant.audited}`"
+                >
+                    <div class="audit-banner__head">
+                        <b-icon icon="exclamation-triangle" size="is-small" />
+                        <strong>{{ auditBannerTitle(selectedVariant.audited) }}</strong>
+                    </div>
+                    <p class="audit-banner__body">
+                        {{ selectedVariant.auditNote || auditBannerFallback(selectedVariant.audited) }}
+                    </p>
+                    <p class="audit-banner__cta">
+                        Click <strong>Open in Source</strong> above to inspect the .sol files before deploying.
+                    </p>
+                </div>
+
                 <!-- Configure -->
                 <div class="deploy-card configure-card">
                     <div class="card-head">
@@ -82,8 +110,19 @@
                                 :class="{ active: variantId === v.id }"
                                 @click="onPickVariant(v.id)"
                             >
-                                <span class="variant-label">{{ v.label }}</span>
+                                <span class="variant-head">
+                                    <span class="variant-label">{{ v.label }}</span>
+                                    <span
+                                        v-if="(v.audited || 'oz') !== 'oz'"
+                                        class="variant-audit"
+                                        :class="`variant-audit--${v.audited}`"
+                                        :title="auditPipTitle(v.audited)"
+                                    >
+                                        <b-icon icon="exclamation-triangle" size="is-small" />
+                                    </span>
+                                </span>
                                 <span class="variant-blurb">{{ v.blurb }}</span>
+                                <span v-if="v.holds" class="variant-holds">{{ v.holds }}</span>
                             </button>
                         </div>
                     </div>
@@ -93,8 +132,21 @@
                             <span class="config-hint">Only one variant available for this template.</span>
                         </span>
                         <div class="variant-fixed">
-                            <span class="variant-label">{{ family.variants[0].label }}</span>
+                            <span class="variant-head">
+                                <span class="variant-label">{{ family.variants[0].label }}</span>
+                                <span
+                                    v-if="(family.variants[0].audited || 'oz') !== 'oz'"
+                                    class="variant-audit"
+                                    :class="`variant-audit--${family.variants[0].audited}`"
+                                    :title="auditPipTitle(family.variants[0].audited)"
+                                >
+                                    <b-icon icon="exclamation-triangle" size="is-small" />
+                                </span>
+                            </span>
                             <span class="variant-blurb">{{ family.variants[0].blurb }}</span>
+                            <span v-if="family.variants[0].holds" class="variant-holds">
+                                {{ family.variants[0].holds }}
+                            </span>
                         </div>
                     </div>
 
@@ -169,8 +221,11 @@ import {
     getTemplate,
     getEntryFragment,
     familyHasChoice,
+    familyWorstAuditStatus,
+    AuditStatus,
     DeployTemplate,
     TemplateFamily,
+    TemplateVariant,
     VariantId,
     COMPILER_VERSION,
     GENESIS,
@@ -223,6 +278,37 @@ export default class TemplateMode extends Vue {
         if (!this.family) return undefined
         const v = this.family.variants.find((x) => x.id === this.variantId) || this.family.variants[0]
         return v ? getTemplate(v.templateId) : undefined
+    }
+
+    get selectedVariant(): TemplateVariant | undefined {
+        if (!this.family) return undefined
+        return this.family.variants.find((x) => x.id === this.variantId) || this.family.variants[0]
+    }
+
+    familyAuditStatus(f: TemplateFamily): AuditStatus {
+        return familyWorstAuditStatus(f)
+    }
+
+    auditPipTitle(status?: AuditStatus): string {
+        if (status === 'third-party') return 'Third-party code — not audited by us. Review before deploying.'
+        if (status === 'custom') return 'Custom code written for this tool — not audited. Review before deploying.'
+        return 'Standard OpenZeppelin contract.'
+    }
+
+    auditBannerTitle(status?: AuditStatus): string {
+        if (status === 'third-party') return 'Third-party code — not audited by us'
+        if (status === 'custom') return 'Custom code — unaudited'
+        return ''
+    }
+
+    auditBannerFallback(status?: AuditStatus): string {
+        if (status === 'third-party') {
+            return 'This template was pulled from an external repository and has not been audited. Review the source before deploying real funds.'
+        }
+        if (status === 'custom') {
+            return 'This contract was written for this tool, not inherited from OpenZeppelin, and has not been formally audited. Review the source before deploying real funds.'
+        }
+        return ''
     }
 
     get entryInputs(): ABI.InputItem[] {
@@ -582,6 +668,36 @@ function shortAddr(a: string): string {
     letter-spacing: 0.04em;
     flex-shrink: 0;
 }
+.row-tags {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+}
+.audit-pip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: 50%;
+    background: rgba(255, 165, 32, 0.18);
+}
+.audit-pip ::v-deep .icon {
+    color: #b88010;
+}
+.audit-pip--third-party {
+    background: rgba(255, 56, 96, 0.18);
+}
+.audit-pip--third-party ::v-deep .icon {
+    color: #c4264e;
+}
+[data-theme='dark'] .audit-pip ::v-deep .icon {
+    color: #ffd766;
+}
+[data-theme='dark'] .audit-pip--third-party ::v-deep .icon {
+    color: #ff7a8e;
+}
 .row-desc {
     font-size: 0.74rem;
     color: var(--text-color-light);
@@ -799,6 +915,89 @@ function shortAddr(a: string): string {
     font-size: 0.74rem;
     color: var(--text-color-light);
     line-height: 1.4;
+}
+.variant-head {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.variant-audit {
+    display: inline-flex;
+    align-items: center;
+    color: #b88010;
+}
+.variant-audit--third-party {
+    color: #c4264e;
+}
+[data-theme='dark'] .variant-audit {
+    color: #ffd766;
+}
+[data-theme='dark'] .variant-audit--third-party {
+    color: #ff7a8e;
+}
+.variant-holds {
+    margin-top: 0.25rem;
+    font-size: 0.68rem;
+    font-family: monospace;
+    color: var(--text-color-light);
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    align-self: flex-start;
+}
+[data-theme='dark'] .variant-holds {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.audit-banner {
+    padding: 0.9rem 1.1rem;
+    border-left: 4px solid #d4a017;
+    background: rgba(255, 165, 32, 0.06);
+    border-color: rgba(255, 165, 32, 0.35);
+}
+.audit-banner--third-party {
+    border-left-color: #ff3860;
+    background: rgba(255, 56, 96, 0.07);
+    border-color: rgba(255, 56, 96, 0.35);
+}
+.audit-banner__head {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.35rem;
+    color: var(--text-color-strong);
+    font-size: 0.9rem;
+}
+.audit-banner__head ::v-deep .icon {
+    color: #b88010;
+}
+.audit-banner--third-party .audit-banner__head ::v-deep .icon {
+    color: #c4264e;
+}
+.audit-banner__body {
+    margin: 0 0 0.45rem 0;
+    font-size: 0.82rem;
+    color: var(--text-color);
+    line-height: 1.5;
+}
+.audit-banner__cta {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--text-color-light);
+}
+[data-theme='dark'] .audit-banner {
+    background: rgba(255, 180, 30, 0.1);
+    border-color: rgba(255, 180, 30, 0.3);
+}
+[data-theme='dark'] .audit-banner--third-party {
+    background: rgba(255, 80, 110, 0.12);
+    border-color: rgba(255, 80, 110, 0.35);
+}
+[data-theme='dark'] .audit-banner__head ::v-deep .icon {
+    color: #ffd766;
+}
+[data-theme='dark'] .audit-banner--third-party .audit-banner__head ::v-deep .icon {
+    color: #ff7a8e;
 }
 
 .args-row {

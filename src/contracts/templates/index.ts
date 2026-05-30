@@ -70,6 +70,16 @@ export function getEntryFragment(t: DeployTemplate): TemplateAbiItem | undefined
 // than the standard / upgradeable axis (e.g. single / multi beneficiary).
 export type VariantId = string
 
+/**
+ * Code provenance for a variant. Drives the audit-status badge and warning
+ * banner shown when the user picks the variant.
+ *   - 'oz'          : inherits standard OpenZeppelin contracts directly. Safe.
+ *   - 'custom'      : written from scratch for this tool. Unaudited.
+ *   - 'third-party' : pulled from an external (non-OZ, non-VeChain) repo.
+ *                     Unaudited; needs explicit user trust.
+ */
+export type AuditStatus = 'oz' | 'custom' | 'third-party'
+
 export interface TemplateVariant {
   id: VariantId
   label: string
@@ -77,6 +87,12 @@ export interface TemplateVariant {
   blurb: string
   /** Underlying flat-template id resolved from `artifacts.templates`. */
   templateId: string
+  /** Code provenance — controls the warning banner. Defaults to 'oz'. */
+  audited?: AuditStatus
+  /** Optional extra context shown inside the warning banner. */
+  auditNote?: string
+  /** Short tag rendered on the variant card (e.g. "Holds: VET + ERC20"). */
+  holds?: string
 }
 
 export interface TemplateFamily {
@@ -156,12 +172,14 @@ export const TEMPLATE_FAMILIES: TemplateFamily[] = [
         label: 'Standard',
         blurb: 'One-shot deployment. Logic immutable after deploy.',
         templateId: 'erc20-basic',
+        audited: 'oz',
       },
       {
         id: 'upgradeable',
         label: 'Upgradeable (UUPS)',
         blurb: 'Deploys impl + ERC1967Proxy. Owner can upgrade later.',
         templateId: 'erc20-upgradeable',
+        audited: 'oz',
       },
     ],
   },
@@ -184,12 +202,14 @@ export const TEMPLATE_FAMILIES: TemplateFamily[] = [
         label: 'Standard',
         blurb: 'One-shot deployment. Logic immutable after deploy.',
         templateId: 'erc721-basic',
+        audited: 'oz',
       },
       {
         id: 'upgradeable',
         label: 'Upgradeable (UUPS)',
         blurb: 'Deploys impl + ERC1967Proxy. Owner can upgrade later.',
         templateId: 'erc721-upgradeable',
+        audited: 'oz',
       },
     ],
   },
@@ -213,12 +233,14 @@ export const TEMPLATE_FAMILIES: TemplateFamily[] = [
         label: 'Standard',
         blurb: 'One-shot deployment. Logic immutable after deploy.',
         templateId: 'erc4626-basic',
+        audited: 'oz',
       },
       {
         id: 'upgradeable',
         label: 'Upgradeable (UUPS)',
         blurb: 'Deploys impl + ERC1967Proxy. Owner can upgrade later.',
         templateId: 'erc4626-upgradeable',
+        audited: 'oz',
       },
     ],
   },
@@ -240,26 +262,38 @@ export const TEMPLATE_FAMILIES: TemplateFamily[] = [
       {
         id: 'single',
         label: 'Single beneficiary',
-        blurb: 'One recipient. Vests VET + any ERC20. Beneficiary owns the wallet.',
+        blurb: 'One recipient. Beneficiary owns the wallet.',
         templateId: 'vesting-single',
+        audited: 'oz',
+        holds: 'Holds: VET + any ERC20',
       },
       {
         id: 'single-uups',
         label: 'Single beneficiary (UUPS)',
         blurb: 'Same as above + ERC1967Proxy. Beneficiary controls upgrades.',
         templateId: 'vesting-single-upgradeable',
+        audited: 'oz',
+        holds: 'Holds: VET + any ERC20',
       },
       {
         id: 'multi',
         label: 'Multi-beneficiary',
-        blurb: 'Many recipients of one ERC20. Schedules locked at deploy.',
+        blurb: 'Many recipients on one schedule. Schedules locked at deploy.',
         templateId: 'vesting-multi',
+        audited: 'custom',
+        auditNote:
+          'Multi-beneficiary vesting is a custom contract written for this tool — not inherited from OpenZeppelin and not formally audited. Review the source before deploying real funds.',
+        holds: 'Holds: ERC20 only',
       },
       {
         id: 'multi-uups',
         label: 'Multi-beneficiary (UUPS)',
         blurb: 'Same as above + ERC1967Proxy. Owner controls upgrades.',
         templateId: 'vesting-multi-upgradeable',
+        audited: 'custom',
+        auditNote:
+          'Multi-beneficiary vesting (UUPS) is a custom contract written for this tool — not inherited from OpenZeppelin and not formally audited. Review the source before deploying real funds.',
+        holds: 'Holds: ERC20 only',
       },
     ],
   },
@@ -283,12 +317,18 @@ export const TEMPLATE_FAMILIES: TemplateFamily[] = [
         label: 'Standard',
         blurb: 'One-shot deployment. Logic immutable after deploy.',
         templateId: 'conditional-escrow',
+        audited: 'custom',
+        auditNote:
+          'Conditional Escrow is a custom contract written for this tool — not inherited from OpenZeppelin and not formally audited. Read the source carefully and consider it experimental before holding real funds.',
       },
       {
         id: 'upgradeable',
         label: 'Upgradeable (UUPS)',
         blurb: 'Deploys impl + ERC1967Proxy. Owner can upgrade later.',
         templateId: 'conditional-escrow-upgradeable',
+        audited: 'custom',
+        auditNote:
+          'Conditional Escrow (UUPS) is a custom contract written for this tool — not inherited from OpenZeppelin and not formally audited. Read the source carefully and consider it experimental before holding real funds.',
       },
     ],
   },
@@ -312,6 +352,9 @@ export const TEMPLATE_FAMILIES: TemplateFamily[] = [
         label: 'Upgradeable (UUPS)',
         blurb: 'Deploys impl + ERC1967Proxy. Upgrader role can upgrade later.',
         templateId: 'endorsers-reward-distributor',
+        audited: 'third-party',
+        auditNote:
+          'Source pulled from github.com/Agilulfo1820/endorsers-reward-contract (a personal repo, not an official VeChain or VeBetterDAO organisation repo). Not audited by us. Verify the source matches what you expect — click "Open in Source" to inspect — before deploying.',
       },
     ],
     defaults: (genesisId) => {
@@ -351,4 +394,16 @@ export function getFamily(id: string): TemplateFamily | undefined {
 /** Returns true when the family exposes more than one variant (so a toggle is meaningful). */
 export function familyHasChoice(f: TemplateFamily): boolean {
   return f.variants.length > 1
+}
+
+/**
+ * Worst-case audit status across all variants of a family — drives the
+ * sidebar's unaudited indicator. Order: third-party > custom > oz.
+ */
+export function familyWorstAuditStatus(f: TemplateFamily): AuditStatus {
+  const order: AuditStatus[] = ['third-party', 'custom', 'oz']
+  for (const status of order) {
+    if (f.variants.some((v) => (v.audited || 'oz') === status)) return status
+  }
+  return 'oz'
 }
