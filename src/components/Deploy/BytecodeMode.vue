@@ -1,64 +1,77 @@
 <template>
-    <div class="deploy-card">
-        <div class="card-head">
-            <h3 class="card-title">Deploy raw bytecode</h3>
-            <p class="card-sub">Paste the contract's creation bytecode and (optionally) a VET amount sent to the constructor.</p>
-        </div>
+    <div class="mode-shell">
+        <main class="mode-main">
+            <div class="content-pad">
+                <div class="deploy-card">
+                    <div class="card-head">
+                        <h3 class="card-title">Deploy raw bytecode</h3>
+                        <p class="card-sub">
+                            Paste the contract's creation bytecode (with constructor args already
+                            appended if any) and optionally a VET amount sent to the constructor.
+                        </p>
+                    </div>
 
-        <b-field
-            :type="{ 'is-danger': errors.has('code') }"
-            :message="errors.first('code')"
-            label="Bytecode"
-        >
-            <b-input
-                name="code"
-                rows="10"
-                v-validate="{ required: true, bytecode: true }"
-                v-model.trim="code"
-                type="textarea"
-            />
-        </b-field>
+                    <b-field
+                        :type="{ 'is-danger': errors.has('code') }"
+                        :message="errors.first('code')"
+                        label="Bytecode"
+                    >
+                        <b-input
+                            name="code"
+                            rows="12"
+                            v-validate="{ required: true, bytecode: true }"
+                            v-model.trim="code"
+                            type="textarea"
+                        />
+                    </b-field>
 
-        <b-field
-            :type="{ 'is-danger': errors.has('vet') }"
-            :message="errors.first('vet')"
-            label="VET sent to constructor (optional)"
-        >
-            <b-input
-                v-model.trim="vet"
-                v-validate="'vet'"
-                placeholder="0"
-                name="vet"
-                type="text"
-            />
-        </b-field>
+                    <b-field
+                        :type="{ 'is-danger': errors.has('vet') }"
+                        :message="errors.first('vet')"
+                        label="VET sent to constructor (optional)"
+                    >
+                        <b-input
+                            v-model.trim="vet"
+                            v-validate="'vet'"
+                            placeholder="0"
+                            name="vet"
+                            type="text"
+                        />
+                    </b-field>
 
-        <p class="value-readout">
-            wei = <span class="mono">{{ numberValue }}</span>
-            <span class="hex-aside">({{ haxValue }})</span>
-        </p>
+                    <p class="value-readout">
+                        wei = <span class="mono">{{ numberValue }}</span>
+                        <span class="hex-aside">({{ haxValue }})</span>
+                    </p>
+                </div>
 
-        <div class="actions">
-            <button
-                type="button"
-                class="button is-rounded is-primary"
-                :disabled="deploying"
-                @click="deploy"
-            >
-                <b-icon v-if="deploying" icon="loading" custom-class="mdi-spin" size="is-small" />
-                <span>{{ deploying ? 'Deploying…' : 'Deploy' }}</span>
-            </button>
-        </div>
+                <DeploySuccessCard
+                    v-if="result"
+                    :address="result.address"
+                    :txid="result.txid"
+                    :abi="[]"
+                    :network="network"
+                    :existing-categories="existingCategories"
+                    @saved="onSaved"
+                    @dismiss="result = null"
+                />
+            </div>
+        </main>
 
-        <DeploySuccessCard
-            v-if="result"
-            :address="result.address"
-            :txid="result.txid"
-            :abi="[]"
-            :network="network"
-            :existing-categories="existingCategories"
-            @saved="onSaved"
-            @dismiss="result = null"
+        <DeployFooter
+            class="mode-footer"
+            :status="footerStatus"
+            :status-label="footerLabel"
+            :status-aux="footerAux"
+            primary-label="Deploy"
+            primary-icon="rocket-launch-outline"
+            :primary-disabled="!canDeploy || !!result"
+            :primary-loading="deploying"
+            :show-cancel="!!code || !!result"
+            :cancel-label="result ? 'Reset' : 'Clear'"
+            :cancel-disabled="deploying"
+            @primary="deploy"
+            @cancel="onReset"
         />
     </div>
 </template>
@@ -66,6 +79,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator'
 import DeploySuccessCard from './DeploySuccessCard.vue'
+import DeployFooter, { FooterStatus } from './DeployFooter.vue'
 import {
     buildRegularClause,
     signAndWait,
@@ -78,7 +92,7 @@ interface DeployResult {
     txid: string
 }
 
-@Component({ components: { DeploySuccessCard } })
+@Component({ components: { DeploySuccessCard, DeployFooter } })
 export default class BytecodeMode extends Vue {
     @Prop({ required: true }) network!: string
     @Prop({ default: () => [] }) existingCategories!: string[]
@@ -102,6 +116,33 @@ export default class BytecodeMode extends Vue {
             return vet.multipliedBy(1e18).toFixed(0)
         }
         return '0'
+    }
+
+    get canDeploy(): boolean {
+        return !!this.code && !this.deploying
+    }
+
+    get footerStatus(): FooterStatus {
+        if (this.result) return 'success'
+        if (this.deploying) return 'busy'
+        if (!this.code) return 'idle'
+        return 'ready'
+    }
+
+    get footerLabel(): string {
+        if (this.result) return 'Deployed'
+        if (this.deploying) return 'Deploying…'
+        if (!this.code) return 'Paste creation bytecode'
+        return 'Ready to deploy'
+    }
+
+    get footerAux(): string {
+        if (this.result) return shortAddr(this.result.address)
+        if (this.code) {
+            const len = this.code.startsWith('0x') ? this.code.length - 2 : this.code.length
+            return `${(len / 2).toFixed(0)} bytes`
+        }
+        return ''
     }
 
     private async checkForm() {
@@ -150,8 +191,15 @@ export default class BytecodeMode extends Vue {
         }
     }
 
+    onReset() {
+        if (this.deploying) return
+        this.code = ''
+        this.vet = null
+        this.result = null
+    }
+
     onSaved() {
-        // Card stays visible with the "Saved" state; nothing else to do.
+        // Success card stays in the "Saved" state.
     }
 
     private confirm(title: string, message: string): Promise<boolean> {
@@ -169,9 +217,35 @@ export default class BytecodeMode extends Vue {
         })
     }
 }
+
+function shortAddr(a: string): string {
+    if (!a) return ''
+    return a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a
+}
 </script>
 
 <style lang="scss" scoped>
+.mode-shell {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+    min-height: 0;
+    background: var(--body-background-alt);
+}
+.mode-main {
+    grid-row: 1;
+    overflow-y: auto;
+    min-width: 0;
+}
+.mode-footer {
+    grid-row: 2;
+}
+.content-pad {
+    padding: 1.25rem;
+    max-width: 820px;
+    margin: 0 auto;
+}
 .deploy-card {
     background: var(--card-background);
     border: 1px solid var(--border-color);
@@ -191,11 +265,12 @@ export default class BytecodeMode extends Vue {
     font-size: 0.82rem;
     color: var(--text-color-light);
     margin: 0;
+    line-height: 1.45;
 }
 .value-readout {
     font-size: 0.8rem;
     color: var(--text-color-light);
-    margin: 0.25rem 0 0.75rem 0;
+    margin: 0.25rem 0 0 0;
 }
 .mono {
     font-family: monospace;
@@ -203,10 +278,5 @@ export default class BytecodeMode extends Vue {
 .hex-aside {
     margin-left: 0.5rem;
     opacity: 0.7;
-}
-.actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 0.75rem;
 }
 </style>

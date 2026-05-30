@@ -8,7 +8,7 @@
                     type="button"
                     class="mode-tab"
                     :class="{ active: mode === m.id }"
-                    @click="mode = m.id"
+                    @click="onModeChange(m.id)"
                 >
                     <b-icon :icon="m.icon" size="is-small" />
                     <span>{{ m.label }}</span>
@@ -22,25 +22,21 @@
             </div>
         </div>
 
-        <div class="deploy-main">
-            <div class="deploy-content">
-                <TemplateMode
-                    v-if="mode === 'template'"
-                    :network="network"
-                    :existing-categories="existingCategories"
-                />
-                <SourceMode
-                    v-else-if="mode === 'source'"
-                    :network="network"
-                    :existing-categories="existingCategories"
-                />
-                <BytecodeMode
-                    v-else
-                    :network="network"
-                    :existing-categories="existingCategories"
-                />
-            </div>
-        </div>
+        <TemplateMode
+            v-if="mode === 'template'"
+            :network="network"
+            :existing-categories="existingCategories"
+        />
+        <SourceMode
+            v-else-if="mode === 'source'"
+            :network="network"
+            :existing-categories="existingCategories"
+        />
+        <BytecodeMode
+            v-else
+            :network="network"
+            :existing-categories="existingCategories"
+        />
     </section>
 </template>
 
@@ -89,6 +85,10 @@ export default class DeployContract extends Vue {
         return this.modes.find((m) => m.id === this.mode)?.blurb || ''
     }
 
+    onModeChange(id: DeployMode) {
+        this.mode = id
+    }
+
     private async created() {
         ;(this as any).$ga.page('/inspector/deploy')
         await this.loadCategories()
@@ -115,6 +115,7 @@ export default class DeployContract extends Vue {
     flex-direction: column;
     height: 100%;
     background: var(--body-background-alt);
+    min-height: 0;
 }
 
 .deploy-header {
@@ -126,6 +127,7 @@ export default class DeployContract extends Vue {
     background: var(--card-background);
     border-bottom: 1px solid var(--border-color);
     flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 .mode-tabs {
@@ -181,24 +183,9 @@ export default class DeployContract extends Vue {
     background: var(--primary-color, #485fc7);
 }
 
-.deploy-main {
-    flex: 1;
-    overflow-y: auto;
-    background: var(--body-background-alt);
-}
-
-.deploy-content {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 1.25rem;
-}
-
 @media (max-width: 768px) {
     .deploy-header {
         padding: 0.5rem 0.75rem;
-    }
-    .deploy-content {
-        padding: 0.75rem;
     }
 }
 </style>

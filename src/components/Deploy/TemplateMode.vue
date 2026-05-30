@@ -1,76 +1,91 @@
 <template>
-    <div class="template-mode">
-        <div class="deploy-card picker-card">
-            <div class="card-head">
-                <h3 class="card-title">Pick a template</h3>
-                <p class="card-sub">Pre-built, pre-compiled with solc 0.8.20 + evmVersion=paris.</p>
+    <div class="mode-shell">
+        <aside class="mode-sidebar">
+            <div class="sidebar-head">
+                <h3 class="sidebar-title">Templates</h3>
+                <p class="sidebar-sub">Pre-built, pre-compiled<br />solc 0.8.20 · paris · optimizer 200</p>
             </div>
-            <div class="template-grid">
+            <nav class="template-list">
                 <button
                     v-for="t in templates"
                     :key="t.id"
                     type="button"
-                    class="template-card"
+                    class="template-row"
                     :class="{ active: selectedId === t.id }"
                     @click="onPick(t.id)"
                 >
-                    <div class="tcard-head">
-                        <strong>{{ t.label }}</strong>
-                        <span v-if="t.upgradeable" class="tag is-info is-light">UUPS</span>
+                    <span class="row-head">
+                        <span class="row-name">{{ t.label }}</span>
+                        <span v-if="t.upgradeable" class="row-tag">UUPS</span>
+                    </span>
+                    <span class="row-desc">{{ t.description }}</span>
+                </button>
+            </nav>
+        </aside>
+
+        <main class="mode-main">
+            <div v-if="!template" class="empty-state">
+                <b-icon icon="view-list-outline" size="is-large" custom-class="has-text-grey-light" />
+                <p class="empty-title">Pick a template to begin</p>
+                <p class="empty-desc">Choose a contract on the left to configure its constructor or initializer arguments.</p>
+            </div>
+
+            <div v-else class="content-pad">
+                <div class="deploy-card">
+                    <div class="card-head">
+                        <div class="card-head-text">
+                            <h3 class="card-title">{{ template.label }}</h3>
+                            <p class="card-sub" v-if="template.upgradeable">
+                                Upgradeable (UUPS) — deploys an implementation then an
+                                <code>ERC1967Proxy</code> with the encoded
+                                <code>{{ template.entryFn }}(…)</code> call.
+                            </p>
+                            <p class="card-sub" v-else>
+                                Constructor arguments are encoded and appended to the creation bytecode.
+                            </p>
+                        </div>
+                        <span class="contract-name-tag">{{ template.contractName }}</span>
                     </div>
-                    <p class="tcard-desc">{{ t.description }}</p>
-                </button>
-            </div>
-        </div>
 
-        <div v-if="template" class="deploy-card form-card">
-            <div class="card-head">
-                <h3 class="card-title">
-                    {{ template.upgradeable ? 'Initializer arguments' : 'Constructor arguments' }}
-                </h3>
-                <p class="card-sub" v-if="template.upgradeable">
-                    Encoded into ERC1967Proxy's <code>_data</code> and delegate-called at proxy deploy.
-                </p>
-                <p class="card-sub" v-else>Encoded and appended to the creation bytecode.</p>
-            </div>
-            <ConstructorForm
-                :inputs="entryInputs"
-                @input="onValues"
-                @valid="onValid"
-            />
-
-            <DeployStatus :stages="stages" />
-
-            <div class="actions">
-                <button
-                    type="button"
-                    class="button is-rounded is-primary"
-                    :disabled="!canDeploy"
-                    @click="deploy"
-                >
-                    <b-icon
-                        v-if="deploying"
-                        icon="loading"
-                        custom-class="mdi-spin"
-                        size="is-small"
+                    <ConstructorForm
+                        :inputs="entryInputs"
+                        @input="onValues"
+                        @valid="onValid"
                     />
-                    <span>{{ deployButtonLabel }}</span>
-                </button>
-            </div>
 
-            <DeploySuccessCard
-                v-if="result"
-                :address="result.address"
-                :impl-address="result.implAddress"
-                :txid="result.txid"
-                :abi="template.abi"
-                :network="network"
-                :suggested-name="template.contractName"
-                :existing-categories="existingCategories"
-                :source="contractSource"
-                @dismiss="result = null"
-            />
-        </div>
+                    <DeployStatus v-if="stages.length" :stages="stages" />
+                </div>
+
+                <DeploySuccessCard
+                    v-if="result"
+                    :address="result.address"
+                    :impl-address="result.implAddress"
+                    :txid="result.txid"
+                    :abi="template.abi"
+                    :network="network"
+                    :suggested-name="template.contractName"
+                    :existing-categories="existingCategories"
+                    :source="contractSource"
+                    @dismiss="result = null"
+                />
+            </div>
+        </main>
+
+        <DeployFooter
+            class="mode-footer"
+            :status="footerStatus"
+            :status-label="footerLabel"
+            :status-aux="footerAux"
+            :primary-label="primaryLabel"
+            :primary-icon="result ? 'check' : 'rocket-launch-outline'"
+            :primary-disabled="!canDeploy || !!result"
+            :primary-loading="deploying"
+            :show-cancel="!!result || !!template"
+            :cancel-label="result ? 'Reset' : 'Clear'"
+            :cancel-disabled="deploying"
+            @primary="deploy"
+            @cancel="onReset"
+        />
     </div>
 </template>
 
@@ -79,6 +94,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator'
 import ConstructorForm from './ConstructorForm.vue'
 import DeploySuccessCard from './DeploySuccessCard.vue'
 import DeployStatus from './DeployStatus.vue'
+import DeployFooter, { FooterStatus } from './DeployFooter.vue'
 import {
     listTemplates,
     getTemplate,
@@ -102,14 +118,19 @@ interface DeployResult {
 }
 
 @Component({
-    components: { ConstructorForm, DeploySuccessCard, DeployStatus },
+    components: {
+        ConstructorForm,
+        DeploySuccessCard,
+        DeployStatus,
+        DeployFooter,
+    },
 })
 export default class TemplateMode extends Vue {
     @Prop({ required: true }) network!: string
     @Prop({ default: () => [] }) existingCategories!: string[]
 
     templates: DeployTemplate[] = listTemplates()
-    selectedId: string = this.templates[0]?.id || ''
+    selectedId: string = ''
     values: any[] = []
     valid = false
     deploying = false
@@ -130,13 +151,38 @@ export default class TemplateMode extends Vue {
         return !!this.template && this.valid && !this.deploying
     }
 
-    get deployButtonLabel(): string {
-        if (!this.deploying) return 'Deploy'
-        if (this.template?.upgradeable) {
+    get footerStatus(): FooterStatus {
+        if (this.result) return 'success'
+        if (this.deploying) return 'busy'
+        if (!this.template) return 'idle'
+        if (this.valid) return 'ready'
+        return 'pending'
+    }
+
+    get footerLabel(): string {
+        if (this.result) return 'Deployed'
+        if (this.deploying) {
             const active = this.stages.find((s) => s.state === 'active')
             return active ? active.label : 'Deploying…'
         }
-        return 'Deploying…'
+        if (!this.template) return 'Pick a template'
+        if (!this.valid) return 'Fill required arguments'
+        return `Ready · ${this.template.contractName}`
+    }
+
+    get footerAux(): string {
+        if (this.result) {
+            return this.result.implAddress
+                ? `proxy ${shortAddr(this.result.address)} · impl ${shortAddr(this.result.implAddress)}`
+                : shortAddr(this.result.address)
+        }
+        return ''
+    }
+
+    get primaryLabel(): string {
+        if (this.result) return 'Done'
+        if (this.deploying) return 'Deploying…'
+        return this.template?.upgradeable ? 'Deploy proxy' : 'Deploy'
     }
 
     get contractSource(): Entities.ContractSource | null {
@@ -154,6 +200,7 @@ export default class TemplateMode extends Vue {
     }
 
     onPick(id: string) {
+        if (this.deploying) return
         this.selectedId = id
         this.values = []
         this.valid = false
@@ -167,6 +214,15 @@ export default class TemplateMode extends Vue {
 
     onValid(v: boolean) {
         this.valid = v
+    }
+
+    onReset() {
+        if (this.deploying) return
+        this.result = null
+        this.stages = []
+        if (!this.template) return
+        // Reset args by re-picking the same template (clears the form).
+        this.onPick(this.selectedId)
     }
 
     async deploy() {
@@ -198,7 +254,7 @@ export default class TemplateMode extends Vue {
     private decodeValues(values: any[], inputs: ABI.InputItem[]): any[] {
         return values.map((v, i) => {
             const inp = inputs[i]
-            if (inp.type === 'tuple') return v // already an array (from ParamInput tuple)
+            if (inp.type === 'tuple') return v
             if (inp.type.endsWith(']')) return JSON.parse(v)
             return v
         })
@@ -242,7 +298,6 @@ export default class TemplateMode extends Vue {
             { label: '1/2 Deploying implementation', state: 'active' },
             { label: '2/2 Deploying proxy', state: 'pending' },
         ]
-        // Step 1: deploy the implementation (no constructor args — templates use _disableInitializers()).
         const implClause = buildRegularClause(
             t.bytecode,
             [],
@@ -259,7 +314,6 @@ export default class TemplateMode extends Vue {
         this.stages[0].state = 'done'
         this.stages[1].state = 'active'
 
-        // Step 2: encode initialize(...) and deploy the proxy.
         const initFrag = getEntryFragment(t)
         const initInputs = (initFrag?.inputs as ABI.InputItem[]) || []
         const initData = encodeFunctionCall(
@@ -279,7 +333,6 @@ export default class TemplateMode extends Vue {
             `Inspector deploy ${t.contractName} proxy`,
         )
         this.stages[1].state = 'done'
-
         this.result = {
             address: proxyOut.contractAddresses[0],
             implAddress,
@@ -292,14 +345,144 @@ export default class TemplateMode extends Vue {
         if (idx >= 0) this.stages[idx].state = 'error'
     }
 }
+
+function shortAddr(a: string): string {
+    if (!a) return ''
+    return a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a
+}
 </script>
 
 <style lang="scss" scoped>
-.template-mode {
+.mode-shell {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: 1fr auto;
+    min-height: 0;
+    background: var(--body-background-alt);
+}
+
+.mode-sidebar {
+    grid-column: 1;
+    grid-row: 1;
+    background: var(--card-background);
+    border-right: 1px solid var(--border-color);
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
 }
+.sidebar-head {
+    padding: 0.9rem 1rem 0.4rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+.sidebar-title {
+    margin: 0 0 0.15rem 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-color-light);
+}
+.sidebar-sub {
+    margin: 0;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: var(--text-color-light);
+}
+.template-list {
+    display: flex;
+    flex-direction: column;
+    padding: 0.4rem 0;
+}
+.template-row {
+    text-align: left;
+    background: transparent;
+    border: 0;
+    padding: 0.55rem 1rem;
+    cursor: pointer;
+    color: var(--text-color);
+    transition: background 0.12s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    border-left: 3px solid transparent;
+}
+.template-row:hover {
+    background: var(--body-background-alt);
+}
+.template-row.active {
+    background: var(--body-background-alt);
+    border-left-color: var(--primary-color, #485fc7);
+}
+.row-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.4rem;
+}
+.row-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-color-strong);
+    line-height: 1.25;
+}
+.row-tag {
+    font-size: 0.6rem;
+    font-weight: 700;
+    background: rgba(72, 95, 199, 0.12);
+    color: var(--primary-color, #485fc7);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+.row-desc {
+    font-size: 0.74rem;
+    color: var(--text-color-light);
+    line-height: 1.35;
+}
+
+.mode-main {
+    grid-column: 2;
+    grid-row: 1;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+.mode-footer {
+    grid-column: 1 / -1;
+    grid-row: 2;
+}
+
+.empty-state {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+}
+.empty-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-color-strong);
+    margin: 0.5rem 0 0;
+}
+.empty-desc {
+    color: var(--text-color-light);
+    max-width: 360px;
+    margin: 0;
+}
+
+.content-pad {
+    padding: 1.25rem;
+    max-width: 820px;
+    margin: 0 auto;
+}
+
 .deploy-card {
     background: var(--card-background);
     border: 1px solid var(--border-color);
@@ -307,59 +490,57 @@ export default class TemplateMode extends Vue {
     padding: 1.25rem 1.5rem;
 }
 .card-head {
-    margin-bottom: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+.card-head-text {
+    flex: 1;
+    min-width: 0;
 }
 .card-title {
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-color-strong);
-    margin: 0 0 0.25rem 0;
+    margin: 0 0 0.2rem 0;
 }
 .card-sub {
     font-size: 0.82rem;
     color: var(--text-color-light);
     margin: 0;
+    line-height: 1.45;
 }
-.template-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 0.6rem;
-}
-.template-card {
-    text-align: left;
-    background: var(--body-background-alt);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 0.7rem 0.85rem;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
-    color: var(--text-color);
-}
-.template-card:hover {
-    border-color: var(--primary-color, #485fc7);
-}
-.template-card.active {
-    border-color: var(--primary-color, #485fc7);
-    background: var(--card-background);
-    box-shadow: 0 0 0 1px var(--primary-color, #485fc7);
-}
-.tcard-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 0.4rem;
-    margin-bottom: 0.25rem;
-    color: var(--text-color-strong);
-}
-.tcard-desc {
-    font-size: 0.78rem;
+.contract-name-tag {
+    font-size: 0.72rem;
+    font-family: monospace;
+    font-weight: 600;
     color: var(--text-color-light);
-    line-height: 1.4;
-    margin: 0;
+    background: var(--body-background-alt);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    flex-shrink: 0;
 }
-.actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 0.75rem;
+
+@media (max-width: 900px) {
+    .mode-shell {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto;
+    }
+    .mode-sidebar {
+        grid-column: 1;
+        grid-row: 1;
+        max-height: 35vh;
+        border-right: 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .mode-main {
+        grid-column: 1;
+        grid-row: 2;
+    }
+    .mode-footer {
+        grid-row: 3;
+    }
 }
 </style>

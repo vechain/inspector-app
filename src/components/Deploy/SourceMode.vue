@@ -1,48 +1,90 @@
 <template>
-    <div class="source-mode">
-        <div class="layout">
-            <div class="editor-pane">
+    <div class="mode-shell">
+        <aside class="mode-sidebar">
+            <div class="sidebar-head">
+                <div class="sidebar-head-row">
+                    <h3 class="sidebar-title">Files</h3>
+                    <button
+                        type="button"
+                        class="icon-btn"
+                        title="Add file"
+                        @click="onAddFile"
+                    >
+                        <b-icon icon="plus" size="is-small" />
+                    </button>
+                </div>
+                <p class="sidebar-sub">
+                    solc {{ solcVersionShort }} · paris · optimizer 200
+                </p>
+            </div>
+
+            <nav class="file-list">
+                <button
+                    v-for="(_, name) in files"
+                    :key="name"
+                    type="button"
+                    class="file-row"
+                    :class="{ active: activeFile === name, entry: name === entryFile }"
+                    @click="activeFile = name"
+                >
+                    <span class="file-marker" :title="name === entryFile ? 'Entry file' : ''">
+                        <b-icon
+                            :icon="name === entryFile ? 'star' : 'file-document-outline'"
+                            size="is-small"
+                        />
+                    </span>
+                    <span class="file-name">{{ name }}</span>
+                    <span
+                        v-if="canRemove(name)"
+                        class="file-close"
+                        @click.stop="onCloseFile(name)"
+                        title="Remove file"
+                    >×</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-foot">
+                <button
+                    type="button"
+                    class="entry-btn"
+                    :disabled="entryFile === activeFile"
+                    @click="entryFile = activeFile"
+                    title="Mark the active file as the entry (compile target)"
+                >
+                    <b-icon icon="star-outline" size="is-small" />
+                    <span>Set as entry</span>
+                </button>
+                <div class="hint">
+                    <b-icon icon="information-outline" size="is-small" />
+                    <span>
+                        OZ &amp; VeChain packages resolve via virtual FS — see the starter file.
+                    </span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="mode-main">
+            <div class="editor-wrap">
                 <SolidityEditor
                     :files="files"
                     :active-file="activeFile"
                     @change-file="onFileChange"
-                    @switch-file="onSwitchFile"
-                    @add-file="onAddFile"
-                    @close-file="onCloseFile"
                 />
-                <div class="editor-meta">
-                    <span class="solc-version">solc {{ solcVersionShort }} · paris · optimizer 200</span>
-                    <span class="entry-hint" v-if="files[activeFile] !== undefined">
-                        entry: <code>{{ entryFile }}</code>
-                    </span>
-                </div>
             </div>
 
-            <div class="side-pane">
-                <div class="actions">
-                    <button
-                        type="button"
-                        class="button is-small"
-                        :disabled="compiling"
-                        @click="onCompile"
-                    >
-                        <b-icon
-                            v-if="compiling"
-                            icon="loading"
-                            custom-class="mdi-spin"
-                            size="is-small"
-                        />
-                        <span>{{ compiling ? 'Compiling…' : 'Compile' }}</span>
-                    </button>
-                </div>
-
+            <div class="diagnostics-pane">
                 <CompileStatus
                     :diagnostics="compileErrors"
                     :warning-list="compileWarnings"
                     :result="compileResult"
                 />
 
-                <div v-if="compileResult" class="post-compile">
+                <div v-if="compileResult" class="post-compile-card">
+                    <div class="card-head">
+                        <h3 class="card-title">{{ compileResult.contractName }}</h3>
+                        <span class="card-meta">{{ bytecodeSize }} bytes</span>
+                    </div>
+
                     <b-field
                         v-if="compiledContracts.length > 1"
                         label="Contract"
@@ -53,7 +95,7 @@
                                 :key="`${c.file}:${c.name}`"
                                 :value="`${c.file}:${c.name}`"
                             >
-                                {{ c.name }} <small>({{ c.file }})</small>
+                                {{ c.name }} ({{ c.file }})
                             </option>
                         </b-select>
                     </b-field>
@@ -76,30 +118,18 @@
                         </b-select>
                     </b-field>
 
-                    <ConstructorForm
-                        :inputs="entryInputs"
-                        @input="onValues"
-                        @valid="onValid"
-                    />
-
-                    <DeployStatus :stages="stages" />
-
-                    <div class="actions deploy-actions">
-                        <button
-                            type="button"
-                            class="button is-primary is-small"
-                            :disabled="!canDeploy"
-                            @click="deploy"
-                        >
-                            <b-icon
-                                v-if="deploying"
-                                icon="loading"
-                                custom-class="mdi-spin"
-                                size="is-small"
-                            />
-                            <span>{{ deployButtonLabel }}</span>
-                        </button>
+                    <div class="args-section">
+                        <span class="args-label">
+                            {{ useProxy ? 'Initializer arguments' : 'Constructor arguments' }}
+                        </span>
+                        <ConstructorForm
+                            :inputs="entryInputs"
+                            @input="onValues"
+                            @valid="onValid"
+                        />
                     </div>
+
+                    <DeployStatus v-if="stages.length" :stages="stages" />
                 </div>
 
                 <DeploySuccessCard
@@ -115,7 +145,27 @@
                     @dismiss="result = null"
                 />
             </div>
-        </div>
+        </main>
+
+        <DeployFooter
+            class="mode-footer"
+            :status="footerStatus"
+            :status-label="footerLabel"
+            :status-aux="footerAux"
+            :primary-label="primaryLabel"
+            :primary-icon="primaryIcon"
+            :primary-disabled="!canPrimary"
+            :primary-loading="primaryLoading"
+            :show-secondary="!!compileResult && !result"
+            :secondary-label="'Recompile'"
+            :secondary-disabled="compiling || deploying"
+            @primary="onPrimary"
+            @secondary="onCompile"
+            :show-cancel="true"
+            :cancel-label="result ? 'Reset' : 'Clear'"
+            :cancel-disabled="compiling || deploying"
+            @cancel="onReset"
+        />
     </div>
 </template>
 
@@ -126,6 +176,7 @@ import CompileStatus from './CompileStatus.vue'
 import ConstructorForm from './ConstructorForm.vue'
 import DeployStatus from './DeployStatus.vue'
 import DeploySuccessCard from './DeploySuccessCard.vue'
+import DeployFooter, { FooterStatus } from './DeployFooter.vue'
 import {
     compile,
     listCompiledContracts,
@@ -150,7 +201,7 @@ const DEFAULT_FILE = 'Contract.sol'
 const STARTER_SOURCE = `// SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-// OpenZeppelin (full sources) — both contracts and contracts-upgradeable @5.0.2
+// OpenZeppelin (full sources, @5.0.2)
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 // VeChain interface stubs (synthesized from artifacts):
@@ -184,6 +235,7 @@ interface DeployResult {
         ConstructorForm,
         DeployStatus,
         DeploySuccessCard,
+        DeployFooter,
     },
 })
 export default class SourceMode extends Vue {
@@ -192,7 +244,6 @@ export default class SourceMode extends Vue {
 
     files: Record<string, string> = { [DEFAULT_FILE]: STARTER_SOURCE }
     activeFile: string = DEFAULT_FILE
-    /** Entry file = the file that the user wants to deploy a contract from. */
     entryFile: string = DEFAULT_FILE
 
     compiling = false
@@ -218,7 +269,6 @@ export default class SourceMode extends Vue {
         if (!this.selectedContractKey) return
         const [file, name] = this.selectedContractKey.split(':')
         this.entryFile = file
-        // Re-emit compile result for the chosen contract so ABI / bytecode match.
         await this.recompileFor(name)
     }
 
@@ -247,14 +297,70 @@ export default class SourceMode extends Vue {
         return (ctor?.inputs as ABI.InputItem[]) || []
     }
 
-    get canDeploy(): boolean {
-        return !!this.compileResult && this.valid && !this.deploying
+    get canPrimary(): boolean {
+        if (this.deploying || this.compiling) return false
+        if (this.result) return false
+        if (!this.compileResult) return true // primary = Compile
+        return this.valid // primary = Deploy
     }
 
-    get deployButtonLabel(): string {
-        if (!this.deploying) return 'Deploy'
-        const active = this.stages.find((s) => s.state === 'active')
-        return active ? active.label : 'Deploying…'
+    get primaryLoading(): boolean {
+        return this.compiling || this.deploying
+    }
+
+    get primaryLabel(): string {
+        if (this.deploying) return 'Deploying…'
+        if (this.compiling) return 'Compiling…'
+        if (this.result) return 'Done'
+        if (!this.compileResult) return 'Compile'
+        return this.useProxy ? 'Deploy proxy' : 'Deploy'
+    }
+
+    get primaryIcon(): string {
+        if (!this.compileResult) return 'cog-outline'
+        if (this.result) return 'check'
+        return 'rocket-launch-outline'
+    }
+
+    get footerStatus(): FooterStatus {
+        if (this.result) return 'success'
+        if (this.deploying || this.compiling) return 'busy'
+        if (this.compileErrors.length) return 'error'
+        if (this.compileResult) return this.valid ? 'ready' : 'pending'
+        return 'idle'
+    }
+
+    get footerLabel(): string {
+        if (this.result) return 'Deployed'
+        if (this.deploying) {
+            const active = this.stages.find((s) => s.state === 'active')
+            return active ? active.label : 'Deploying…'
+        }
+        if (this.compiling) return 'Compiling…'
+        if (this.compileErrors.length) {
+            return `${this.compileErrors.length} compile error${this.compileErrors.length > 1 ? 's' : ''}`
+        }
+        if (!this.compileResult) return 'Ready to compile'
+        if (!this.valid) return `Fill ${this.useProxy ? 'initializer' : 'constructor'} arguments`
+        return `Ready · ${this.compileResult.contractName}`
+    }
+
+    get footerAux(): string {
+        if (this.result) {
+            return this.result.implAddress
+                ? `proxy ${shortAddr(this.result.address)} · impl ${shortAddr(this.result.implAddress)}`
+                : shortAddr(this.result.address)
+        }
+        if (this.compileResult) return `${this.bytecodeSize} bytes`
+        return ''
+    }
+
+    get bytecodeSize(): number {
+        if (!this.compileResult) return 0
+        const hex = this.compileResult.bytecode.startsWith('0x')
+            ? this.compileResult.bytecode.slice(2)
+            : this.compileResult.bytecode
+        return hex.length / 2
     }
 
     get contractSource(): Entities.ContractSource | null {
@@ -271,27 +377,54 @@ export default class SourceMode extends Vue {
         }
     }
 
+    canRemove(name: string): boolean {
+        return Object.keys(this.files).length > 1
+    }
+
     onFileChange(name: string, text: string) {
         this.$set(this.files, name, text)
     }
 
-    onSwitchFile(name: string) {
-        this.activeFile = name
-    }
-
-    onAddFile(name: string) {
-        this.$set(this.files, name, '')
-        this.activeFile = name
+    onAddFile() {
+        let i = Object.keys(this.files).length + 1
+        let name = `File${i}.sol`
+        while (this.files[name] !== undefined) {
+            i++
+            name = `File${i}.sol`
+        }
+        const input = window.prompt('New file name (must end with .sol)', name)
+        if (!input) return
+        if (!input.endsWith('.sol')) {
+            ;(this as any).$buefy.toast.open({
+                message: 'File name must end with .sol',
+                type: 'is-warning',
+                position: 'is-top',
+                duration: 2500,
+            })
+            return
+        }
+        if (this.files[input] !== undefined) {
+            ;(this as any).$buefy.toast.open({
+                message: 'A file with that name already exists',
+                type: 'is-warning',
+                position: 'is-top',
+                duration: 2500,
+            })
+            return
+        }
+        this.$set(this.files, input, '')
+        this.activeFile = input
     }
 
     onCloseFile(name: string) {
         if (Object.keys(this.files).length <= 1) return
         this.$delete(this.files, name)
+        const remaining = Object.keys(this.files)
         if (this.activeFile === name) {
-            this.activeFile = Object.keys(this.files)[0]
+            this.activeFile = remaining[0]
         }
         if (this.entryFile === name) {
-            this.entryFile = Object.keys(this.files)[0]
+            this.entryFile = remaining[0]
         }
     }
 
@@ -307,6 +440,28 @@ export default class SourceMode extends Vue {
         return (inputs || []).map((i) => `${i.type}${i.name ? ' ' + i.name : ''}`).join(', ')
     }
 
+    onPrimary() {
+        if (!this.compileResult) {
+            this.onCompile()
+        } else {
+            this.deploy()
+        }
+    }
+
+    onReset() {
+        if (this.compiling || this.deploying) return
+        this.compileResult = null
+        this.compileErrors = []
+        this.compileWarnings = []
+        this.compiledContracts = []
+        this.selectedContractKey = ''
+        this.useProxy = false
+        this.values = []
+        this.valid = false
+        this.result = null
+        this.stages = []
+    }
+
     async onCompile() {
         this.compiling = true
         this.compileErrors = []
@@ -315,7 +470,10 @@ export default class SourceMode extends Vue {
         this.compiledContracts = []
         this.result = null
         this.stages = []
-        this.entryFile = this.activeFile
+        // Refresh the entry file in case the user edited it but didn't pin it as entry.
+        if (!this.files[this.entryFile]) {
+            this.entryFile = this.activeFile
+        }
 
         try {
             this.compiledContracts = await listCompiledContracts({
@@ -340,7 +498,6 @@ export default class SourceMode extends Vue {
             })
             this.compileResult = res
             this.compileWarnings = res.warnings
-            // Default the initialize fn to the first matching candidate, if any.
             const init = this.initializerCandidates[0]
             if (init) this.initFnName = init.name
         } catch (err: any) {
@@ -478,9 +635,7 @@ export default class SourceMode extends Vue {
         const initFn = res.abi.find(
             (i: any) => i.type === 'function' && i.name === this.initFnName,
         )
-        if (!initFn) {
-            throw new Error(`Initializer ${this.initFnName} not found in ABI`)
-        }
+        if (!initFn) throw new Error(`Initializer ${this.initFnName} not found in ABI`)
         const initInputs = (initFn.inputs as ABI.InputItem[]) || []
         const initData = encodeFunctionCall(
             this.initFnName,
@@ -527,53 +682,239 @@ export default class SourceMode extends Vue {
         })
     }
 }
+
+function shortAddr(a: string): string {
+    if (!a) return ''
+    return a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a
+}
 </script>
 
 <style lang="scss" scoped>
-.source-mode {
+.mode-shell {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 1fr auto;
+    min-height: 0;
+    background: var(--body-background-alt);
+}
+
+.mode-sidebar {
+    grid-column: 1;
+    grid-row: 1;
+    background: var(--card-background);
+    border-right: 1px solid var(--border-color);
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
+    min-height: 0;
+}
+.sidebar-head {
+    padding: 0.9rem 1rem 0.5rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+.sidebar-head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.2rem;
+}
+.sidebar-title {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-color-light);
+}
+.icon-btn {
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    padding: 0.15rem;
+    color: var(--text-color-light);
+    display: inline-flex;
+    align-items: center;
+}
+.icon-btn:hover {
+    color: var(--primary-color, #485fc7);
+}
+.sidebar-sub {
+    margin: 0;
+    font-size: 0.7rem;
+    font-family: monospace;
+    color: var(--text-color-light);
+}
+.file-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0.4rem 0;
+    overflow-y: auto;
+}
+.file-row {
+    text-align: left;
+    background: transparent;
+    border: 0;
+    padding: 0.4rem 0.8rem 0.4rem 0.7rem;
+    cursor: pointer;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-left: 3px solid transparent;
+    font-size: 0.82rem;
+    transition: background 0.12s;
+}
+.file-row:hover {
+    background: var(--body-background-alt);
+}
+.file-row.active {
+    background: var(--body-background-alt);
+    border-left-color: var(--primary-color, #485fc7);
+}
+.file-row.entry .file-marker {
+    color: #d4a017;
+}
+.file-marker {
+    color: var(--text-color-light);
+    display: inline-flex;
+    flex-shrink: 0;
+}
+.file-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: monospace;
+}
+.file-close {
+    color: var(--text-color-light);
+    opacity: 0.5;
+    padding: 0 0.2rem;
+    font-size: 1rem;
+    line-height: 1;
+}
+.file-close:hover {
+    opacity: 1;
+    color: #ff3860;
+}
+.sidebar-foot {
+    border-top: 1px solid var(--border-color);
+    padding: 0.6rem 0.8rem;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.entry-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.78rem;
+    color: var(--text-color);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    justify-content: center;
+}
+.entry-btn:not(:disabled):hover {
+    border-color: var(--primary-color, #485fc7);
+    color: var(--primary-color, #485fc7);
+}
+.entry-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.hint {
+    display: flex;
+    gap: 0.35rem;
+    font-size: 0.7rem;
+    color: var(--text-color-light);
+    line-height: 1.4;
+}
+
+.mode-main {
+    grid-column: 2;
+    grid-row: 1;
+    overflow-y: auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
     gap: 1rem;
 }
-.layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-    gap: 1rem;
-    align-items: start;
+.editor-wrap {
+    flex-shrink: 0;
+    height: 420px;
 }
-@media (max-width: 900px) {
-    .layout {
-        grid-template-columns: 1fr;
-    }
+.diagnostics-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
-.editor-pane,
-.side-pane {
+.post-compile-card {
     background: var(--card-background);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 1rem 1.1rem;
+    padding: 1rem 1.2rem;
 }
-.editor-meta {
+.card-head {
     display: flex;
     justify-content: space-between;
-    font-size: 0.7rem;
-    color: var(--text-color-light);
-    margin-top: 0.45rem;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.7rem;
 }
-.solc-version {
+.card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-color-strong);
+    margin: 0;
+}
+.card-meta {
+    font-size: 0.72rem;
     font-family: monospace;
+    color: var(--text-color-light);
 }
-.actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 0.6rem;
+.args-section {
+    margin-top: 0.5rem;
 }
-.deploy-actions {
-    margin-top: 0.75rem;
+.args-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-color-strong);
+    margin-bottom: 0.4rem;
 }
-.post-compile {
-    margin-top: 0.85rem;
-    padding-top: 0.85rem;
-    border-top: 1px dashed var(--border-color);
+
+.mode-footer {
+    grid-column: 1 / -1;
+    grid-row: 2;
+}
+
+@media (max-width: 900px) {
+    .mode-shell {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto;
+    }
+    .mode-sidebar {
+        grid-column: 1;
+        grid-row: 1;
+        max-height: 35vh;
+        border-right: 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .mode-main {
+        grid-column: 1;
+        grid-row: 2;
+    }
+    .mode-footer {
+        grid-row: 3;
+    }
 }
 </style>
