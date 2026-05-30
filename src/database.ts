@@ -3,6 +3,17 @@ import "dexie-observable";
 import { IDatabaseChange } from "dexie-observable/api";
 
 export namespace Entities {
+  export interface ContractSource {
+    files: Record<string, string>;
+    entry: string; // path of the file containing the deployed contract
+    contractName: string;
+    compiler: {
+      version: string; // e.g. "0.8.20+commit.a1b79de6"
+      evmVersion: string; // e.g. "paris"
+      optimizer: { enabled: boolean; runs: number };
+    };
+  }
+
   export interface Contract {
     id?: number;
     name?: string;
@@ -12,6 +23,7 @@ export namespace Entities {
     network?: string;
     category?: string;
     order?: number;
+    source?: ContractSource;
   }
 
   export interface Filter extends Contract {

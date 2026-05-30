@@ -2,6 +2,9 @@ declare namespace ABI {
   interface InputItem {
     name: string
     type: string
+    /** Populated for `tuple` / `tuple[]` types — describes the struct fields. */
+    components?: InputItem[]
+    internalType?: string
   }
   interface EventInputItem {
     name: string

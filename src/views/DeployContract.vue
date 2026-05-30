@@ -1,88 +1,204 @@
 <template>
-    <div class="section" style="max-width: 1000px; margin: auto">
-        <div class="container">
-            <form @submit.prevent="sendCode">
-                <b-field
-                    :type="{'is-danger': errors.has('code')}"
-                    :message="errors.first('code')"
-                    label="Byte Code"
+    <section class="deploy-layout">
+        <div class="deploy-header">
+            <div class="mode-tabs">
+                <button
+                    v-for="m in modes"
+                    :key="m.id"
+                    type="button"
+                    class="mode-tab"
+                    :class="{ active: mode === m.id }"
+                    @click="mode = m.id"
                 >
-                    <b-input
-                        name="code"
-                        rows="10"
-                        v-validate="{required: true, bytecode: true}"
-                        v-model.trim="code"
-                        type="textarea"
-                    />
-                </b-field>
-                <b-field
-                    :type="{'is-danger': errors.has('vet')}"
-                    :message="errors.first('vet')"
-                    label="Vet"
-                >
-                    <b-input v-model.trim="vet" v-validate="'vet'" placeholder="number (optional)" name="vet" type="text"/>
-                </b-field>
-                <b-field label="Valid Hex value (wei)">
-                    <span class="is-family-monospace has-text-weight-semibold">{{haxValue}}</span>
-                </b-field>
-                <b-field label="Valid Integer value (wei)">
-                    <span class="is-family-monospace has-text-weight-semibold">{{numberValue}}</span>
-                </b-field>
-                <b-field class="is-clearfix">
-                    <button type="submit" class="is-pulled-right button is-primary">Send</button>
-                </b-field>
-            </form>
+                    <b-icon :icon="m.icon" size="is-small" />
+                    <span>{{ m.label }}</span>
+                </button>
+            </div>
+            <div class="header-meta">
+                <span class="meta-pill">
+                    <span class="meta-dot"></span>
+                    {{ modeBlurb }}
+                </span>
+            </div>
         </div>
-    </div>
+
+        <div class="deploy-main">
+            <div class="deploy-content">
+                <TemplateMode
+                    v-if="mode === 'template'"
+                    :network="network"
+                    :existing-categories="existingCategories"
+                />
+                <SourceMode
+                    v-else-if="mode === 'source'"
+                    :network="network"
+                    :existing-categories="existingCategories"
+                />
+                <BytecodeMode
+                    v-else
+                    :network="network"
+                    :existing-categories="existingCategories"
+                />
+            </div>
+        </div>
+    </section>
 </template>
+
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
+import BytecodeMode from '@/components/Deploy/BytecodeMode.vue'
+import TemplateMode from '@/components/Deploy/TemplateMode.vue'
+import DB from '@/database'
 
-@Component
+const SourceMode = () =>
+    import(/* webpackChunkName: "deploy-source-mode" */ '@/components/Deploy/SourceMode.vue')
+
+type DeployMode = 'template' | 'source' | 'bytecode'
+
+@Component({ components: { BytecodeMode, TemplateMode, SourceMode } })
 export default class DeployContract extends Vue {
-    code: string = ''
-    vet: number | null = null
-    get haxValue() {
-        const vet = BN(this.vet)
-        if (!vet.isNaN() && !vet.isNegative()) {
-            return '0x' + BN(vet.multipliedBy(1e18).toFixed(0)).toString(16)
-        } else {
-            return '0x0'
-        }
-    }
-    get numberValue() {
-        const vet = BN(this.vet)
-        if (!vet.isNaN() && !vet.isNegative()) {
-            return vet.multipliedBy(1e18).toFixed(0)
-        } else {
-            return '0'
-        }
-    }
-    async checkForm() {
-        const result = await this.$validator.validateAll()
-        return result
-    }
-    async sendCode() {
-        if (await this.checkForm()) {
-            try {
-                const resp = await this.$connex.vendor
-                    .sign('tx', [{ value: this.haxValue || 0, data: this.code, to: null }])
-                    .comment('Inspector deploy contract')
-                    .request()
-                window.open(`${this.$explorerTx}${resp.txid}`)
-            } catch (error: any) {
-                this.$buefy.toast.open({
-                    type: 'is-danger',
-                    message: `${error.name}: ${error.message}`,
-                    position: 'is-top',
-                    duration: 3000
-                })
-            }
-        }
+    mode: DeployMode = 'template'
+    existingCategories: string[] = []
+
+    readonly modes: { id: DeployMode; label: string; icon: string; blurb: string }[] = [
+        {
+            id: 'template',
+            label: 'Template',
+            icon: 'view-list-outline',
+            blurb: 'Pick a pre-built contract and fill its arguments',
+        },
+        {
+            id: 'source',
+            label: 'Source',
+            icon: 'code-tags',
+            blurb: 'Paste Solidity, compile, deploy',
+        },
+        {
+            id: 'bytecode',
+            label: 'Bytecode',
+            icon: 'cube-outline',
+            blurb: 'Deploy raw creation bytecode',
+        },
+    ]
+
+    get network(): string {
+        return (this as any).$connex.thor.genesis.id
     }
 
-    private created() {
-        this.$ga.page('/inspector/deploy')
+    get modeBlurb(): string {
+        return this.modes.find((m) => m.id === this.mode)?.blurb || ''
+    }
+
+    private async created() {
+        ;(this as any).$ga.page('/inspector/deploy')
+        await this.loadCategories()
+    }
+
+    private async loadCategories() {
+        try {
+            const all = await DB.contracts.toArray()
+            const set = new Set<string>()
+            for (const c of all) {
+                if (c.category && c.category.trim() !== '') set.add(c.category)
+            }
+            this.existingCategories = Array.from(set).sort()
+        } catch {
+            this.existingCategories = []
+        }
     }
 }
 </script>
+
+<style lang="scss" scoped>
+.deploy-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--body-background-alt);
+}
+
+.deploy-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 1.25rem;
+    background: var(--card-background);
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+.mode-tabs {
+    display: inline-flex;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--body-background-alt);
+}
+
+.mode-tab {
+    border: 0;
+    background: transparent;
+    padding: 0.4rem 0.9rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--text-color);
+    transition: background 0.15s, color 0.15s;
+}
+.mode-tab + .mode-tab {
+    border-left: 1px solid var(--border-color);
+}
+.mode-tab.active {
+    background: var(--primary-color, #485fc7);
+    color: white;
+}
+.mode-tab:hover:not(.active) {
+    background: var(--hover-bg, rgba(0, 0, 0, 0.04));
+}
+
+.header-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 14px;
+    font-size: 0.78rem;
+    color: var(--text-color-light);
+    background: var(--body-background-alt);
+}
+.meta-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary-color, #485fc7);
+}
+
+.deploy-main {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--body-background-alt);
+}
+
+.deploy-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.25rem;
+}
+
+@media (max-width: 768px) {
+    .deploy-header {
+        padding: 0.5rem 0.75rem;
+    }
+    .deploy-content {
+        padding: 0.75rem;
+    }
+}
+</style>
