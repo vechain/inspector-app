@@ -44,15 +44,44 @@ export default class ConstructorForm extends Vue {
     private values: any[] = []
 
     created() {
-        this.values = this.value.length
-            ? [...this.value]
-            : this.makeInitialValues(this.inputs)
+        this.values = this.seedValues()
     }
 
     @Watch('inputs')
     onInputsChanged() {
-        this.values = this.makeInitialValues(this.inputs)
+        this.values = this.seedValues()
         this.emitChange()
+    }
+
+    @Watch('value')
+    onValueChanged() {
+        // Parent supplied a new initial value tree (e.g. network changed →
+        // different per-network defaults). Reseed and re-emit.
+        this.values = this.seedValues()
+        this.emitChange()
+    }
+
+    private seedValues(): any[] {
+        if (Array.isArray(this.value) && this.value.length) {
+            return this.mergeWithDefaults(this.value, this.inputs)
+        }
+        return this.makeInitialValues(this.inputs)
+    }
+
+    /**
+     * Deep-merge the parent-supplied initial tree with the empty-shape tree —
+     * the parent may pass `''` (or omit entries) for fields the user must fill,
+     * while still providing concrete values for the pre-filled positions.
+     */
+    private mergeWithDefaults(supplied: any[], inputs: ABI.InputItem[]): any[] {
+        return inputs.map((inp, i) => {
+            const v = supplied[i]
+            if (inp.type === 'tuple' && inp.components) {
+                const inner = Array.isArray(v) ? v : []
+                return this.mergeWithDefaults(inner, inp.components as ABI.InputItem[])
+            }
+            return v !== undefined && v !== null ? v : ''
+        })
     }
 
     private makeInitialValues(inputs: ABI.InputItem[]): any[] {

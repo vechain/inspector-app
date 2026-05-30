@@ -88,6 +88,50 @@ export interface TemplateFamily {
   features: string[]
   /** All variants this family exposes; first entry is the default. */
   variants: TemplateVariant[]
+  /**
+   * Optional per-network pre-fill for the entry function's argument tree.
+   * Returns the value tree solc/ParamInput expects (positional array
+   * mirroring the constructor / initializer inputs). Returns null when the
+   * family has no known defaults for that network — the user fills everything.
+   */
+  defaults?: (genesisId: string, variantId: VariantId) => any[] | null
+  /**
+   * Networks for which `defaults` is expected to pre-fill something — used
+   * by the UI to render an informative banner ("Pre-filled for mainnet…").
+   */
+  defaultsNetworks?: string[]
+}
+
+/**
+ * Genesis IDs we recognise by name.
+ */
+export const GENESIS = {
+  MAIN: '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a',
+  TEST: '0x000000000b2bce3c70bc649a02749e8687721b09ed2e15997f466536b20bb127',
+} as const
+
+/**
+ * Canonical VeBetterDAO contract addresses on the public networks.
+ * Source: src/contracts/config.ts (ContractConfig).
+ */
+const VEBETTERDAO_ADDRESSES: Record<string, {
+  XAllocationVoting: string
+  X2EarnRewardsPool: string
+  X2EarnApps: string
+  XAllocationPool: string
+}> = {
+  [GENESIS.MAIN]: {
+    XAllocationVoting: '0x89A00Bb0947a30FF95BEeF77a66AEdE3842Fe5B7',
+    X2EarnRewardsPool: '0x6Bee7DDab6c99d5B2Af0554EaEA484CE18F52631',
+    X2EarnApps: '0x8392B7CCc763dB03b47afcD8E8f5e24F9cf0554D',
+    XAllocationPool: '0x4191776F05f4bE4848d3f4d587345078B439C7d3',
+  },
+  [GENESIS.TEST]: {
+    XAllocationVoting: '0x8800592c463f0b21ae08732559ee8e146db1d7b2',
+    X2EarnRewardsPool: '0x2d2a2207c68a46fc79325d7718e639d1047b0d8b',
+    X2EarnApps: '0x0b54a094b877a25bdc95b4431eaa1e2206b1ddfe',
+    XAllocationPool: '0x6f7b4bc19b4dc99005b473b9c45ce2815bbe7533',
+  },
 }
 
 export const TEMPLATE_FAMILIES: TemplateFamily[] = [
@@ -169,6 +213,29 @@ export const TEMPLATE_FAMILIES: TemplateFamily[] = [
         templateId: 'endorsers-reward-distributor',
       },
     ],
+    defaults: (genesisId) => {
+      const addrs = VEBETTERDAO_ADDRESSES[genesisId]
+      // initialize(InitParams memory _params) — one positional arg whose value
+      // is the 10-field InitParams tuple. Order MUST match the struct:
+      //   upgrader, admin, vetDomainOwner, appId,
+      //   allocationVotingGovernor, rewardsPool, x2earnApps, allocationPool,
+      //   startRound, rewardsPercentage
+      return [
+        [
+          '',                                         // upgrader
+          '',                                         // admin
+          '',                                         // vetDomainOwner
+          '',                                         // appId
+          addrs ? addrs.XAllocationVoting : '',       // allocationVotingGovernor
+          addrs ? addrs.X2EarnRewardsPool : '',       // rewardsPool
+          addrs ? addrs.X2EarnApps : '',              // x2earnApps
+          addrs ? addrs.XAllocationPool : '',         // allocationPool
+          '',                                         // startRound
+          '',                                         // rewardsPercentage
+        ],
+      ]
+    },
+    defaultsNetworks: [GENESIS.MAIN, GENESIS.TEST],
   },
 ]
 

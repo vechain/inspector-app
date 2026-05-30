@@ -96,8 +96,14 @@
                                 Encoded and appended to the creation bytecode.
                             </span>
                         </span>
+                        <div v-if="defaultsBanner" class="defaults-banner">
+                            <b-icon icon="info-circle" size="is-small" />
+                            <span>{{ defaultsBanner }}</span>
+                        </div>
                         <ConstructorForm
+                            :key="`${selectedFamilyId}:${variantId}:${network}`"
                             :inputs="entryInputs"
+                            :value="initialValues"
                             @input="onValues"
                             @valid="onValid"
                         />
@@ -155,6 +161,7 @@ import {
     TemplateFamily,
     VariantId,
     COMPILER_VERSION,
+    GENESIS,
 } from '@/contracts/templates'
 import { Entities } from '@/database'
 import {
@@ -248,6 +255,41 @@ export default class TemplateMode extends Vue {
         if (this.result) return 'Done'
         if (this.deploying) return 'Deploying…'
         return this.template?.upgradeable ? 'Deploy proxy' : 'Deploy'
+    }
+
+    /**
+     * Per-network pre-fill for the entry function's arguments. The
+     * ConstructorForm merges these with the empty-shape tree so the user
+     * can edit any pre-filled field as well as fill the gaps.
+     */
+    get initialValues(): any[] {
+        if (!this.family || !this.family.defaults || !this.variantId) return []
+        const out = this.family.defaults(this.network, this.variantId)
+        return out || []
+    }
+
+    /**
+     * If the family declares per-network defaults, surface a small banner
+     * explaining where the pre-fills came from and which fields the user
+     * still has to provide (or what to do on unsupported networks).
+     */
+    get defaultsBanner(): string {
+        if (!this.family || !this.family.defaults) return ''
+        const supported = this.family.defaultsNetworks || []
+        const hasPrefill = supported.indexOf(this.network) !== -1
+        const netLabel =
+            this.network === GENESIS.MAIN
+                ? 'mainnet'
+                : this.network === GENESIS.TEST
+                ? 'testnet'
+                : 'this network'
+        if (this.family.id === 'endorsers-reward-distributor') {
+            if (hasPrefill) {
+                return `Pre-filled VeBetterDAO contract addresses (XAllocationVoting, X2EarnRewardsPool, X2EarnApps, XAllocationPool) for ${netLabel}. Fill the remaining fields (upgrader, admin, vetDomainOwner, appId, startRound, rewardsPercentage).`
+            }
+            return `No known VeBetterDAO deployment on ${netLabel} — you'll need to supply every address yourself.`
+        }
+        return ''
     }
 
     get contractSource(): Entities.ContractSource | null {
@@ -713,6 +755,28 @@ function shortAddr(a: string): string {
 
 .args-row {
     padding-top: 1rem;
+}
+
+.defaults-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    padding: 0.55rem 0.75rem;
+    background: rgba(72, 95, 199, 0.08);
+    border: 1px solid rgba(72, 95, 199, 0.25);
+    color: var(--text-color);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin-bottom: 0.6rem;
+}
+.defaults-banner ::v-deep .icon {
+    color: var(--primary-color, #485fc7);
+    flex-shrink: 0;
+}
+[data-theme='dark'] .defaults-banner {
+    background: rgba(120, 140, 240, 0.12);
+    border-color: rgba(120, 140, 240, 0.3);
 }
 
 @media (max-width: 900px) {
