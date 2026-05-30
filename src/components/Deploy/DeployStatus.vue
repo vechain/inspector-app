@@ -10,11 +10,11 @@
                 <b-icon v-if="s.state === 'done'" icon="check" size="is-small" />
                 <b-icon
                     v-else-if="s.state === 'active'"
-                    icon="loading"
-                    custom-class="mdi-spin"
+                    icon="circle-notch"
+                    custom-class="fa-spin"
                     size="is-small"
                 />
-                <b-icon v-else-if="s.state === 'error'" icon="close" size="is-small" />
+                <b-icon v-else-if="s.state === 'error'" icon="times" size="is-small" />
                 <span v-else class="dot-pending">{{ i + 1 }}</span>
             </span>
             <span class="label">{{ s.label }}</span>

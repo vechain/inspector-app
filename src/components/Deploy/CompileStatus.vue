@@ -2,14 +2,14 @@
     <div class="compile-status" v-if="diagnostics.length || warningList.length || result">
         <div v-if="diagnostics.length" class="block errors">
             <div class="block-head">
-                <b-icon icon="alert-circle" type="is-danger" size="is-small" />
+                <b-icon icon="exclamation-circle" type="is-danger" size="is-small" />
                 <strong>{{ diagnostics.length }} error{{ diagnostics.length > 1 ? 's' : '' }}</strong>
             </div>
             <pre class="block-body">{{ diagnostics.map(e => e.formattedMessage || e.message).join('\n\n') }}</pre>
         </div>
         <div v-if="warningList.length" class="block warnings">
             <div class="block-head">
-                <b-icon icon="alert" type="is-warning" size="is-small" />
+                <b-icon icon="exclamation-triangle" type="is-warning" size="is-small" />
                 <strong>{{ warningList.length }} warning{{ warningList.length > 1 ? 's' : '' }}</strong>
             </div>
             <pre class="block-body">{{ warningList.map(w => w.formattedMessage || w.message).join('\n\n') }}</pre>

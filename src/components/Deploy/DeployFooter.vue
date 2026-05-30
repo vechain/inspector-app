@@ -26,8 +26,8 @@
             >
                 <b-icon
                     v-if="secondaryLoading"
-                    icon="loading"
-                    custom-class="mdi-spin"
+                    icon="circle-notch"
+                    custom-class="fa-spin"
                     size="is-small"
                 />
                 <span>{{ secondaryLabel }}</span>
@@ -63,7 +63,7 @@ export default class DeployFooter extends Vue {
     @Prop({ default: '' }) statusAux!: string
 
     @Prop({ default: 'Deploy' }) primaryLabel!: string
-    @Prop({ default: 'rocket-launch-outline' }) primaryIcon!: string
+    @Prop({ default: 'rocket' }) primaryIcon!: string
     @Prop({ default: false }) primaryDisabled!: boolean
     @Prop({ default: false }) primaryLoading!: boolean
     @Prop({ default: true }) showPrimary!: boolean

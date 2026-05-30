@@ -11,7 +11,7 @@
             <span class="row-label">Address</span>
             <code class="addr">{{ address }}</code>
             <button class="copy-btn" @click="copy(address)" title="Copy">
-                <b-icon icon="content-copy" size="is-small" />
+                <b-icon icon="copy" size="is-small" />
             </button>
         </div>
 
@@ -19,7 +19,7 @@
             <span class="row-label">Implementation</span>
             <code class="addr">{{ implAddress }}</code>
             <button class="copy-btn" @click="copy(implAddress)" title="Copy">
-                <b-icon icon="content-copy" size="is-small" />
+                <b-icon icon="copy" size="is-small" />
             </button>
         </div>
 
@@ -27,7 +27,7 @@
             <span class="row-label">Tx</span>
             <a :href="txExplorerUrl" target="_blank" rel="noopener" class="tx-link">
                 <code>{{ txid }}</code>
-                <b-icon icon="open-in-new" size="is-small" />
+                <b-icon icon="external-link-alt" size="is-small" />
             </a>
         </div>
 

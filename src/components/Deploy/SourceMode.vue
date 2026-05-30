@@ -29,7 +29,7 @@
                 >
                     <span class="file-marker" :title="name === entryFile ? 'Entry file' : ''">
                         <b-icon
-                            :icon="name === entryFile ? 'star' : 'file-document-outline'"
+                            :icon="name === entryFile ? 'star' : 'file-alt'"
                             size="is-small"
                         />
                     </span>
@@ -51,11 +51,11 @@
                     @click="entryFile = activeFile"
                     title="Mark the active file as the entry (compile target)"
                 >
-                    <b-icon icon="star-outline" size="is-small" />
+                    <b-icon icon="star" size="is-small" />
                     <span>Set as entry</span>
                 </button>
                 <div class="hint">
-                    <b-icon icon="information-outline" size="is-small" />
+                    <b-icon icon="info-circle" size="is-small" />
                     <span>
                         OZ &amp; VeChain packages resolve via virtual FS — see the starter file.
                     </span>
@@ -317,9 +317,9 @@ export default class SourceMode extends Vue {
     }
 
     get primaryIcon(): string {
-        if (!this.compileResult) return 'cog-outline'
+        if (!this.compileResult) return 'cog'
         if (this.result) return 'check'
-        return 'rocket-launch-outline'
+        return 'rocket'
     }
 
     get footerStatus(): FooterStatus {

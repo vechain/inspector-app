@@ -64,7 +64,7 @@
             :status-label="footerLabel"
             :status-aux="footerAux"
             primary-label="Deploy"
-            primary-icon="rocket-launch-outline"
+            primary-icon="rocket"
             :primary-disabled="!canDeploy || !!result"
             :primary-loading="deploying"
             :show-cancel="!!code || !!result"

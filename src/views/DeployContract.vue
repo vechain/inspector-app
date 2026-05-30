@@ -60,19 +60,19 @@ export default class DeployContract extends Vue {
         {
             id: 'template',
             label: 'Template',
-            icon: 'view-list-outline',
+            icon: 'th-large',
             blurb: 'Pick a pre-built contract and fill its arguments',
         },
         {
             id: 'source',
             label: 'Source',
-            icon: 'code-tags',
+            icon: 'code',
             blurb: 'Paste Solidity, compile, deploy',
         },
         {
             id: 'bytecode',
             label: 'Bytecode',
-            icon: 'cube-outline',
+            icon: 'cube',
             blurb: 'Deploy raw creation bytecode',
         },
     ]
@@ -132,33 +132,54 @@ export default class DeployContract extends Vue {
 
 .mode-tabs {
     display: inline-flex;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    overflow: hidden;
+    padding: 3px;
+    border-radius: 9px;
     background: var(--body-background-alt);
+    border: 1px solid var(--border-color);
+    gap: 2px;
 }
 
 .mode-tab {
     border: 0;
     background: transparent;
-    padding: 0.4rem 0.9rem;
+    padding: 0.35rem 0.9rem;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 0.85rem;
-    color: var(--text-color);
-    transition: background 0.15s, color 0.15s;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-color-light);
+    border-radius: 6px;
+    transition: background 0.18s ease, color 0.18s ease,
+        box-shadow 0.18s ease, transform 0.05s ease;
+    position: relative;
 }
-.mode-tab + .mode-tab {
-    border-left: 1px solid var(--border-color);
-}
-.mode-tab.active {
-    background: var(--primary-color, #485fc7);
-    color: white;
+.mode-tab .icon {
+    font-size: 0.78rem;
 }
 .mode-tab:hover:not(.active) {
-    background: var(--hover-bg, rgba(0, 0, 0, 0.04));
+    color: var(--text-color-strong);
+}
+.mode-tab:active:not(.active) {
+    transform: scale(0.97);
+}
+.mode-tab.active {
+    background: var(--card-background);
+    color: var(--text-color-strong);
+    font-weight: 600;
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+.mode-tab.active .icon {
+    color: var(--primary-color, #485fc7);
+}
+
+[data-theme='dark'] .mode-tab.active {
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .header-meta {

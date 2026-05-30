@@ -25,7 +25,7 @@
 
         <main class="mode-main">
             <div v-if="!template" class="empty-state">
-                <b-icon icon="view-list-outline" size="is-large" custom-class="has-text-grey-light" />
+                <b-icon icon="th-large" size="is-large" custom-class="has-text-grey-light" />
                 <p class="empty-title">Pick a template to begin</p>
                 <p class="empty-desc">Choose a contract on the left to configure its constructor or initializer arguments.</p>
             </div>
@@ -77,7 +77,7 @@
             :status-label="footerLabel"
             :status-aux="footerAux"
             :primary-label="primaryLabel"
-            :primary-icon="result ? 'check' : 'rocket-launch-outline'"
+            :primary-icon="result ? 'check' : 'rocket'"
             :primary-disabled="!canDeploy || !!result"
             :primary-loading="deploying"
             :show-cancel="!!result || !!template"
