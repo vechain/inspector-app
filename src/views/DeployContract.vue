@@ -28,12 +28,15 @@
                 key="template"
                 :network="network"
                 :existing-categories="existingCategories"
+                @open-in-source="onOpenInSource"
             />
             <SourceMode
                 v-else-if="mode === 'source'"
                 key="source"
                 :network="network"
                 :existing-categories="existingCategories"
+                :pending-import="pendingImport"
+                @import-consumed="pendingImport = null"
             />
             <BytecodeMode
                 v-else
@@ -63,6 +66,8 @@ type DeployMode = 'template' | 'source' | 'bytecode'
 export default class DeployContract extends Vue {
     mode: DeployMode = 'template'
     existingCategories: string[] = []
+    /** Payload handed from TemplateMode → SourceMode when the user clicks "Open in Source". */
+    pendingImport: { files: Record<string, string>; entry: string; contractName: string } | null = null
 
     readonly modes: { id: DeployMode; label: string; icon: string; blurb: string }[] = [
         {
@@ -95,6 +100,11 @@ export default class DeployContract extends Vue {
 
     onModeChange(id: DeployMode) {
         this.mode = id
+    }
+
+    onOpenInSource(payload: { files: Record<string, string>; entry: string; contractName: string }) {
+        this.pendingImport = payload
+        this.mode = 'source'
     }
 
     private async created() {

@@ -276,6 +276,14 @@ interface DeployResult {
 export default class SourceMode extends Vue {
     @Prop({ required: true }) network!: string
     @Prop({ default: () => [] }) existingCategories!: string[]
+    /**
+     * Fork-of-template payload from the parent. Watched: when it becomes
+     * non-null, we replace the workspace with `files` + `entry` (after
+     * confirming if the user has unsaved work) and emit `import-consumed`.
+     */
+    @Prop({ default: null }) pendingImport!:
+        | { files: Record<string, string>; entry: string; contractName?: string }
+        | null
 
     files: Record<string, string> = { [DEFAULT_FILE]: STARTER_SOURCE }
     activeFile: string = DEFAULT_FILE
@@ -309,6 +317,63 @@ export default class SourceMode extends Vue {
     result: DeployResult | null = null
 
     readonly solcVersionShort = SOLC_VERSION_SHORT
+
+    @Watch('pendingImport', { immediate: true })
+    async onPendingImportChange(
+        next: { files: Record<string, string>; entry: string; contractName?: string } | null,
+    ) {
+        if (!next) return
+        const apply = () => {
+            this.suppressDirty = true
+            this.files = JSON.parse(JSON.stringify(next.files))
+            const fileNames = Object.keys(this.files)
+            this.entryFile =
+                next.entry && this.files[next.entry] ? next.entry : fileNames[0] || ''
+            this.activeFile = this.entryFile
+            // Forked from a template — this is a NEW unsaved workspace.
+            this.loadedProjectId = null
+            this.dirty = true
+            this.compileResult = null
+            this.compileErrors = []
+            this.compileWarnings = []
+            this.compiledContracts = []
+            this.selectedContractKey = ''
+            this.values = []
+            this.valid = false
+            this.result = null
+            this.stages = []
+            this.$nextTick(() => {
+                this.suppressDirty = false
+            })
+            this.$emit('import-consumed')
+        }
+        if (this.dirty && this.workspaceHasContent && this.loadedProjectId !== null) {
+            ;(this as any).$buefy.dialog.confirm({
+                title: 'Replace workspace',
+                message: `You have unsaved changes in "${this.loadedProjectName}". Load the template anyway?`,
+                confirmText: 'Load template',
+                onConfirm: apply,
+                onCancel: () => this.$emit('import-consumed'),
+            })
+        } else if (this.dirty && this.workspaceHasContent) {
+            ;(this as any).$buefy.dialog.confirm({
+                title: 'Replace workspace',
+                message: 'You have unsaved changes. Load the template anyway?',
+                confirmText: 'Load template',
+                onConfirm: apply,
+                onCancel: () => this.$emit('import-consumed'),
+            })
+        } else {
+            apply()
+        }
+    }
+
+    get loadedProjectName(): string {
+        // Cheap lookup — re-fetching the row would be overkill for a label.
+        // The actual name lives in SourceProjectsMenu; here we just hint the
+        // user there's something to lose.
+        return 'this project'
+    }
 
     @Watch('selectedContractKey')
     async onSelectedContractChange() {

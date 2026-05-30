@@ -40,7 +40,19 @@
                             <h3 class="card-title">{{ family.label }}</h3>
                             <p class="long-desc">{{ family.longDescription }}</p>
                         </div>
-                        <span class="contract-name-tag" v-if="template">{{ template.contractName }}</span>
+                        <div class="card-head-side">
+                            <span class="contract-name-tag" v-if="template">{{ template.contractName }}</span>
+                            <button
+                                v-if="template"
+                                type="button"
+                                class="open-source-btn"
+                                title="Load this template's source into the editor — modify and recompile before deploying"
+                                @click="onOpenInSource"
+                            >
+                                <b-icon icon="code" size="is-small" />
+                                <span>Open in Source</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="features" v-if="family.features.length">
                         <span class="features-label">What's included</span>
@@ -254,7 +266,7 @@ export default class TemplateMode extends Vue {
     get primaryLabel(): string {
         if (this.result) return 'Done'
         if (this.deploying) return 'Deploying…'
-        return this.template?.upgradeable ? 'Deploy proxy' : 'Deploy'
+        return 'Deploy'
     }
 
     /**
@@ -304,6 +316,18 @@ export default class TemplateMode extends Vue {
                 optimizer: { enabled: true, runs: 200 },
             },
         }
+    }
+
+    onOpenInSource() {
+        if (!this.template) return
+        // Emit a payload the parent (DeployContract) can hand to the Source
+        // tab. We send copies, not references, so future edits in the source
+        // editor don't mutate the template artifact.
+        this.$emit('open-in-source', {
+            files: JSON.parse(JSON.stringify(this.template.files)),
+            entry: this.template.file,
+            contractName: this.template.contractName,
+        })
     }
 
     onPickFamily(id: string) {
@@ -650,6 +674,30 @@ function shortAddr(a: string): string {
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
     flex-shrink: 0;
+}
+.card-head-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+.open-source-btn {
+    background: var(--body-background-alt);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    color: var(--text-color);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.open-source-btn:hover {
+    border-color: var(--primary-color, #485fc7);
+    color: var(--primary-color, #485fc7);
 }
 
 .features {
