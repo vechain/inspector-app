@@ -2,16 +2,22 @@
     <div class="drafts-menu">
         <b-dropdown aria-role="list" position="is-bottom-right" append-to-body>
             <template #trigger>
-                <button type="button" class="button is-small">
-                    <b-icon icon="folder-open" size="is-small"></b-icon>
-                    <span>Drafts</span>
-                    <span v-if="drafts.length" class="drafts-count">{{ drafts.length }}</span>
-                    <b-icon icon="caret-down" size="is-small"></b-icon>
+                <button type="button" class="trigger-btn">
+                    <b-icon icon="folder-open" size="is-small" />
+                    <span class="trigger-label">
+                        {{ currentDraft ? currentDraft.name : 'Untitled draft' }}
+                    </span>
+                    <span
+                        v-if="dirty && currentDraft"
+                        class="dirty-dot"
+                        title="Unsaved changes"
+                    ></span>
+                    <b-icon icon="caret-down" size="is-small" />
                 </button>
             </template>
 
             <b-dropdown-item custom>
-                <span class="dropdown-section-label">Current network only</span>
+                <span class="section-label">Drafts · this network only</span>
             </b-dropdown-item>
 
             <b-dropdown-item v-if="drafts.length === 0" custom>
@@ -35,30 +41,34 @@
                 </div>
                 <div class="draft-row__actions">
                     <button type="button" class="icon-btn" title="Rename" @click.stop="onRename(d)">
-                        <b-icon icon="pen" size="is-small"></b-icon>
+                        <b-icon icon="pen" size="is-small" />
                     </button>
                     <button type="button" class="icon-btn icon-btn--danger" title="Delete" @click.stop="onDelete(d)">
-                        <b-icon icon="trash" size="is-small"></b-icon>
+                        <b-icon icon="trash" size="is-small" />
                     </button>
                 </div>
             </b-dropdown-item>
 
-            <hr class="dropdown-divider">
+            <hr class="dropdown-divider" />
 
             <b-dropdown-item :disabled="!loadedDraftId || !dirty" @click="$emit('save')">
-                <b-icon icon="save" size="is-small"></b-icon>
+                <b-icon icon="save" size="is-small" />
                 <span>Save</span>
             </b-dropdown-item>
             <b-dropdown-item :disabled="!workspaceHasContent" @click="$emit('save-as')">
-                <b-icon icon="save" size="is-small"></b-icon>
+                <b-icon icon="save" size="is-small" />
                 <span>Save as…</span>
             </b-dropdown-item>
         </b-dropdown>
 
         <div v-if="loadedDraftId && currentDraft" class="loaded-indicator">
-            <b-icon icon="circle" size="is-small" :class="{ 'has-text-warning': dirty, 'has-text-success': !dirty }"></b-icon>
-            <span class="loaded-name">{{ currentDraft.name }}</span>
-            <span v-if="dirty" class="loaded-dirty">· unsaved changes</span>
+            <b-icon
+                icon="circle"
+                size="is-small"
+                :class="{ 'has-text-warning': dirty, 'has-text-success': !dirty }"
+            />
+            <span v-if="dirty" class="loaded-dirty">unsaved changes</span>
+            <span v-else class="loaded-saved">saved</span>
         </div>
     </div>
 </template>
@@ -147,11 +157,46 @@ export default class DraftsMenu extends Vue {
 .drafts-menu {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.4rem;
+}
+
+.trigger-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--body-background-alt);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    color: var(--text-color);
+    font-size: 0.8rem;
+    text-align: left;
+    min-width: 0;
+    max-width: 280px;
+}
+.trigger-btn:hover {
+    border-color: var(--primary-color, #485fc7);
+}
+.trigger-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-color-strong);
+    font-weight: 600;
+}
+.dirty-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #d4a017;
+    flex-shrink: 0;
 }
 
 ::v-deep .dropdown-menu {
-    min-width: 280px;
+    min-width: 300px;
 }
 ::v-deep .dropdown-content {
     background-color: var(--card-background);
@@ -173,16 +218,7 @@ export default class DraftsMenu extends Vue {
 ::v-deep .dropdown-divider {
     background-color: var(--border-color);
 }
-.drafts-count {
-    background: var(--body-background-alt);
-    color: var(--text-color-light);
-    border-radius: 8px;
-    padding: 0 0.3rem;
-    font-size: 0.7rem;
-    margin-left: 0.3rem;
-    font-weight: 600;
-}
-.dropdown-section-label {
+.section-label {
     font-size: 0.7rem;
     color: var(--text-color-light);
     text-transform: uppercase;
@@ -245,16 +281,14 @@ export default class DraftsMenu extends Vue {
 .loaded-indicator {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-    font-size: 0.8rem;
-    color: var(--text-color-light);
-}
-.loaded-name {
-    font-weight: 600;
-    color: var(--text-color);
+    gap: 0.25rem;
+    font-size: 0.7rem;
+    flex-shrink: 0;
 }
 .loaded-dirty {
     color: #b88010;
-    font-size: 0.75rem;
+}
+.loaded-saved {
+    color: #2e8b57;
 }
 </style>
