@@ -9,6 +9,7 @@
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,
+    "useDefineForClassFields": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
