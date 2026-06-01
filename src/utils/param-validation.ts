@@ -10,6 +10,12 @@ const UINT_RE = /^\d+$/
 const INT_RE = /^-?\d+$/
 
 export function validateParam(value: any, type: string): ParamValidation {
+    if (type === 'tuple') {
+        // Tuple validation is handled by the nested ParamInput components.
+        // We treat the tuple itself as always valid here; the parent form
+        // walks the components when deciding whether the form can be submitted.
+        return { valid: true }
+    }
     if (value === null || value === undefined || value === '') {
         return { valid: false, error: 'Required' }
     }

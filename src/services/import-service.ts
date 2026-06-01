@@ -45,12 +45,16 @@ export class ImportService {
 
     if (existing) {
       // Update existing contract
-      await DB.contracts.update(existing.id!, {
+      const patch: Partial<Entities.Contract> = {
         name: contractWithNetwork.name,
         abi: contractWithNetwork.abi,
         category: contractWithNetwork.category,
         network: contractWithNetwork.network,
-      });
+      };
+      if (contractWithNetwork.source) {
+        patch.source = contractWithNetwork.source;
+      }
+      await DB.contracts.update(existing.id!, patch);
     } else {
       // Add new contract
       await DB.contracts.add({

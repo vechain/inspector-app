@@ -3,6 +3,17 @@ import "dexie-observable";
 import { IDatabaseChange } from "dexie-observable/api";
 
 export namespace Entities {
+  export interface ContractSource {
+    files: Record<string, string>;
+    entry: string; // path of the file containing the deployed contract
+    contractName: string;
+    compiler: {
+      version: string; // e.g. "0.8.20+commit.a1b79de6"
+      evmVersion: string; // e.g. "paris"
+      optimizer: { enabled: boolean; runs: number };
+    };
+  }
+
   export interface Contract {
     id?: number;
     name?: string;
@@ -12,6 +23,7 @@ export namespace Entities {
     network?: string;
     category?: string;
     order?: number;
+    source?: ContractSource;
   }
 
   export interface Filter extends Contract {
@@ -62,6 +74,17 @@ export namespace Entities {
     updatedTime: number;
   }
 
+  // A saved Deploy "Source" workspace: a set of .sol files + entry. Compiles
+  // on any network so we don't scope by genesis id (unlike TxBuilder drafts).
+  export interface SourceProject {
+    id?: number;
+    name: string;
+    files: Record<string, string>;
+    entry: string;
+    createdTime: number;
+    updatedTime: number;
+  }
+
   export interface SourcedAbi {
     id?: number;
     genesisId: string;
@@ -107,6 +130,7 @@ class Database extends Dexie {
   public readonly sourcedAbis!: Dexie.Table<Entities.SourcedAbi, number>;
   public readonly b32Signatures!: Dexie.Table<Entities.B32Signature, number>;
   public readonly openchainSignatures!: Dexie.Table<Entities.OpenChainSignature, number>;
+  public readonly sourceProjects!: Dexie.Table<Entities.SourceProject, number>;
 
   constructor() {
     super("inspect");
@@ -147,6 +171,9 @@ class Database extends Dexie {
     });
     this.version(12).stores({
       openchainSignatures: "++id, &[hash+kind], hash, kind",
+    });
+    this.version(13).stores({
+      sourceProjects: "++id, name, updatedTime",
     });
     this.open().catch((err) => {
       // tslint:disable-next-line:no-console

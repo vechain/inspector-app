@@ -75,7 +75,7 @@ import DB from '../database'
 })
 export default class SampleFuncCard extends Mixins(AccountCall) {
     @Prop({ default: false })
-    prototype?: boolean
+    declare prototype?: boolean
 
     private tabs = ['Inputs', 'Description']
     private activeTab = ''

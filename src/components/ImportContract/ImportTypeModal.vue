@@ -158,11 +158,11 @@ export default class ImportTypeModal extends Vue {
 
             if (entry.isDirectory) {
                 // Recursively read all files from the directory
-                const dirFiles = await this.readDirectoryRecursively(entry as FileSystemDirectoryEntry)
+                const dirFiles = await this.readDirectoryRecursively(entry as unknown as FileSystemDirectoryEntry)
                 allFiles.push(...dirFiles)
             } else if (entry.isFile) {
                 // It's a file
-                const file = await this.readFileEntry(entry as FileSystemFileEntry)
+                const file = await this.readFileEntry(entry as unknown as FileSystemFileEntry)
                 if (file) {
                     allFiles.push(file)
                 }

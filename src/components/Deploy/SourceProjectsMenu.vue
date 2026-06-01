@@ -1,49 +1,51 @@
 <template>
-    <div class="drafts-menu">
+    <div class="projects-menu">
         <b-dropdown aria-role="list" position="is-bottom-right" append-to-body>
             <template #trigger>
                 <button type="button" class="trigger-btn">
                     <b-icon icon="folder-open" size="is-small" />
                     <span class="trigger-label">
-                        {{ currentDraft ? currentDraft.name : 'Untitled draft' }}
+                        {{ currentProject ? currentProject.name : 'Untitled project' }}
                     </span>
-                    <span
-                        v-if="dirty && currentDraft"
-                        class="dirty-dot"
-                        title="Unsaved changes"
-                    ></span>
+                    <span v-if="dirty && currentProject" class="dirty-dot" title="Unsaved changes"></span>
                     <b-icon icon="caret-down" size="is-small" />
                 </button>
             </template>
 
             <b-dropdown-item custom>
-                <span class="section-label">Drafts · this network only</span>
+                <span class="section-label">Projects</span>
             </b-dropdown-item>
 
-            <b-dropdown-item v-if="drafts.length === 0" custom>
-                <span class="has-text-grey-light">No drafts saved yet</span>
+            <b-dropdown-item v-if="projects.length === 0" custom>
+                <span class="has-text-grey-light">No projects saved yet</span>
             </b-dropdown-item>
 
             <b-dropdown-item
-                v-for="d in drafts"
-                :key="d.id"
+                v-for="p in projects"
+                :key="p.id"
                 custom
-                class="draft-row"
+                class="project-row"
             >
-                <div class="draft-row__main" @click="$emit('load', d)">
-                    <div class="draft-row__name">
-                        {{ d.name }}
-                        <span v-if="loadedDraftId === d.id" class="badge-loaded">loaded</span>
+                <div class="project-row__main" @click="$emit('load', p)">
+                    <div class="project-row__name">
+                        {{ p.name }}
+                        <span v-if="loadedProjectId === p.id" class="badge-loaded">loaded</span>
                     </div>
-                    <div class="draft-row__meta">
-                        {{ d.clauses.length }} clause{{ d.clauses.length === 1 ? '' : 's' }} · {{ formatTime(d.updatedTime) }}
+                    <div class="project-row__meta">
+                        {{ fileCount(p) }} file{{ fileCount(p) === 1 ? '' : 's' }} ·
+                        {{ formatTime(p.updatedTime) }}
                     </div>
                 </div>
-                <div class="draft-row__actions">
-                    <button type="button" class="icon-btn" title="Rename" @click.stop="onRename(d)">
+                <div class="project-row__actions">
+                    <button type="button" class="icon-btn" title="Rename" @click.stop="onRename(p)">
                         <b-icon icon="pen" size="is-small" />
                     </button>
-                    <button type="button" class="icon-btn icon-btn--danger" title="Delete" @click.stop="onDelete(d)">
+                    <button
+                        type="button"
+                        class="icon-btn icon-btn--danger"
+                        title="Delete"
+                        @click.stop="onDelete(p)"
+                    >
                         <b-icon icon="trash" size="is-small" />
                     </button>
                 </div>
@@ -51,7 +53,7 @@
 
             <hr class="dropdown-divider" />
 
-            <b-dropdown-item :disabled="!loadedDraftId || !dirty" @click="$emit('save')">
+            <b-dropdown-item :disabled="!loadedProjectId || !dirty" @click="$emit('save')">
                 <b-icon icon="save" size="is-small" />
                 <span>Save</span>
             </b-dropdown-item>
@@ -59,9 +61,13 @@
                 <b-icon icon="save" size="is-small" />
                 <span>Save as…</span>
             </b-dropdown-item>
+            <b-dropdown-item @click="$emit('new')">
+                <b-icon icon="plus" size="is-small" />
+                <span>New blank project</span>
+            </b-dropdown-item>
         </b-dropdown>
 
-        <div v-if="loadedDraftId && currentDraft" class="loaded-indicator">
+        <div v-if="loadedProjectId && currentProject" class="loaded-indicator">
             <b-icon
                 icon="circle"
                 size="is-small"
@@ -74,33 +80,31 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
-import DB, { Entities } from '../../database'
+import { Vue, Component, Prop } from 'vue-property-decorator'
+import DB, { Entities } from '@/database'
 
 @Component
-export default class DraftsMenu extends Vue {
-    @Prop({ required: true }) network!: string
-    @Prop({ default: null }) loadedDraftId!: number | null
+export default class SourceProjectsMenu extends Vue {
+    @Prop({ default: null }) loadedProjectId!: number | null
     @Prop({ default: false }) dirty!: boolean
     @Prop({ default: false }) workspaceHasContent!: boolean
 
-    private drafts: Entities.TxBuilderDraft[] = []
+    projects: Entities.SourceProject[] = []
 
-    get currentDraft(): Entities.TxBuilderDraft | null {
-        if (this.loadedDraftId === null) return null
-        return this.drafts.find(d => d.id === this.loadedDraftId) || null
+    get currentProject(): Entities.SourceProject | null {
+        if (this.loadedProjectId === null) return null
+        return this.projects.find((p) => p.id === this.loadedProjectId) || null
+    }
+
+    private fileCount(p: Entities.SourceProject): number {
+        return Object.keys(p.files || {}).length
     }
 
     private async reload() {
-        if (!this.network) {
-            this.drafts = []
-            return
-        }
-        this.drafts = await DB.txBuilderDrafts
-            .where('network')
-            .equals(this.network)
+        this.projects = await DB.sourceProjects
+            .orderBy('updatedTime')
             .reverse()
-            .sortBy('updatedTime')
+            .toArray()
     }
 
     private formatTime(t: number) {
@@ -112,52 +116,51 @@ export default class DraftsMenu extends Vue {
         return d.toLocaleDateString()
     }
 
-    private onRename(d: Entities.TxBuilderDraft) {
-        this.$buefy.dialog.prompt({
-            title: 'Rename draft',
-            message: 'Enter a new name for this draft.',
-            inputAttrs: { value: d.name, maxlength: 60, required: true },
+    private onRename(p: Entities.SourceProject) {
+        ;(this as any).$buefy.dialog.prompt({
+            title: 'Rename project',
+            message: 'Enter a new name for this project.',
+            inputAttrs: { value: p.name, maxlength: 60, required: true },
             onConfirm: async (val: string) => {
                 const name = val.trim()
                 if (!name) return
-                await DB.txBuilderDrafts.update(d.id!, { name, updatedTime: Date.now() })
+                await DB.sourceProjects.update(p.id!, {
+                    name,
+                    updatedTime: Date.now(),
+                })
                 await this.reload()
-                this.$emit('renamed', { id: d.id, name })
-            }
+                this.$emit('renamed', { id: p.id, name })
+            },
         })
     }
 
-    private onDelete(d: Entities.TxBuilderDraft) {
-        this.$buefy.dialog.confirm({
-            title: 'Delete draft',
-            message: `Delete draft "${d.name}"? This cannot be undone.`,
+    private onDelete(p: Entities.SourceProject) {
+        ;(this as any).$buefy.dialog.confirm({
+            title: 'Delete project',
+            message: `Delete project "${p.name}"? This cannot be undone.`,
             confirmText: 'Delete',
             type: 'is-danger',
             onConfirm: async () => {
-                await DB.txBuilderDrafts.delete(d.id!)
+                await DB.sourceProjects.delete(p.id!)
                 await this.reload()
-                this.$emit('deleted', d.id)
-            }
+                this.$emit('deleted', p.id)
+            },
         })
-    }
-
-    @Watch('network')
-    private onNetworkChange() {
-        this.reload()
     }
 
     created() {
         this.reload()
-        DB.subscribe('txBuilderDrafts', () => this.reload())
+        DB.subscribe('sourceProjects', () => this.reload())
     }
 }
 </script>
 
 <style lang="scss" scoped>
-.drafts-menu {
+.projects-menu {
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    width: 100%;
 }
 
 .trigger-btn {
@@ -171,9 +174,9 @@ export default class DraftsMenu extends Vue {
     cursor: pointer;
     color: var(--text-color);
     font-size: 0.8rem;
+    width: 100%;
     text-align: left;
     min-width: 0;
-    max-width: 280px;
 }
 .trigger-btn:hover {
     border-color: var(--primary-color, #485fc7);
@@ -218,33 +221,33 @@ export default class DraftsMenu extends Vue {
 ::v-deep .dropdown-divider {
     background-color: var(--border-color);
 }
+
 .section-label {
     font-size: 0.7rem;
     color: var(--text-color-light);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
-
-.draft-row {
+.project-row {
     display: flex !important;
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 0.75rem !important;
     gap: 0.5rem;
 }
-.draft-row__main {
+.project-row__main {
     flex: 1;
     min-width: 0;
     cursor: pointer;
 }
-.draft-row__name {
+.project-row__name {
     font-weight: 600;
     color: var(--text-color-strong);
     display: flex;
     align-items: center;
     gap: 0.4rem;
 }
-.draft-row__meta {
+.project-row__meta {
     font-size: 0.7rem;
     color: var(--text-color-light);
 }
@@ -257,7 +260,7 @@ export default class DraftsMenu extends Vue {
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
-.draft-row__actions {
+.project-row__actions {
     display: flex;
     gap: 0.2rem;
     flex-shrink: 0;
