@@ -223,7 +223,7 @@ export default class FunctionCard extends Mixins(AccountCall) {
         
         if (this.txid) {
             output += `Transaction ID: ${this.txid}\n`
-            output += `Explorer: ${this.$explorerTx}${this.txid}\n\n`
+            output += `Explorer: ${this.$explorerTx(this.txid)}\n\n`
         }
         
         if (this.receipt) {

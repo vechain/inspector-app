@@ -105,7 +105,7 @@
                         </span>
                         <a
                             v-if="submission.txid"
-                            :href="$explorerTx + submission.txid"
+                            :href="$explorerTx(submission.txid)"
                             target="_blank"
                             rel="noopener"
                             class="submission-link"

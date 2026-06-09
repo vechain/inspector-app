@@ -20,9 +20,9 @@ import { isCustomNetwork, getCustomNetworkId } from './utils'
 declare module 'vue/types/vue' {
   interface Vue {
     $connex: Connex
-    $explorerAccount: string
-    $explorerBlock: string
-    $explorerTx: string
+    $explorerAccount: (id: string) => string
+    $explorerBlock: (id: string) => string
+    $explorerTx: (id: string) => string
     $nodeUrl: string
   }
 }
@@ -44,11 +44,25 @@ Vue.use(VueAnalytics, {
 Vue.config.productionTip = false
 
 
-function setExplorerUrl(path: string) {
-  const temp = path ? (path + '/') : path
-  Vue.prototype.$explorerAccount = `https://insight.vecha.in/#/${temp}accounts/`
-  Vue.prototype.$explorerBlock = `https://insight.vecha.in/#/${temp}blocks/`
-  Vue.prototype.$explorerTx = `https://insight.vecha.in/#/${temp}txs/`
+function setExplorerUrl(path: 'main' | 'test' | 'solo') {
+  if (path === 'solo') {
+    Vue.prototype.$explorerAccount = (id: string) => `https://insight.vecha.in/#/solo/accounts/${id}`
+    Vue.prototype.$explorerBlock = (id: string) => `https://insight.vecha.in/#/solo/blocks/${id}`
+    Vue.prototype.$explorerTx = (id: string) => `https://insight.vecha.in/#/solo/txs/${id}`
+    return
+  }
+  const network = path === 'main' ? 'mainnet' : 'testnet'
+  const query = `?network=${network}`
+  Vue.prototype.$explorerAccount = (id: string) => `https://explore.vechain.org/address/${id}${query}`
+  Vue.prototype.$explorerBlock = (id: string) => `https://explore.vechain.org/block/${id}${query}`
+  Vue.prototype.$explorerTx = (id: string) => `https://explore.vechain.org/transactions/${id}${query}`
+}
+
+function setExplorerUrlForCustomNode(nodeUrl: string) {
+  const host = nodeUrl.endsWith('/') ? nodeUrl : (nodeUrl + '/')
+  Vue.prototype.$explorerAccount = (id: string) => `${host}accounts/${id}`
+  Vue.prototype.$explorerBlock = (id: string) => `${host}blocks/${id}`
+  Vue.prototype.$explorerTx = (id: string) => `${host}transactions/${id}`
 }
 
 async function initApp() {
@@ -58,7 +72,7 @@ async function initApp() {
   console.log("net", net)
 
   if (['test', 'main', 'solo'].includes(net)) {
-    setExplorerUrl(net)
+    setExplorerUrl(net as "test" | "main" | "solo")
     Vue.prototype.$connex = createConnex(net as "test" | "main" | "solo")
     Vue.prototype.$nodeUrl = nodeUrls[net as "test" | "main" | "solo"]
   } else if (isCustomNetwork(net)) {
@@ -86,10 +100,7 @@ async function initApp() {
               transactions: []
             }
 
-            const host = customNetwork.nodeUrl.endsWith('/') ? customNetwork.nodeUrl : (customNetwork.nodeUrl + '/')
-            Vue.prototype.$explorerAccount = `${host}accounts/`
-            Vue.prototype.$explorerBlock = `${host}blocks/`
-            Vue.prototype.$explorerTx = `${host}transactions/`
+            setExplorerUrlForCustomNode(customNetwork.nodeUrl)
 
             Vue.prototype.$connex = createConnexForNetwork(customNetwork.nodeUrl, genesisBlock, genesisBlock.id)
             Vue.prototype.$nodeUrl = customNetwork.nodeUrl
@@ -120,10 +131,7 @@ async function initApp() {
           // main
           setExplorerUrl('main')
         } else {
-          const host = node.endsWith('/') ? node : (node + '/')
-          Vue.prototype.$explorerAccount = `${host}accounts/`
-          Vue.prototype.$explorerBlock = `${host}blocks/`
-          Vue.prototype.$explorerTx = `${host}transactions/`
+          setExplorerUrlForCustomNode(node)
         }
         Vue.prototype.$connex = createConnexForNetwork(node, network, network.id)
         Vue.prototype.$nodeUrl = node

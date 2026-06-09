@@ -21,7 +21,7 @@
                             <b-icon icon="question-circle" size="is-small"></b-icon>
                         </button>
                     </span>
-                    <a :href="$explorerAccount + value" target="_blank" rel="noopener" class="external-link">
+                    <a :href="$explorerAccount(value)" target="_blank" rel="noopener" class="external-link">
                         View on explorer
                         <b-icon icon="external-link-alt" size="is-small"></b-icon>
                     </a>
