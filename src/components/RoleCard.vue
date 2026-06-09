@@ -29,7 +29,7 @@
         <div class="holders-list">
           <div v-for="(holder, index) in holders" :key="index" class="holder-item">
             <a
-              :href="`${$explorerAccount}${holder}`"
+              :href="$explorerAccount(holder)"
               target="_blank"
               class="holder-address-link"
               @click.stop

@@ -87,7 +87,7 @@ export default class DeploySuccessCard extends Vue {
     saved = false
 
     get txExplorerUrl(): string {
-        return `${(this as any).$explorerTx}${this.txid}`
+        return (this as any).$explorerTx(this.txid)
     }
 
     get filteredCategories(): string[] {

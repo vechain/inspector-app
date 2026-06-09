@@ -26,14 +26,14 @@
         </span>
         <span class="event-text">to</span>
         <a
-          :href="`${$explorerAccount}${event.account}`"
+          :href="$explorerAccount(event.account)"
           target="_blank"
           class="address-link"
           :title="event.account"
         >{{ event.account | addr }}</a>
         <span class="event-text">by</span>
         <a
-          :href="`${$explorerAccount}${event.sender}`"
+          :href="$explorerAccount(event.sender)"
           target="_blank"
           class="address-link"
           :title="event.sender"
@@ -44,7 +44,7 @@
           :title="formatFullDate(event.timestamp)"
         >{{ formatRelativeTime(event.timestamp) }}</span>
         <a
-          :href="`${$explorerTx}${event.txId}`"
+          :href="$explorerTx(event.txId)"
           target="_blank"
           class="tx-link"
           title="View transaction"
